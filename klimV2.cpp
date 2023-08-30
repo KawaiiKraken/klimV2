@@ -148,7 +148,7 @@ wchar_t combined_overlay[500], overlay_line_1[100], overlay_line_2[100], overlay
 int __cdecl main(){
     // load dll function
 
-    hDLL = LoadLibrary(L"mydll");
+    hDLL = LoadLibrary(L"krekens_overlay");
     if (hDLL != NULL)
     {
         lpfnDllOverlay = (LPFNDLLMYPUTS)GetProcAddress(hDLL, "Overlay");
