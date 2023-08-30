@@ -14,6 +14,11 @@ an oss destiny 2 netlimiter that doesnt rely on NL4/5 DLL/service
 
 # how to use
   soon™
+
+# troubleshooting
+- run as admin
+- disable anti virus 
+- if this didnt help head over to our discord #support: https://discord.com/invite/KGyjysA5WY
   
 # upcoming features
 - gui and/or config file for the hotkeys
