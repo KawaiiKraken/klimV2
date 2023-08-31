@@ -46,7 +46,13 @@
  *
  * This program is similar to Linux's iptables with the "-j REJECT" target.
  */
+//#pragma clang diagnostic ignored "-Wmacro-redefined"
+//#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+//#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wwritable-strings"
+#define _WIN32_WINNT 0x0400
+//#pragma comment( lib, "user32.lib" )
+//#pragma comment( lib, "kernel32.lib" )
 #define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include <stdio.h>
@@ -56,7 +62,6 @@
 #include <stdbool.h>
 #include <iostream>
 #include <wchar.h>
-// i love my gf tea <3
 
 #include "windivert.h"
 
@@ -65,8 +70,44 @@ int __cdecl Overlay(LPTSTR);   // a function from a DLL
 
 typedef UINT (CALLBACK* LPFNDLLMYPUTS)(LPTSTR);
 
+using namespace std;
+
 HINSTANCE hDLL;               // Handle to DLL
 LPFNDLLMYPUTS lpfnDllOverlay;    // Function pointer
+HHOOK hKeyboardHook;
+HANDLE hTimer = NULL;
+HANDLE hTimerQueue = NULL;
+HANDLE gDoneEvent;
+HANDLE hThread = NULL;
+HANDLE handle = NULL;
+bool can_trigger_3074 = TRUE;
+bool can_trigger_7k = TRUE;
+bool can_trigger_27k = TRUE;
+bool can_trigger_30k = TRUE;
+wchar_t pathToIni[MAX_PATH];
+char hotkey_exitapp, hotkey_3074, hotkey_27k, hotkey_30k, hotkey_7k;
+bool state3074 = FALSE;
+bool state27k = FALSE; 
+bool state30k = FALSE;
+bool state7k = FALSE;
+// function declaration so function can be below main
+void toggle3074();
+void toggle27k(); 
+void toggle30k(); 
+void toggle7k(); 
+void combinerules();
+void updateOverlay();
+void updateOverlayLine1(wchar_t arg[]);
+void updateOverlayLine2(wchar_t arg[]);
+void updateOverlayLine3(wchar_t arg[]);
+void updateOverlayLine4(wchar_t arg[]);
+void updateOverlayLine5(wchar_t arg[]);
+unsigned long block_traffic(LPVOID lpParam);
+char myNetRules[500];
+const char *err_str;
+INT16 priority = 1000;
+wchar_t combined_overlay[500], overlay_line_1[100], overlay_line_2[100], overlay_line_3[100], overlay_line_4[100], overlay_line_5[100];
+
 
 
 #define ntohs(x)            WinDivertHelperNtohs(x)
@@ -118,32 +159,276 @@ static void PacketIpv6TcpInit(PTCPV6PACKET packet);
 static void PacketIpv6Icmpv6Init(PICMPV6PACKET packet);
 
 
+VOID CALLBACK TimerRoutine(bool* arg, BOOLEAN TimerOrWaitFired){
+    printf("hotkey re-enabled\n");
+    *arg = TRUE;
+}
+
+int setTimer(bool* arg){
+    // Set a timer to call the timer routine in hotkey_timeout ms.
+    int hotkey_timeout = 1000;
+    if (!CreateTimerQueueTimer( &hTimer, hTimerQueue, 
+            (WAITORTIMERCALLBACK)TimerRoutine, arg, hotkey_timeout, 0, 0))
+    {
+        printf("CreateTimerQueueTimer failed (%lu)\n", GetLastError());
+        return 3;
+    }
+    return 0;
+}
+
+void startFilter(){
+    printf("Starting thread\n");
+    hThread = CreateThread(NULL, 0, block_traffic, NULL, 0, NULL);
+}
+
+__declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, LPARAM lParam)
+{
+    DWORD SHIFT_key=0;
+    DWORD CTRL_key=0;
+    DWORD ALT_key=0;
+
+    if  ((nCode == HC_ACTION) &&   ((wParam == WM_SYSKEYDOWN) ||  (wParam == WM_KEYDOWN)))      
+    {
+        KBDLLHOOKSTRUCT hooked_key =    *((KBDLLHOOKSTRUCT*)lParam);
+        DWORD dwMsg = 1;
+        dwMsg += hooked_key.scanCode << 16;
+        dwMsg += hooked_key.flags << 24;
+        wchar_t lpszKeyName[1024] = {0};
+        lpszKeyName[0] = L'[';
+
+        int i = GetKeyNameText(dwMsg,   (lpszKeyName+1),0xFF) + 1;
+        lpszKeyName[i] = L']';
+
+        int key = hooked_key.vkCode;
+
+        SHIFT_key = GetAsyncKeyState(VK_SHIFT);
+        CTRL_key = GetAsyncKeyState(VK_CONTROL);
+        ALT_key = GetAsyncKeyState(VK_MENU);
+
+        //if (key >= 'A' && key <= 'Z')   
+        if (key != (VK_SHIFT | VK_CONTROL | VK_MENU))   // this might be a bit broken
+        {
+            SHIFT_key = GetAsyncKeyState(VK_SHIFT); // double because async normally only checks if key was pressed since last time it was called, there is a way to bypass that but im lazy
+            CTRL_key = GetAsyncKeyState(VK_CONTROL);
+            ALT_key = GetAsyncKeyState(VK_MENU);
+
+            //if  (GetAsyncKeyState(VK_SHIFT)>= 0) key +=32;
+            
+            // ============= 3074 ================
+            if (CTRL_key !=0 && key == hotkey_3074 ) 
+            {
+                wcout << L"hotkey_3074 detected\n";
+                if (can_trigger_3074){ // set time out to prevent multiple triggers
+                    can_trigger_3074 = FALSE;
+                    setTimer(&can_trigger_3074);
+                    wcout << L"doing stuff\n";
+                    toggle3074();
+                    combinerules();
+                    startFilter();
+                }
+                CTRL_key=0;
+            }
+
+            // ============= 27k ================
+            if (CTRL_key !=0 && key == hotkey_27k ) 
+            {
+                wcout << L"hotkey_27k detected\n";
+                if (can_trigger_27k){ // set time out to prevent multiple triggers
+                    can_trigger_27k = FALSE;
+                    setTimer(&can_trigger_27k);
+                    wcout << L"doing stuff\n";
+                    toggle27k();
+                    combinerules();
+                    startFilter();
+                }
+                CTRL_key=0;
+            }
+
+            // ============= 30k ================
+            if (CTRL_key !=0 && key == hotkey_30k ) 
+            {
+                wcout << L"hotkey_30k detected\n";
+                if (can_trigger_30k){ // set time out to prevent multiple triggers
+                    can_trigger_30k = FALSE;
+                    setTimer(&can_trigger_30k);
+                    wcout << L"doing stuff\n";
+                    toggle30k();
+                    combinerules();
+                    startFilter();
+                }
+                CTRL_key=0;
+            }
+
+            // ============= 7k ================
+            if (CTRL_key !=0 && key == hotkey_7k ) 
+            {
+                wcout << L"hotkey_30k detected\n";
+                if (can_trigger_7k){ // set time out to prevent multiple triggers
+                    can_trigger_7k = FALSE;
+                    setTimer(&can_trigger_7k);
+                    wcout << L"doing stuff\n";
+                    toggle30k();
+                    combinerules();
+                    startFilter();
+                }
+                CTRL_key=0;
+            } 
+
+
+            // ============= exitapp ================
+            if (CTRL_key !=0 && key == hotkey_exitapp)
+            {
+                wcout << "shutting down\n";
+                PostQuitMessage(0);
+            }
+            printf("key: %d\n", key);
+
+
+            //printf("key = %c\n", key);
+
+            SHIFT_key = 0; // not sure if this is needed
+            CTRL_key = 0;
+            ALT_key = 0;
+
+        }
+
+        printf("lpszKeyName = %ls\n",  lpszKeyName );
+    }
+    return CallNextHookEx(hKeyboardHook,    nCode,wParam,lParam);
+}
+
+void MessageLoop()
+{
+    MSG message;
+    while (GetMessage(&message,NULL,0,0)) 
+    {
+        TranslateMessage( &message );
+        DispatchMessage( &message );
+    }
+}
+
+DWORD WINAPI my_HotKey(LPVOID lpParm)
+{
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    if (!hInstance) hInstance = LoadLibrary((LPCWSTR) lpParm); 
+    if (!hInstance) return 1;
+
+    hKeyboardHook = SetWindowsHookEx (  WH_KEYBOARD_LL, (HOOKPROC) KeyboardEvent,   hInstance,  NULL    );
+    MessageLoop();
+    UnhookWindowsHookEx(hKeyboardHook);
+    return 0;
+}
+
+BOOL FileExists(LPCTSTR szPath)
+{
+  DWORD dwAttrib = GetFileAttributes(szPath);
+
+  return (dwAttrib != INVALID_FILE_ATTRIBUTES && 
+         !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+const wchar_t* GetFileName(const wchar_t *path)
+{
+    const wchar_t *filename = wcsrchr(path, '\\');
+    if (filename == NULL)
+        filename = path;
+    else
+        filename++;
+    return filename;
+}
+
+
+void setGlobalPathToIni(){ // this function does a bit too much, should prob split it up
+    wchar_t szFilePathSelf[MAX_PATH], szFolderPathSelf[MAX_PATH];
+    GetModuleFileName(NULL, szFilePathSelf, MAX_PATH);
+    wcsncpy_s(szFolderPathSelf, sizeof(szFolderPathSelf), szFilePathSelf, (wcslen(szFilePathSelf) - wcslen(GetFileName(szFilePathSelf))));
+    wchar_t filename[MAX_PATH], filePath[MAX_PATH];
+    wcscpy(filename, L"config.ini");
+    wcscpy(filePath, szFolderPathSelf);
+    wcscat_s(filePath, sizeof(filePath), filename);
+    if (!FileExists(filePath)){
+        printf("creating config file\n");
+        CreateFileW((LPCTSTR)filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+        printf("setting config file to default settings\n");
+        WritePrivateProfileString(L"hotkeys", L"exitapp", L"k", filePath);
+        WritePrivateProfileString(L"hotkeys", L"hotkey_3074", L"g", filePath);
+        WritePrivateProfileString(L"hotkeys", L"hotkey_27k", L"t", filePath);
+        WritePrivateProfileString(L"hotkeys", L"hotkey_30k", L"l", filePath);
+        WritePrivateProfileString(L"hotkeys", L"hotkey_7k", L"j", filePath);
+        
+    }
+    wcsncpy_s(pathToIni, sizeof(pathToIni), filePath, sizeof(pathToIni));
+}
+
+void setGlobalHotkeyVars(){
+    wchar_t buffer[50];
+    wchar_t* wcSingleChar = nullptr;
+    // exitapp
+    GetPrivateProfileStringW(L"hotkeys", L"exitapp", NULL, buffer, sizeof(buffer), pathToIni);
+    if (GetLastError() == 0x2){
+        printf("GetPrivateProfileString failed (%lu)\n", GetLastError());
+    } else {
+        //printf("buffer contains: %ls\n", buffer);
+        wcSingleChar = &buffer[0];
+        //printf("wcSingleChar: %ls\n", wcSingleChar);
+        hotkey_exitapp = VkKeyScanW(*wcSingleChar);
+        printf("set hotkey_exitapp to: %c\n", hotkey_exitapp);
+    } 
+    
+    // 3074
+    GetPrivateProfileStringW(L"hotkeys", L"hotkey_3074", NULL, buffer, sizeof(buffer), pathToIni);
+    if (GetLastError() == 0x2){
+        printf("GetPrivateProfileString failed (%lu)\n", GetLastError());
+    } else {
+        //printf("buffer contains: %ls\n", buffer);
+        wcSingleChar = &buffer[0];
+        //printf("wcSingleChar: %ls\n", wcSingleChar);
+        hotkey_3074 = VkKeyScanW(*wcSingleChar);
+        printf("set hotkey_3074 to: %c\n", hotkey_3074);
+    } 
+
+    // 27k
+    GetPrivateProfileStringW(L"hotkeys", L"hotkey_27k", NULL, buffer, sizeof(buffer), pathToIni);
+    if (GetLastError() == 0x2){
+        printf("GetPrivateProfileString failed (%lu)\n", GetLastError());
+    } else {
+        //printf("buffer contains: %ls\n", buffer);
+        wcSingleChar = &buffer[0];
+        //printf("wcSingleChar: %ls\n", wcSingleChar);
+        hotkey_27k = VkKeyScanW(*wcSingleChar);
+        printf("set hotkey_27k to: %c\n", hotkey_27k);
+    } 
+
+    // 30k 
+    GetPrivateProfileStringW(L"hotkeys", L"hotkey_30k", NULL, buffer, sizeof(buffer), pathToIni);
+    if (GetLastError() == 0x2){
+        printf("GetPrivateProfileString failed (%lu)\n", GetLastError());
+    } else {
+        //printf("buffer contains: %ls\n", buffer);
+        wcSingleChar = &buffer[0];
+        //printf("wcSingleChar: %ls\n", wcSingleChar);
+        hotkey_30k = VkKeyScanW(*wcSingleChar);
+        printf("set hotkey_30k to: %c\n", hotkey_30k);
+    } 
+
+    // 7k
+    GetPrivateProfileStringW(L"hotkeys", L"hotkey_7k", NULL, buffer, sizeof(buffer), pathToIni);
+    if (GetLastError() == 0x2){
+        printf("GetPrivateProfileString failed (%lu)\n", GetLastError());
+    } else {
+        //printf("buffer contains: %ls\n", buffer);
+        wcSingleChar = &buffer[0];
+        //printf("wcSingleChar: %ls\n", wcSingleChar);
+        hotkey_7k = VkKeyScanW(*wcSingleChar);
+        printf("set hotkey_7k to: %c\n", hotkey_7k);
+    } 
+
+
+}
+
 /*
  * Entry.
  */
-bool state3074 = FALSE;
-bool state27k = FALSE; 
-bool state30k = FALSE;
-bool state7k = FALSE;
-// function declaration so function can be below main
-void toggle3074();
-void toggle27k(); 
-void toggle30k(); 
-void toggle7k(); 
-void combinerules();
-void updateOverlay();
-void updateOverlayLine1(wchar_t arg[]);
-void updateOverlayLine2(wchar_t arg[]);
-void updateOverlayLine3(wchar_t arg[]);
-void updateOverlayLine4(wchar_t arg[]);
-void updateOverlayLine5(wchar_t arg[]);
-unsigned long block_traffic(LPVOID lpParam);
-char myNetRules[500];
-HANDLE hThread = NULL;
-HANDLE handle = NULL;
-const char *err_str;
-INT16 priority = 1000;
-wchar_t combined_overlay[500], overlay_line_1[100], overlay_line_2[100], overlay_line_3[100], overlay_line_4[100], overlay_line_5[100];
 
 int __cdecl main(){
     // load dll function
@@ -160,86 +445,47 @@ int __cdecl main(){
             return -3;
         }
     }
+    
 
 
-    // hotkey part
-    if (RegisterHotKey(
-        NULL,
-        1, // hotkey id
-        MOD_CONTROL | MOD_NOREPEAT,
-        0x47))  //0x47 is 'g' // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+    DWORD dwThread;
+    // prepare timer
+    // Use an event object to track the TimerRoutine execution
+    gDoneEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (NULL == gDoneEvent)
     {
-        _tprintf(_T("Hotkey 'CTRL+g' registered for 3074\n"));
-        updateOverlayLine1(L"ctrl+g 3074");
+        printf("CreateEvent failed (%lu)\n", GetLastError());
+        return 1;
     }
 
-    if (RegisterHotKey(
-        NULL,
-        2, // hotkey id
-        MOD_CONTROL | MOD_NOREPEAT,
-        0x54))  //0x54 is 't' // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+    // Create the timer queue.
+    hTimerQueue = CreateTimerQueue();
+    if (NULL == hTimerQueue)
     {
-        _tprintf(_T("Hotkey 'CTRL+t' registered for 27k\n"));
-        updateOverlayLine2(L"ctrl+t 27k");
+        printf("CreateTimerQueue failed (%lu)\n", GetLastError());
+        return 2;
     }
+    
+    // ini file stuff
+    setGlobalPathToIni(); 
+    printf("pathToIni %ls\n", pathToIni);
+    
+    setGlobalHotkeyVars();
+    updateOverlayLine1(L"3074 off");
+    updateOverlayLine2(L"27k off");
+    updateOverlayLine3(L"20k off");
+    updateOverlayLine4(L"7k off");
+    updateOverlayLine5(L"off");
 
-    if (RegisterHotKey(
-        NULL,
-        3, // hotkey id
-        MOD_CONTROL | MOD_NOREPEAT,
-        0x59))  //0x59 is 'y' // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-    {
-        _tprintf(_T("Hotkey 'CTRL+y' registered for 30k\n"));
-        updateOverlayLine3(L"ctrl+y 30k");
-    }
 
-    if (RegisterHotKey(
-        NULL,
-        4, // hotkey id
-        MOD_CONTROL | MOD_NOREPEAT,
-        0x4C))  //0x4C is 'l' // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-    {
-        _tprintf(_T("Hotkey 'CTRL+l' registered for 7k\n"));
-        updateOverlayLine4(L"ctrl+l 7k");
-    }
 
-    if (RegisterHotKey(
-        NULL,
-        10, // hotkey id
-        MOD_CONTROL | MOD_NOREPEAT,
-        0x4B))  //0x4b is 'k' // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-    {
-        _tprintf(_T("Hotkey 'CTRL+k' registered for exitapp\n"));
-        updateOverlayLine5(L"ctrl+k to close");
-    }
- 
-    MSG msg = {0};
-    while (GetMessage(&msg, NULL, 0, 0) != 0){
-        if (msg.message == WM_HOTKEY){
-            if (msg.wParam == 1){
-                toggle3074();
-            }
-            if (msg.wParam == 2){
-                toggle27k();
-            }
-            if (msg.wParam == 3){
-                toggle30k();
-            }
-            if (msg.wParam == 4){
-                toggle7k();
-            }
-            if (msg.wParam == 10){
-                goto cleanup;
-            }
-            combinerules();
-            
-            if (GetThreadId(hThread) == 0){
-                printf("Starting thread\n");
-                hThread = CreateThread(NULL, 0, block_traffic, NULL, 0, NULL);
-            }
-        }
-    } 
+    printf("starting hotkey thread\n");
+    hThread = CreateThread(NULL,NULL,(LPTHREAD_START_ROUTINE)   my_HotKey, (LPVOID) NULL, NULL, &dwThread);
 
+    //ShowWindow(FindWindowA("ConsoleWindowClass", NULL), false);
+
+    if (hThread) return WaitForSingleObject(hThread,INFINITE);
+    else return 1;
     cleanup:
     printf("Exiting thread\n");
     CloseHandle(hThread);
