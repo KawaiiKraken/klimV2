@@ -62,6 +62,7 @@
 #include <stdbool.h>
 #include <iostream>
 #include <wchar.h>
+#include <shellapi.h>
 
 #include "windivert.h"
 
@@ -81,17 +82,20 @@ HANDLE gDoneEvent;
 HANDLE hThread = NULL;
 HANDLE handle = NULL;
 bool can_trigger_3074 = TRUE;
+bool can_trigger_3074_UL = TRUE;
 bool can_trigger_7k = TRUE;
 bool can_trigger_27k = TRUE;
 bool can_trigger_30k = TRUE;
 wchar_t pathToIni[MAX_PATH];
-char hotkey_exitapp, hotkey_3074, hotkey_27k, hotkey_30k, hotkey_7k;
+char hotkey_exitapp, hotkey_3074, hotkey_3074_UL, hotkey_27k, hotkey_30k, hotkey_7k;
 bool state3074 = FALSE;
+bool state3074_UL = FALSE;
 bool state27k = FALSE; 
 bool state30k = FALSE;
 bool state7k = FALSE;
 // function declaration so function can be below main
 void toggle3074();
+void toggle3074_UL();
 void toggle27k(); 
 void toggle30k(); 
 void toggle7k(); 
@@ -102,11 +106,12 @@ void updateOverlayLine2(wchar_t arg[]);
 void updateOverlayLine3(wchar_t arg[]);
 void updateOverlayLine4(wchar_t arg[]);
 void updateOverlayLine5(wchar_t arg[]);
+void updateOverlayLine6(wchar_t arg[]);
 unsigned long block_traffic(LPVOID lpParam);
-char myNetRules[500];
+char myNetRules[1000];
 const char *err_str;
 INT16 priority = 1000;
-wchar_t combined_overlay[500], overlay_line_1[100], overlay_line_2[100], overlay_line_3[100], overlay_line_4[100], overlay_line_5[100];
+wchar_t combined_overlay[1000], overlay_line_1[100], overlay_line_2[100], overlay_line_3[100], overlay_line_4[100], overlay_line_5[100], overlay_line_6[100];
 
 
 
@@ -223,6 +228,21 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
                     setTimer(&can_trigger_3074);
                     wcout << L"doing stuff\n";
                     toggle3074();
+                    combinerules();
+                    startFilter();
+                }
+                CTRL_key=0;
+            }
+
+            // ============= 3074UL ================
+            if (CTRL_key !=0 && key == hotkey_3074_UL ) 
+            {
+                wcout << L"hotkey_3074 detected\n";
+                if (can_trigger_3074_UL){ // set time out to prevent multiple triggers
+                    can_trigger_3074_UL = FALSE;
+                    setTimer(&can_trigger_3074_UL);
+                    wcout << L"doing stuff\n";
+                    toggle3074_UL();
                     combinerules();
                     startFilter();
                 }
@@ -352,6 +372,7 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
         printf("setting config file to default settings\n");
         WritePrivateProfileString(L"hotkeys", L"exitapp", L"k", filePath);
         WritePrivateProfileString(L"hotkeys", L"hotkey_3074", L"g", filePath);
+        WritePrivateProfileString(L"hotkeys", L"hotkey_3074_UL", L"c", filePath);
         WritePrivateProfileString(L"hotkeys", L"hotkey_27k", L"t", filePath);
         WritePrivateProfileString(L"hotkeys", L"hotkey_30k", L"l", filePath);
         WritePrivateProfileString(L"hotkeys", L"hotkey_7k", L"j", filePath);
@@ -375,6 +396,7 @@ void setGlobalHotkeyVars(){
         printf("set hotkey_exitapp to: %c\n", hotkey_exitapp);
     } 
     
+    // TODO make this bs into a function
     // 3074
     GetPrivateProfileStringW(L"hotkeys", L"hotkey_3074", NULL, buffer, sizeof(buffer), pathToIni);
     if (GetLastError() == 0x2){
@@ -385,6 +407,18 @@ void setGlobalHotkeyVars(){
         //printf("wcSingleChar: %ls\n", wcSingleChar);
         hotkey_3074 = VkKeyScanW(*wcSingleChar);
         printf("set hotkey_3074 to: %c\n", hotkey_3074);
+    } 
+
+    // 3074_UL
+    GetPrivateProfileStringW(L"hotkeys", L"hotkey_3074_UL", NULL, buffer, sizeof(buffer), pathToIni);
+    if (GetLastError() == 0x2){
+        printf("GetPrivateProfileString failed (%lu)\n", GetLastError());
+    } else {
+        //printf("buffer contains: %ls\n", buffer);
+        wcSingleChar = &buffer[0];
+        //printf("wcSingleChar: %ls\n", wcSingleChar);
+        hotkey_3074_UL = VkKeyScanW(*wcSingleChar);
+        printf("set hotkey_3074_UL to: %c\n", hotkey_3074_UL);
     } 
 
     // 27k
@@ -443,11 +477,49 @@ void triggerHotkeyString(wchar_t* wcstring, char hotkey, wchar_t* action){ // TO
     delete []wcstringbuf;
 }
 
+BOOL IsElevated(){
+    BOOL fRet = FALSE;
+    HANDLE hToken = NULL;
+    if( OpenProcessToken( GetCurrentProcess(),TOKEN_QUERY,&hToken ) ) {
+        TOKEN_ELEVATION Elevation;
+        DWORD cbSize = sizeof( TOKEN_ELEVATION );
+        if( GetTokenInformation( hToken, TokenElevation, &Elevation, sizeof( Elevation ), &cbSize ) ) {
+            fRet = Elevation.TokenIsElevated;
+        }
+    }
+    if( hToken ) {
+        CloseHandle( hToken );
+    }
+    return fRet;
+}
+
 /*
  * Entry.
  */
 
-int __cdecl main(){
+int __cdecl main(int argc, char** argv){
+    if (argv[1] != NULL){
+        if (strcmp(argv[1], "--help") == 0){
+            printf("options:\n");
+            printf("    --help      prints this message.\n");
+            printf("    --debug     prevents console hiding. (currently does nothing).\n");
+            return 0;
+        }
+    }
+    // check if exe had admin, request if not
+    bool elevated = IsElevated();
+    if (!elevated){
+        int msgboxID = MessageBox(
+            NULL,
+            (LPCWSTR)L"ERROR: not running as admin",
+            (LPCWSTR)L"ERROR",
+            MB_ICONERROR | MB_DEFBUTTON2
+        );
+        wchar_t szFilePathSelf[MAX_PATH];
+        GetModuleFileName(NULL, szFilePathSelf, MAX_PATH); // get own exe
+        return 0;
+    }
+    
     // load dll function
 
     hDLL = LoadLibrary(L"krekens_overlay");
@@ -495,17 +567,20 @@ int __cdecl main(){
     triggerHotkeyString(wcstring, hotkey_3074, L"3074");
     updateOverlayLine1(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_27k, L"27k");
+    triggerHotkeyString(wcstring, hotkey_3074_UL, L"3074UL");
     updateOverlayLine2(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_30k, L"30k");
+    triggerHotkeyString(wcstring, hotkey_27k, L"27k");
     updateOverlayLine3(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_7k, L"7k");
+    triggerHotkeyString(wcstring, hotkey_30k, L"30k");
     updateOverlayLine4(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_exitapp, L"close");
+    triggerHotkeyString(wcstring, hotkey_7k, L"7k");
     updateOverlayLine5(wcstring);
+
+    triggerHotkeyString(wcstring, hotkey_exitapp, L"close");
+    updateOverlayLine6(wcstring);
     
     delete []wcstring;
 
@@ -513,7 +588,14 @@ int __cdecl main(){
     printf("starting hotkey thread\n");
     hThread = CreateThread(NULL,NULL,(LPTHREAD_START_ROUTINE)   my_HotKey, (LPVOID) NULL, NULL, &dwThread);
 
-    //ShowWindow(FindWindowA("ConsoleWindowClass", NULL), false);
+    if (argv[1] != NULL){
+        if (!(strcmp(argv[1], "--debug") == 0)){
+            //ShowWindow(FindWindowA("ConsoleWindowClass", NULL), false);
+            //FreeConsole();
+            //printf("debug\n");
+            return 0;
+        }
+    }
 
     if (hThread) return WaitForSingleObject(hThread,INFINITE);
     else return 1;
@@ -535,6 +617,8 @@ void updateOverlay(){
     wcscat(combined_overlay, overlay_line_4);
     wcscat(combined_overlay, L"\n");
     wcscat(combined_overlay, overlay_line_5);
+    wcscat(combined_overlay, L"\n");
+    wcscat(combined_overlay, overlay_line_6);
     wcscat(combined_overlay, L"\n");
     lpfnDllOverlay(combined_overlay);
 }
@@ -564,10 +648,18 @@ void updateOverlayLine5(wchar_t arg[]){
     updateOverlay();
 }
 
+void updateOverlayLine6(wchar_t arg[]){
+    wcscpy(overlay_line_6, arg);
+    updateOverlay();
+}
+
 void combinerules(){
     strcpy_s(myNetRules, sizeof(myNetRules), "(udp.DstPort < 1 and udp.DstPort > 1)"); // set to rule that wont match anything
     if (state3074){
         strcat(myNetRules, " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
+    }
+    if (state3074_UL){
+        strcat(myNetRules, "or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)"); // TODO test this rule
     }
     if (state27k){
         strcat(myNetRules, " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
@@ -616,15 +708,27 @@ void toggle3074(){
     }
 }
 
+void toggle3074_UL(){
+    if (!state3074_UL){
+        state3074_UL = !state3074_UL;
+        printf("state3074_UL %s\n", state3074_UL ? "true" : "false");
+        updateOverlayLine2(L"3074UL on");
+    } else {
+        state3074_UL = !state3074_UL;
+        printf("state3074_UL %s\n", state3074_UL ? "true" : "false");
+        updateOverlayLine2(L"3074UL off");
+    }
+}
+
 void toggle27k(){
     if (!state27k){
         state27k = !state27k;
         printf("state27k %s\n", state27k ? "true" : "false");
-        updateOverlayLine2(L"27k on");
+        updateOverlayLine3(L"27k on");
     } else {
         state27k = !state27k;
         printf("state27k %s\n", state27k ? "true" : "false");
-        updateOverlayLine2(L"27k off");
+        updateOverlayLine3(L"27k off");
     }
 }
 
@@ -632,11 +736,11 @@ void toggle30k(){
     if (!state30k){
         state30k = !state30k;
         printf("state30k %s\n", state30k ? "true" : "false");
-        updateOverlayLine3(L"30k on");
+        updateOverlayLine4(L"30k on");
     } else {
         state30k = !state30k;
         printf("state30k %s\n", state30k ? "true" : "false");
-        updateOverlayLine3(L"30k off");
+        updateOverlayLine4(L"30k off");
     }
 }
 
@@ -644,11 +748,11 @@ void toggle7k(){
     if (!state7k){
         state7k = !state7k;
         printf("state7k %s\n", state7k ? "true" : "false");
-        updateOverlayLine4(L"7k on");
+        updateOverlayLine5(L"7k on");
     } else {
         state7k = !state7k;
         printf("state7k %s\n", state7k ? "true" : "false");
-        updateOverlayLine4(L"7k off");
+        updateOverlayLine5(L"7k off");
     }
 }
 
