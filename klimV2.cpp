@@ -281,7 +281,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
                 wcout << "shutting down\n";
                 PostQuitMessage(0);
             }
-            printf("key: %d\n", key);
+            //printf("key: %d\n", key);
 
 
             //printf("key = %c\n", key);
@@ -292,7 +292,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
 
         }
 
-        printf("lpszKeyName = %ls\n",  lpszKeyName );
+        //printf("lpszKeyName = %ls\n",  lpszKeyName );
     }
     return CallNextHookEx(hKeyboardHook,    nCode,wParam,lParam);
 }
@@ -426,6 +426,23 @@ void setGlobalHotkeyVars(){
 
 }
 
+void triggerHotkeyString(wchar_t* wcstring, char hotkey, wchar_t* action){ // TODO better name for this
+    char charbuf[2];
+    charbuf[0] = hotkey;
+    charbuf[1] = '\0'; // has to be null terminated for strlen to work 
+    
+    int szCharbuf = strlen(charbuf) + 1;
+    wchar_t* wcstringbuf = new wchar_t[szCharbuf];
+    mbstowcs(wcstringbuf, charbuf, szCharbuf);
+
+    wcscpy(wcstring, L"ctrl+");
+    wcscat(wcstring, wcstringbuf);
+    wcscat(wcstring, L" to ");
+    wcscat(wcstring, action);
+
+    delete []wcstringbuf;
+}
+
 /*
  * Entry.
  */
@@ -469,14 +486,28 @@ int __cdecl main(){
     // ini file stuff
     setGlobalPathToIni(); 
     printf("pathToIni %ls\n", pathToIni);
-    
-    setGlobalHotkeyVars();
-    updateOverlayLine1(L"3074 off");
-    updateOverlayLine2(L"27k off");
-    updateOverlayLine3(L"20k off");
-    updateOverlayLine4(L"7k off");
-    updateOverlayLine5(L"off");
 
+    setGlobalHotkeyVars();
+    
+
+    // TODO make this into a function
+    wchar_t* wcstring = new wchar_t[200];
+    triggerHotkeyString(wcstring, hotkey_3074, L"3074");
+    updateOverlayLine1(wcstring);
+
+    triggerHotkeyString(wcstring, hotkey_27k, L"27k");
+    updateOverlayLine2(wcstring);
+
+    triggerHotkeyString(wcstring, hotkey_30k, L"30k");
+    updateOverlayLine3(wcstring);
+
+    triggerHotkeyString(wcstring, hotkey_7k, L"7k");
+    updateOverlayLine4(wcstring);
+
+    triggerHotkeyString(wcstring, hotkey_exitapp, L"close");
+    updateOverlayLine5(wcstring);
+    
+    delete []wcstring;
 
 
     printf("starting hotkey thread\n");
@@ -487,7 +518,6 @@ int __cdecl main(){
     if (hThread) return WaitForSingleObject(hThread,INFINITE);
     else return 1;
     cleanup:
-    printf("Exiting thread\n");
     CloseHandle(hThread);
     FreeLibrary(hDLL);
     return 0;
