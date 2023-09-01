@@ -262,12 +262,12 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             // ============= 7k ================
             if (CTRL_key !=0 && key == hotkey_7k ) 
             {
-                wcout << L"hotkey_30k detected\n";
+                wcout << L"hotkey_7k detected\n";
                 if (can_trigger_7k){ // set time out to prevent multiple triggers
                     can_trigger_7k = FALSE;
                     setTimer(&can_trigger_7k);
                     wcout << L"doing stuff\n";
-                    toggle30k();
+                    toggle7k();
                     combinerules();
                     startFilter();
                 }
