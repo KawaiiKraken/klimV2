@@ -52,7 +52,7 @@
 #pragma comment( lib, "kernel32.lib" )
 #pragma comment( lib, "shell32.lib" )
 #pragma comment( lib, "advapi32.lib" )
-#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // uncomment to hide debug console
 //#define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include <stdio.h>
@@ -460,28 +460,21 @@ void setGlobalHotkeyVars(){
 
 }
 
-void triggerHotkeyString(wchar_t* wcstring, char hotkey, wchar_t* action){ // TODO better name for this
+void triggerHotkeyString(wchar_t* wcstring, int szWcstring, char hotkey, wchar_t* action){ // TODO better name for this
     char charbuf[2];
     charbuf[0] = hotkey;
     charbuf[1] = '\0'; // has to be null terminated for strlen to work 
     
     int szCharbuf = strlen(charbuf) + 1;
     wchar_t* wcstringbuf = new wchar_t[szCharbuf];
-    mbstowcs(wcstringbuf, charbuf, szCharbuf);
+    size_t outSize;
 
-    wcscpy(wcstring, L"ctrl+");
-    
-    
-    int sizeofWcstring = sizeof(wcstring);
-    int wcslenWcstring = wcslen(wcstring);
-    //wcscat_s(wcstring, wcslenWcstring, wcstringbuf);
-    //wcscat(wcstring, L" to ");
-    //wcscat_s(wcstring, wcslenWcstring, action);
-    //wcscat(wcstring, action);
+    mbstowcs_s(&outSize, wcstringbuf, szCharbuf, charbuf, szCharbuf-1);
+    wcscpy_s(wcstring, szWcstring, L"ctrl+");
+    wcscat_s(wcstring, szWcstring, wcstringbuf);
+    wcscat_s(wcstring, szWcstring, L" to ");
+    wcscat_s(wcstring, szWcstring, action);
 
-    wcscat(wcstring, wcstringbuf);
-    wcscat(wcstring, L" to ");
-    wcscat(wcstring, action);
     delete []wcstringbuf;
 }
 
@@ -596,22 +589,22 @@ int __cdecl main(int argc, char** argv){
 
     // TODO make this into a function
     wchar_t* wcstring = new wchar_t[200];
-    triggerHotkeyString(wcstring, hotkey_3074, (wchar_t *)L"3074");
+    triggerHotkeyString(wcstring, 200, hotkey_3074, (wchar_t *)L"3074");
     updateOverlayLine1(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_3074_UL, (wchar_t *)L"3074UL");
+    triggerHotkeyString(wcstring, 200, hotkey_3074_UL, (wchar_t *)L"3074UL");
     updateOverlayLine2(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_27k, (wchar_t *)L"27k");
+    triggerHotkeyString(wcstring, 200, hotkey_27k, (wchar_t *)L"27k");
     updateOverlayLine3(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_30k, (wchar_t *)L"30k");
+    triggerHotkeyString(wcstring, 200, hotkey_30k, (wchar_t *)L"30k");
     updateOverlayLine4(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_7k, (wchar_t *)L"7k");
+    triggerHotkeyString(wcstring, 200, hotkey_7k, (wchar_t *)L"7k");
     updateOverlayLine5(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_exitapp, (wchar_t *)L"close");
+    triggerHotkeyString(wcstring, 200, hotkey_exitapp, (wchar_t *)L"close");
     updateOverlayLine6(wcstring);
     
     delete []wcstring;
