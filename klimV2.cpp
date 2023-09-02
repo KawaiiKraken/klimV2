@@ -46,14 +46,14 @@
  *
  * This program is similar to Linux's iptables with the "-j REJECT" target.
  */
-//#pragma clang diagnostic ignored "-Wmacro-redefined"
-//#pragma clang diagnostic ignored "-Wunused-but-set-variable"
-//#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#pragma clang diagnostic ignored "-Wwritable-strings"
+//#pragma clang diagnostic ignored "-Wwritable-strings"
 #define _WIN32_WINNT 0x0400
-//#pragma comment( lib, "user32.lib" )
-//#pragma comment( lib, "kernel32.lib" )
-#define _CRT_SECURE_NO_WARNINGS
+#pragma comment( lib, "user32.lib" )
+#pragma comment( lib, "kernel32.lib" )
+#pragma comment( lib, "shell32.lib" )
+#pragma comment( lib, "advapi32.lib" )
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+//#define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,7 +66,6 @@
 
 #include "windivert.h"
 
-//int __cdecl Overlay(LPCTSTR);   // a function from a DLL
 int __cdecl Overlay(LPTSTR);   // a function from a DLL
 
 typedef UINT (CALLBACK* LPFNDLLMYPUTS)(LPTSTR);
@@ -87,6 +86,7 @@ bool can_trigger_7k = TRUE;
 bool can_trigger_27k = TRUE;
 bool can_trigger_30k = TRUE;
 wchar_t pathToIni[MAX_PATH];
+wchar_t szFilePathSelf[MAX_PATH];
 char hotkey_exitapp, hotkey_3074, hotkey_3074_UL, hotkey_27k, hotkey_30k, hotkey_7k;
 bool state3074 = FALSE;
 bool state3074_UL = FALSE;
@@ -363,9 +363,9 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
     GetModuleFileName(NULL, szFilePathSelf, MAX_PATH);
     wcsncpy_s(szFolderPathSelf, sizeof(szFolderPathSelf), szFilePathSelf, (wcslen(szFilePathSelf) - wcslen(GetFileName(szFilePathSelf))));
     wchar_t filename[MAX_PATH], filePath[MAX_PATH];
-    wcscpy(filename, L"config.ini");
-    wcscpy(filePath, szFolderPathSelf);
-    wcscat_s(filePath, sizeof(filePath), filename);
+    wcscpy_s(filename, MAX_PATH, L"config.ini");
+    wcscpy_s(filePath, MAX_PATH, szFolderPathSelf);
+    wcscat_s(filePath, MAX_PATH, filename);
     if (!FileExists(filePath)){
         printf("creating config file\n");
         CreateFileW((LPCTSTR)filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -470,10 +470,18 @@ void triggerHotkeyString(wchar_t* wcstring, char hotkey, wchar_t* action){ // TO
     mbstowcs(wcstringbuf, charbuf, szCharbuf);
 
     wcscpy(wcstring, L"ctrl+");
+    
+    
+    int sizeofWcstring = sizeof(wcstring);
+    int wcslenWcstring = wcslen(wcstring);
+    //wcscat_s(wcstring, wcslenWcstring, wcstringbuf);
+    //wcscat(wcstring, L" to ");
+    //wcscat_s(wcstring, wcslenWcstring, action);
+    //wcscat(wcstring, action);
+
     wcscat(wcstring, wcstringbuf);
     wcscat(wcstring, L" to ");
     wcscat(wcstring, action);
-
     delete []wcstringbuf;
 }
 
@@ -515,9 +523,33 @@ int __cdecl main(int argc, char** argv){
             (LPCWSTR)L"ERROR",
             MB_ICONERROR | MB_DEFBUTTON2
         );
-        wchar_t szFilePathSelf[MAX_PATH];
         GetModuleFileName(NULL, szFilePathSelf, MAX_PATH); // get own exe
         return 0;
+    }
+    
+    // check if running with debug
+    char* arg1 = (char *)"nothing";
+    if (argv[1] != NULL){
+        arg1 = argv[1];
+    }
+
+    if (!(strcmp(arg1, "--debug") == 0)){
+        printf("arg1 != debug\n");
+        if (!GetConsoleTitle(NULL, 0) && GetLastError() == ERROR_SUCCESS) {
+            // Console
+            printf("WARN: starting new process!\n");
+            bool creationResult;
+            STARTUPINFOA info={sizeof(info)};
+            PROCESS_INFORMATION processInfo;
+            //if (CreateProcessA(argv[0], NULL, NULL, NULL, FALSE, 0, NULL, NULL, &info, &processInfo))
+            //{
+                //printf("created new process; exiting\n");
+                //goto cleanup;
+            //} else {
+             //   printf("WARN: failed to create new process!\n");
+                //goto cleanup;
+            //}
+        } 
     }
     
     // load dll function
@@ -564,22 +596,22 @@ int __cdecl main(int argc, char** argv){
 
     // TODO make this into a function
     wchar_t* wcstring = new wchar_t[200];
-    triggerHotkeyString(wcstring, hotkey_3074, L"3074");
+    triggerHotkeyString(wcstring, hotkey_3074, (wchar_t *)L"3074");
     updateOverlayLine1(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_3074_UL, L"3074UL");
+    triggerHotkeyString(wcstring, hotkey_3074_UL, (wchar_t *)L"3074UL");
     updateOverlayLine2(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_27k, L"27k");
+    triggerHotkeyString(wcstring, hotkey_27k, (wchar_t *)L"27k");
     updateOverlayLine3(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_30k, L"30k");
+    triggerHotkeyString(wcstring, hotkey_30k, (wchar_t *)L"30k");
     updateOverlayLine4(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_7k, L"7k");
+    triggerHotkeyString(wcstring, hotkey_7k, (wchar_t *)L"7k");
     updateOverlayLine5(wcstring);
 
-    triggerHotkeyString(wcstring, hotkey_exitapp, L"close");
+    triggerHotkeyString(wcstring, hotkey_exitapp, (wchar_t *)L"close");
     updateOverlayLine6(wcstring);
     
     delete []wcstring;
@@ -588,14 +620,7 @@ int __cdecl main(int argc, char** argv){
     printf("starting hotkey thread\n");
     hThread = CreateThread(NULL,NULL,(LPTHREAD_START_ROUTINE)   my_HotKey, (LPVOID) NULL, NULL, &dwThread);
 
-    if (argv[1] != NULL){
-        if (!(strcmp(argv[1], "--debug") == 0)){
-            //ShowWindow(FindWindowA("ConsoleWindowClass", NULL), false);
-            //FreeConsole();
-            //printf("debug\n");
-            return 0;
-        }
-    }
+
 
     if (hThread) return WaitForSingleObject(hThread,INFINITE);
     else return 1;
@@ -607,68 +632,69 @@ int __cdecl main(int argc, char** argv){
 
 //LPWSTR combined;
 void updateOverlay(){
-    wcscpy(combined_overlay, L"");
-    wcscat(combined_overlay, overlay_line_1);
-    wcscat(combined_overlay, L"\n");
-    wcscat(combined_overlay, overlay_line_2);
-    wcscat(combined_overlay, L"\n");
-    wcscat(combined_overlay, overlay_line_3);
-    wcscat(combined_overlay, L"\n");
-    wcscat(combined_overlay, overlay_line_4);
-    wcscat(combined_overlay, L"\n");
-    wcscat(combined_overlay, overlay_line_5);
-    wcscat(combined_overlay, L"\n");
-    wcscat(combined_overlay, overlay_line_6);
-    wcscat(combined_overlay, L"\n");
+    wcscpy_s(combined_overlay, L"");
+    int szCombined_overlay = sizeof(combined_overlay);
+    wcscat_s(combined_overlay, szCombined_overlay, overlay_line_1);
+    wcscat_s(combined_overlay, szCombined_overlay, L"\n");
+    wcscat_s(combined_overlay, szCombined_overlay, overlay_line_2);
+    wcscat_s(combined_overlay, szCombined_overlay, L"\n");
+    wcscat_s(combined_overlay, szCombined_overlay, overlay_line_3);
+    wcscat_s(combined_overlay, szCombined_overlay, L"\n");
+    wcscat_s(combined_overlay, szCombined_overlay, overlay_line_4);
+    wcscat_s(combined_overlay, szCombined_overlay, L"\n");
+    wcscat_s(combined_overlay, szCombined_overlay, overlay_line_5);
+    wcscat_s(combined_overlay, szCombined_overlay, L"\n");
+    wcscat_s(combined_overlay, szCombined_overlay, overlay_line_6);
+    wcscat_s(combined_overlay, szCombined_overlay, L"\n");
     lpfnDllOverlay(combined_overlay);
 }
 
 void updateOverlayLine1(wchar_t arg[]){
-    wcscpy(overlay_line_1, arg);
+    wcscpy_s(overlay_line_1, arg);
     updateOverlay();
 }
 
 void updateOverlayLine2(wchar_t arg[]){
-    wcscpy(overlay_line_2, arg);
+    wcscpy_s(overlay_line_2, arg);
     updateOverlay();
 }
 
 void updateOverlayLine3(wchar_t arg[]){
-    wcscpy(overlay_line_3, arg);
+    wcscpy_s(overlay_line_3, arg);
     updateOverlay();
 }
 
 void updateOverlayLine4(wchar_t arg[]){
-    wcscpy(overlay_line_4, arg);
+    wcscpy_s(overlay_line_4, arg);
     updateOverlay();
 }
 
 void updateOverlayLine5(wchar_t arg[]){
-    wcscpy(overlay_line_5, arg);
+    wcscpy_s(overlay_line_5, arg);
     updateOverlay();
 }
 
 void updateOverlayLine6(wchar_t arg[]){
-    wcscpy(overlay_line_6, arg);
+    wcscpy_s(overlay_line_6, arg);
     updateOverlay();
 }
 
 void combinerules(){
     strcpy_s(myNetRules, sizeof(myNetRules), "(udp.DstPort < 1 and udp.DstPort > 1)"); // set to rule that wont match anything
     if (state3074){
-        strcat(myNetRules, " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
+        strcat_s(myNetRules, sizeof(myNetRules), " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
     }
     if (state3074_UL){
-        strcat(myNetRules, "or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)"); // TODO test this rule
+        strcat_s(myNetRules, sizeof(myNetRules), "or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)"); // TODO test this rule
     }
     if (state27k){
-        strcat(myNetRules, " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
+        strcat_s(myNetRules, sizeof(myNetRules), " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
     }
     if (state30k){
-        strcat(myNetRules, " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
+        strcat_s(myNetRules, sizeof(myNetRules), " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
     }
     if (state7k){
-        strcat(myNetRules, " or (inbound and udp.SrcPort >= 7500 and udp.SrcPort <= 7509) or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
+        strcat_s(myNetRules, sizeof(myNetRules), " or (inbound and udp.SrcPort >= 7500 and udp.SrcPort <= 7509) or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
     }
     printf("filter: %s\n", myNetRules);
     if (handle != NULL){
@@ -700,11 +726,11 @@ void toggle3074(){
     if (!state3074){
         state3074 = !state3074;
         printf("state3074 %s\n", state3074 ? "true" : "false");
-        updateOverlayLine1(L"3074 on");
+        updateOverlayLine1((wchar_t *)L"3074 on");
     } else {
         state3074 = !state3074;
         printf("state3074 %s\n", state3074 ? "true" : "false");
-        updateOverlayLine1(L"3074 off");
+        updateOverlayLine1((wchar_t *)L"3074 off");
     }
 }
 
@@ -712,11 +738,11 @@ void toggle3074_UL(){
     if (!state3074_UL){
         state3074_UL = !state3074_UL;
         printf("state3074_UL %s\n", state3074_UL ? "true" : "false");
-        updateOverlayLine2(L"3074UL on");
+        updateOverlayLine2((wchar_t *)L"3074UL on");
     } else {
         state3074_UL = !state3074_UL;
         printf("state3074_UL %s\n", state3074_UL ? "true" : "false");
-        updateOverlayLine2(L"3074UL off");
+        updateOverlayLine2((wchar_t *)L"3074UL off");
     }
 }
 
@@ -724,11 +750,11 @@ void toggle27k(){
     if (!state27k){
         state27k = !state27k;
         printf("state27k %s\n", state27k ? "true" : "false");
-        updateOverlayLine3(L"27k on");
+        updateOverlayLine3((wchar_t *)L"27k on");
     } else {
         state27k = !state27k;
         printf("state27k %s\n", state27k ? "true" : "false");
-        updateOverlayLine3(L"27k off");
+        updateOverlayLine3((wchar_t *)L"27k off");
     }
 }
 
@@ -736,11 +762,11 @@ void toggle30k(){
     if (!state30k){
         state30k = !state30k;
         printf("state30k %s\n", state30k ? "true" : "false");
-        updateOverlayLine4(L"30k on");
+        updateOverlayLine4((wchar_t *)L"30k on");
     } else {
         state30k = !state30k;
         printf("state30k %s\n", state30k ? "true" : "false");
-        updateOverlayLine4(L"30k off");
+        updateOverlayLine4((wchar_t *)L"30k off");
     }
 }
 
@@ -748,11 +774,11 @@ void toggle7k(){
     if (!state7k){
         state7k = !state7k;
         printf("state7k %s\n", state7k ? "true" : "false");
-        updateOverlayLine5(L"7k on");
+        updateOverlayLine5((wchar_t *)L"7k on");
     } else {
         state7k = !state7k;
         printf("state7k %s\n", state7k ? "true" : "false");
-        updateOverlayLine5(L"7k off");
+        updateOverlayLine5((wchar_t *)L"7k off");
     }
 }
 
