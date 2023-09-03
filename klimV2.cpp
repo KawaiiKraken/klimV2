@@ -52,7 +52,7 @@
 #pragma comment( lib, "shell32.lib" )
 #pragma comment( lib, "advapi32.lib" )
 #pragma comment( lib, "Psapi.lib" )
-//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // uncomment to hide debug console
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // uncomment to hide debug console
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
