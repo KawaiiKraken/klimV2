@@ -51,6 +51,7 @@
 #pragma comment( lib, "kernel32.lib" )
 #pragma comment( lib, "shell32.lib" )
 #pragma comment( lib, "advapi32.lib" )
+#pragma comment( lib, "Psapi.lib" )
 //#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // uncomment to hide debug console
 #include <windows.h>
 #include <stdio.h>
@@ -61,6 +62,7 @@
 #include <iostream>
 #include <wchar.h>
 #include <shellapi.h>
+#include <psapi.h>
 
 #include "windivert.h"
 
@@ -105,6 +107,7 @@ void updateOverlayLine3(wchar_t arg[]);
 void updateOverlayLine4(wchar_t arg[]);
 void updateOverlayLine5(wchar_t arg[]);
 void updateOverlayLine6(wchar_t arg[]);
+const wchar_t* GetFileName(const wchar_t *path);
 unsigned long block_traffic(LPVOID lpParam);
 char myNetRules[1000];
 const char *err_str;
@@ -167,6 +170,23 @@ VOID CALLBACK TimerRoutine(bool* arg, BOOLEAN TimerOrWaitFired){
     *arg = TRUE;
 }
 
+bool isD2Active(){
+    TCHAR buffer[MAX_PATH] = {0};
+    DWORD dwProcId = 0; 
+    GetWindowThreadProcessId(GetForegroundWindow(), &dwProcId);
+    HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ , FALSE, dwProcId);
+    GetModuleFileNameEx(hProc, NULL, buffer, MAX_PATH);
+    printf("buffer: %ls\n", buffer);
+    const wchar_t* bufferFilename = GetFileName(buffer);
+    printf("filename: %ls\n", bufferFilename);
+    CloseHandle(hProc);
+    if (wcscmp(bufferFilename, L"destiny2.exe") == 0){
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}
+
 int setTimer(bool* arg){
     // Set a timer to call the timer routine in hotkey_timeout ms.
     int hotkey_timeout = 1000;
@@ -221,13 +241,15 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (CTRL_key !=0 && key == hotkey_3074 ) 
             {
                 wcout << L"hotkey_3074 detected\n";
-                if (can_trigger_3074){ // set time out to prevent multiple triggers
-                    can_trigger_3074 = FALSE;
-                    setTimer(&can_trigger_3074);
-                    wcout << L"doing stuff\n";
-                    toggle3074();
-                    combinerules();
-                    startFilter();
+                if (isD2Active()){
+                    if (can_trigger_3074){ // set time out to prevent multiple triggers
+                        can_trigger_3074 = FALSE;
+                        setTimer(&can_trigger_3074);
+                        wcout << L"doing stuff\n";
+                        toggle3074();
+                        combinerules();
+                        startFilter();
+                    }
                 }
                 CTRL_key=0;
             }
@@ -236,13 +258,15 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (CTRL_key !=0 && key == hotkey_3074_UL ) 
             {
                 wcout << L"hotkey_3074 detected\n";
-                if (can_trigger_3074_UL){ // set time out to prevent multiple triggers
-                    can_trigger_3074_UL = FALSE;
-                    setTimer(&can_trigger_3074_UL);
-                    wcout << L"doing stuff\n";
-                    toggle3074_UL();
-                    combinerules();
-                    startFilter();
+                if (isD2Active()){
+                    if (can_trigger_3074_UL){ // set time out to prevent multiple triggers
+                        can_trigger_3074_UL = FALSE;
+                        setTimer(&can_trigger_3074_UL);
+                        wcout << L"doing stuff\n";
+                        toggle3074_UL();
+                        combinerules();
+                        startFilter();
+                    }
                 }
                 CTRL_key=0;
             }
@@ -251,13 +275,15 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (CTRL_key !=0 && key == hotkey_27k ) 
             {
                 wcout << L"hotkey_27k detected\n";
-                if (can_trigger_27k){ // set time out to prevent multiple triggers
-                    can_trigger_27k = FALSE;
-                    setTimer(&can_trigger_27k);
-                    wcout << L"doing stuff\n";
-                    toggle27k();
-                    combinerules();
-                    startFilter();
+                if (isD2Active()){
+                    if (can_trigger_27k){ // set time out to prevent multiple triggers
+                        can_trigger_27k = FALSE;
+                        setTimer(&can_trigger_27k);
+                        wcout << L"doing stuff\n";
+                        toggle27k();
+                        combinerules();
+                        startFilter();
+                    }
                 }
                 CTRL_key=0;
             }
@@ -266,13 +292,15 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (CTRL_key !=0 && key == hotkey_30k ) 
             {
                 wcout << L"hotkey_30k detected\n";
-                if (can_trigger_30k){ // set time out to prevent multiple triggers
-                    can_trigger_30k = FALSE;
-                    setTimer(&can_trigger_30k);
-                    wcout << L"doing stuff\n";
-                    toggle30k();
-                    combinerules();
-                    startFilter();
+                if (isD2Active()){
+                    if (can_trigger_30k){ // set time out to prevent multiple triggers
+                        can_trigger_30k = FALSE;
+                        setTimer(&can_trigger_30k);
+                        wcout << L"doing stuff\n";
+                        toggle30k();
+                        combinerules();
+                        startFilter();
+                    }
                 }
                 CTRL_key=0;
             }
@@ -281,13 +309,15 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (CTRL_key !=0 && key == hotkey_7k ) 
             {
                 wcout << L"hotkey_7k detected\n";
-                if (can_trigger_7k){ // set time out to prevent multiple triggers
-                    can_trigger_7k = FALSE;
-                    setTimer(&can_trigger_7k);
-                    wcout << L"doing stuff\n";
-                    toggle7k();
-                    combinerules();
-                    startFilter();
+                if (isD2Active()){
+                    if (can_trigger_7k){ // set time out to prevent multiple triggers
+                        can_trigger_7k = FALSE;
+                        setTimer(&can_trigger_7k);
+                        wcout << L"doing stuff\n";
+                        toggle7k();
+                        combinerules();
+                        startFilter();
+                    }
                 }
                 CTRL_key=0;
             } 
@@ -542,6 +572,8 @@ int __cdecl main(int argc, char** argv){
             //}
         } 
     }
+    
+    isD2Active();
     
     // load dll function
 
