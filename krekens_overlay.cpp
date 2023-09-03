@@ -7,6 +7,11 @@
 #include <windows.h>
 #include <iostream>
 
+#pragma comment( lib, "user32.lib" )
+#pragma comment( lib, "kernel32.lib" )
+#pragma comment( lib, "shell32.lib" )
+#pragma comment( lib, "gdi32.lib" )
+
 // TODO make it not take away focus when spawned
 
 LPCTSTR mytext;
@@ -36,7 +41,7 @@ DWORD WINAPI myfunc(LPVOID lpParam)
     // Create the window.
     int winstyle = (WS_VISIBLE | WS_SYSMENU);
     hwnd = CreateWindowEx(
-        WS_EX_LAYERED | WS_EX_APPWINDOW | WS_EX_TOPMOST | WS_EX_TRANSPARENT,// Optional window styles. // remove WS_EX_APPWINDOW to hide from taskbar WS_EX_TOOLWINDOW??
+        WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW,// Optional window styles. // remove WS_EX_APPWINDOW to hide from taskbar WS_EX_TOOLWINDOW??
         //WS_EX_APPWINDOW | WS_EX_TOPMOST ,// Optional window styles.
         CLASS_NAME,                     // Window class
         L"Learn to Program Windows",    // Window text
