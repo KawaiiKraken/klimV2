@@ -46,14 +46,12 @@
  *
  * This program is similar to Linux's iptables with the "-j REJECT" target.
  */
-//#pragma clang diagnostic ignored "-Wwritable-strings"
 #define _WIN32_WINNT 0x0400
 #pragma comment( lib, "user32.lib" )
 #pragma comment( lib, "kernel32.lib" )
 #pragma comment( lib, "shell32.lib" )
 #pragma comment( lib, "advapi32.lib" )
 //#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // uncomment to hide debug console
-//#define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
