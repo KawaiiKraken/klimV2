@@ -106,9 +106,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             // !!!FONT!!!
             RECT rect;
             HFONT hFontOriginal, hFont1;
-            //Logical units are device dependent pixels, so this will create a handle to a logical font that is 48 pixels in height.
-            //The width, when set to 0, will cause the font mapper to choose the closest matching value.
-            //The font face name will be Impact.
             hFont1 = CreateFont(30, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
                 CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
             hFontOriginal = (HFONT)SelectObject(hdc, hFont1);
