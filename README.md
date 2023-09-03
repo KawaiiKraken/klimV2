@@ -1,5 +1,5 @@
 # klimV2
-an oss destiny 2 netlimiter that doesnt rely on NL4/5 DLL/service
+an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
 
 # features
 - 3074DL/3074UL/27k/30k/7500
@@ -18,7 +18,7 @@ an oss destiny 2 netlimiter that doesnt rely on NL4/5 DLL/service
 # upcoming features
 - gui and/or config file for the hotkeys
 - better code
-- if its proves useful, other ways to mess with packets ()
+- if its proves useful, other ways to mess with packets
 
 # known issues
 
