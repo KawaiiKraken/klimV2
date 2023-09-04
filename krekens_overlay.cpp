@@ -39,10 +39,9 @@ DWORD WINAPI myfunc(LPVOID lpParam)
     RegisterClass(&wc);
 
     // Create the window.
-    int winstyle = (WS_VISIBLE | WS_SYSMENU);
+    int winstyle = (WS_VISIBLE | WS_SYSMENU | WS_DISABLED);
     hwnd = CreateWindowEx(
-        WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW,// Optional window styles. // remove WS_EX_APPWINDOW to hide from taskbar WS_EX_TOOLWINDOW??
-        //WS_EX_APPWINDOW | WS_EX_TOPMOST ,// Optional window styles.
+        WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,// Optional window styles. // remove WS_EX_APPWINDOW to hide from taskbar WS_EX_TOOLWINDOW??
         CLASS_NAME,                     // Window class
         L"Learn to Program Windows",    // Window text
         winstyle,          // Window style

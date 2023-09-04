@@ -46,13 +46,14 @@
  *
  * This program is similar to Linux's iptables with the "-j REJECT" target.
  */
-#define _WIN32_WINNT 0x0400
+#define _WIN32_WINNT 0x0501
 #pragma comment( lib, "user32.lib" )
 #pragma comment( lib, "kernel32.lib" )
 #pragma comment( lib, "shell32.lib" )
 #pragma comment( lib, "advapi32.lib" )
 #pragma comment( lib, "Psapi.lib" )
-#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // uncomment to hide debug console
+#pragma clang diagnostic ignored "-Wwritable-strings"
+//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // uncomment to hide debug console
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,11 +81,7 @@ HANDLE hTimerQueue = NULL;
 HANDLE gDoneEvent;
 HANDLE hThread = NULL;
 HANDLE handle = NULL;
-bool can_trigger_3074 = TRUE;
-bool can_trigger_3074_UL = TRUE;
-bool can_trigger_7k = TRUE;
-bool can_trigger_27k = TRUE;
-bool can_trigger_30k = TRUE;
+bool can_trigger_any_hotkey = TRUE;
 wchar_t pathToIni[MAX_PATH];
 wchar_t szFilePathSelf[MAX_PATH];
 char hotkey_exitapp, hotkey_3074, hotkey_3074_UL, hotkey_27k, hotkey_30k, hotkey_7k;
@@ -93,6 +90,7 @@ bool state3074_UL = FALSE;
 bool state27k = FALSE; 
 bool state30k = FALSE;
 bool state7k = FALSE;
+bool debug = FALSE;
 // function declaration so function can be below main
 void toggle3074();
 void toggle3074_UL();
@@ -189,7 +187,7 @@ bool isD2Active(){
 
 int setTimer(bool* arg){
     // Set a timer to call the timer routine in hotkey_timeout ms.
-    int hotkey_timeout = 1000;
+    int hotkey_timeout = 100;
     if (!CreateTimerQueueTimer( &hTimer, hTimerQueue, 
             (WAITORTIMERCALLBACK)TimerRoutine, arg, hotkey_timeout, 0, 0))
     {
@@ -202,6 +200,8 @@ int setTimer(bool* arg){
 void startFilter(){
     printf("Starting thread\n");
     hThread = CreateThread(NULL, 0, block_traffic, NULL, 0, NULL);
+    can_trigger_any_hotkey = TRUE;
+    printf("hotkley re-enabled\n");
 }
 
 __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, LPARAM lParam)
@@ -211,6 +211,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
     DWORD ALT_key=0;
 
     if  ((nCode == HC_ACTION) &&   ((wParam == WM_SYSKEYDOWN) ||  (wParam == WM_KEYDOWN)))      
+    //if  ((nCode == HC_ACTION) &&   ((wParam == WM_SYSKEYUP) ||  (wParam == WM_KEYUP)))      
     {
         KBDLLHOOKSTRUCT hooked_key =    *((KBDLLHOOKSTRUCT*)lParam);
         DWORD dwMsg = 1;
@@ -241,11 +242,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (CTRL_key !=0 && key == hotkey_3074 ) 
             {
                 wcout << L"hotkey_3074 detected\n";
-                if (isD2Active()){
-                    if (can_trigger_3074){ // set time out to prevent multiple triggers
-                        can_trigger_3074 = FALSE;
-                        setTimer(&can_trigger_3074);
-                        wcout << L"doing stuff\n";
+                if (isD2Active() | debug){
+                    if (can_trigger_any_hotkey){ // prevent race condition
+                        can_trigger_any_hotkey = FALSE;
                         toggle3074();
                         combinerules();
                         startFilter();
@@ -258,11 +257,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (CTRL_key !=0 && key == hotkey_3074_UL ) 
             {
                 wcout << L"hotkey_3074 detected\n";
-                if (isD2Active()){
-                    if (can_trigger_3074_UL){ // set time out to prevent multiple triggers
-                        can_trigger_3074_UL = FALSE;
-                        setTimer(&can_trigger_3074_UL);
-                        wcout << L"doing stuff\n";
+                if (isD2Active() | debug){
+                    if (can_trigger_any_hotkey){ // prevent race condition
+                        can_trigger_any_hotkey = FALSE;
                         toggle3074_UL();
                         combinerules();
                         startFilter();
@@ -275,11 +272,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (CTRL_key !=0 && key == hotkey_27k ) 
             {
                 wcout << L"hotkey_27k detected\n";
-                if (isD2Active()){
-                    if (can_trigger_27k){ // set time out to prevent multiple triggers
-                        can_trigger_27k = FALSE;
-                        setTimer(&can_trigger_27k);
-                        wcout << L"doing stuff\n";
+                if (isD2Active() | debug){
+                    if (can_trigger_any_hotkey){ // prevent race condition
+                        can_trigger_any_hotkey = FALSE;
                         toggle27k();
                         combinerules();
                         startFilter();
@@ -292,11 +287,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (CTRL_key !=0 && key == hotkey_30k ) 
             {
                 wcout << L"hotkey_30k detected\n";
-                if (isD2Active()){
-                    if (can_trigger_30k){ // set time out to prevent multiple triggers
-                        can_trigger_30k = FALSE;
-                        setTimer(&can_trigger_30k);
-                        wcout << L"doing stuff\n";
+                if (isD2Active() | debug){
+                    if (can_trigger_any_hotkey){ // prevent race condition
+                        can_trigger_any_hotkey = FALSE;
                         toggle30k();
                         combinerules();
                         startFilter();
@@ -309,11 +302,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (CTRL_key !=0 && key == hotkey_7k ) 
             {
                 wcout << L"hotkey_7k detected\n";
-                if (isD2Active()){
-                    if (can_trigger_7k){ // set time out to prevent multiple triggers
-                        can_trigger_7k = FALSE;
-                        setTimer(&can_trigger_7k);
-                        wcout << L"doing stuff\n";
+                if (isD2Active() | debug){
+                    if (can_trigger_any_hotkey){ // prevent race condition
+                        can_trigger_any_hotkey = FALSE;
                         toggle7k();
                         combinerules();
                         startFilter();
@@ -327,6 +318,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (CTRL_key !=0 && key == hotkey_exitapp)
             {
                 wcout << "shutting down\n";
+                if (!debug){
+                    ShowWindow( GetConsoleWindow(), SW_RESTORE);
+                }
                 PostQuitMessage(0);
             }
             //printf("key: %d\n", key);
@@ -527,6 +521,9 @@ BOOL IsElevated(){
  */
 
 int __cdecl main(int argc, char** argv){
+    
+    
+
     if (argv[1] != NULL){
         if (strcmp(argv[1], "--help") == 0){
             printf("options:\n");
@@ -554,26 +551,14 @@ int __cdecl main(int argc, char** argv){
         arg1 = argv[1];
     }
 
-    if (!(strcmp(arg1, "--debug") == 0)){
-        printf("arg1 != debug\n");
-        if (!GetConsoleTitle(NULL, 0) && GetLastError() == ERROR_SUCCESS) {
-            // Console
-            printf("WARN: starting new process!\n");
-            bool creationResult;
-            STARTUPINFOA info={sizeof(info)};
-            PROCESS_INFORMATION processInfo;
-            //if (CreateProcessA(argv[0], NULL, NULL, NULL, FALSE, 0, NULL, NULL, &info, &processInfo))
-            //{
-                //printf("created new process; exiting\n");
-                //goto cleanup;
-            //} else {
-             //   printf("WARN: failed to create new process!\n");
-                //goto cleanup;
-            //}
-        } 
+    if ((strcmp(arg1, "--debug") == 0)){
+        printf("debug: TRUE\n");
+        debug = TRUE;
+    } else {
+        ShowWindow(GetConsoleWindow(), SW_HIDE);
     }
     
-    isD2Active();
+    
     
     // load dll function
 
