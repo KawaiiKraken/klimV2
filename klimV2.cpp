@@ -204,14 +204,55 @@ void startFilter(){
     printf("hotkley re-enabled\n");
 }
 
+bool hotkey_3074_keydown = FALSE;
+bool hotkey_3074_UL_keydown = FALSE;
+bool hotkey_27k_keydown = FALSE;
+bool hotkey_30k_keydown = FALSE;
+bool hotkey_7k_keydown = FALSE;
+
 __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, LPARAM lParam)
 {
     DWORD SHIFT_key=0;
     DWORD CTRL_key=0;
     DWORD ALT_key=0;
 
+    if  ((nCode == HC_ACTION) &&   ((wParam == WM_SYSKEYUP) ||  (wParam == WM_KEYUP)))      
+    {
+        KBDLLHOOKSTRUCT hooked_key =    *((KBDLLHOOKSTRUCT*)lParam);
+        DWORD dwMsg = 1;
+        dwMsg += hooked_key.scanCode << 16;
+        dwMsg += hooked_key.flags << 24;
+        wchar_t lpszKeyName[1024] = {0};
+        lpszKeyName[0] = L'[';
+
+        int i = GetKeyNameText(dwMsg,   (lpszKeyName+1),0xFF) + 1;
+        lpszKeyName[i] = L']';
+        int key = hooked_key.vkCode;
+
+        if (key != (VK_SHIFT | VK_CONTROL | VK_MENU))   // this might be a bit broken
+        {
+            // TODO check if CTRL_key != 0 and GetAsyncKeyState is needed here
+            switch(key){
+                case hotkey_3074:
+                    hotkey_3074_keydown = FALSE;
+                    break;
+                case hotkey_3074_UL:
+                    hotkey_3074_UL_keydown = FALSE;
+                    break;
+                case hotkey_27k:
+                    hotkey_27k_keydown = FALSE;
+                    break;
+                case hotkey_30k:
+                    hotkey_30k_keydown = FALSE;
+                    break;
+                case hotkey_7k:
+                    hotkey_7k_keydown = FALSE;
+                    break;
+            }
+        }
+    }
+
     if  ((nCode == HC_ACTION) &&   ((wParam == WM_SYSKEYDOWN) ||  (wParam == WM_KEYDOWN)))      
-    //if  ((nCode == HC_ACTION) &&   ((wParam == WM_SYSKEYUP) ||  (wParam == WM_KEYUP)))      
     {
         KBDLLHOOKSTRUCT hooked_key =    *((KBDLLHOOKSTRUCT*)lParam);
         DWORD dwMsg = 1;
@@ -243,8 +284,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             {
                 wcout << L"hotkey_3074 detected\n";
                 if (isD2Active() | debug){
-                    if (can_trigger_any_hotkey){ // prevent race condition
+                    if (can_trigger_any_hotkey && !hotkey_3074_keydown){ // prevent race condition
                         can_trigger_any_hotkey = FALSE;
+                        hotkey_3074_keydown = TRUE;
                         toggle3074();
                         combinerules();
                         startFilter();
@@ -258,8 +300,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             {
                 wcout << L"hotkey_3074 detected\n";
                 if (isD2Active() | debug){
-                    if (can_trigger_any_hotkey){ // prevent race condition
+                    if (can_trigger_any_hotkey && !hotkey_3074_UL_keydown){ // prevent race condition
                         can_trigger_any_hotkey = FALSE;
+                        hotkey_3074_UL_keydown = TRUE;
                         toggle3074_UL();
                         combinerules();
                         startFilter();
@@ -273,8 +316,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             {
                 wcout << L"hotkey_27k detected\n";
                 if (isD2Active() | debug){
-                    if (can_trigger_any_hotkey){ // prevent race condition
+                    if (can_trigger_any_hotkey && !hotkey_27k_keydown){ // prevent race condition
                         can_trigger_any_hotkey = FALSE;
+                        hotkey_27k_keydown = TRUE;
                         toggle27k();
                         combinerules();
                         startFilter();
@@ -288,8 +332,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             {
                 wcout << L"hotkey_30k detected\n";
                 if (isD2Active() | debug){
-                    if (can_trigger_any_hotkey){ // prevent race condition
+                    if (can_trigger_any_hotkey && !hotkey_30k_keydown){ // prevent race condition
                         can_trigger_any_hotkey = FALSE;
+                        hotkey_30k_keydown = TRUE;
                         toggle30k();
                         combinerules();
                         startFilter();
@@ -303,8 +348,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             {
                 wcout << L"hotkey_7k detected\n";
                 if (isD2Active() | debug){
-                    if (can_trigger_any_hotkey){ // prevent race condition
+                    if (can_trigger_any_hotkey && !hotkey_7k_keydown){ // prevent race condition
                         can_trigger_any_hotkey = FALSE;
+                        hotkey_7k_keydown = TRUE;
                         toggle7k();
                         combinerules();
                         startFilter();
@@ -528,7 +574,7 @@ int __cdecl main(int argc, char** argv){
         if (strcmp(argv[1], "--help") == 0){
             printf("options:\n");
             printf("    --help      prints this message.\n");
-            printf("    --debug     prevents console hiding. (currently does nothing).\n");
+            printf("    --debug     prevents console hiding and enables hotkey trigger outside of destiny 2.\n");
             return 0;
         }
     }
