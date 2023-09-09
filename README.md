@@ -11,19 +11,20 @@ an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
 # installation
 - download https://github.com/KawaiiKraken/klimV2/releases/latest
 - run exe 
+- if needed ctrl+k to exit and adjust keybinds in the generated config file
 
 # how to use
   soon™
   
 # upcoming features
-- gui and/or config file for the hotkeys
 - better code
 - if its proves useful, other ways to mess with packets
 
 # known issues
+- the mod seasonal monochromatic maestro can cause desync to be permanent 
 
 # compiling from source
-- overlay
+- overlay dll
   ```
   clang++.exe -o krekens_overlay.dll -D "_UNICODE" -D "UNICODE" -shared -Wall .\krekens_overlay.cpp
   ```
@@ -31,5 +32,5 @@ an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
   ```
   clang++.exe -o .\klimV2.exe -D "_UNICODE" -D "UNICODE" -l .\WinDivert.lib -Wall .\klimV2.cpp
   ```
-note: you may also have to include and/or link the windows 10 sdk 
+note: you may also have to include/link the windows sdk 
 
