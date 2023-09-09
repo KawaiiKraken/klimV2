@@ -73,8 +73,8 @@ typedef UINT (CALLBACK* LPFNDLLMYPUTS)(LPTSTR);
 
 using namespace std;
 
-HINSTANCE hDLL;               // Handle to DLL
-LPFNDLLMYPUTS lpfnDllOverlay;    // Function pointer
+HINSTANCE hDLL, hDLL2;               // Handle to DLL
+LPFNDLLMYPUTS lpfnDllOverlay, lpfnDllOverlay2;    // Function pointer
 HHOOK hKeyboardHook;
 HANDLE hTimer = NULL;
 HANDLE hTimerQueue = NULL;
@@ -440,7 +440,7 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
         WritePrivateProfileString(L"hotkeys", L"exitapp", L"k", filePath);
         WritePrivateProfileString(L"hotkeys", L"hotkey_3074", L"g", filePath);
         WritePrivateProfileString(L"hotkeys", L"hotkey_3074_UL", L"c", filePath);
-        WritePrivateProfileString(L"hotkeys", L"hotkey_27k", L"t", filePath);
+        WritePrivateProfileString(L"hotkeys", L"hotkey_27k", L"6", filePath);
         WritePrivateProfileString(L"hotkeys", L"hotkey_30k", L"l", filePath);
         WritePrivateProfileString(L"hotkeys", L"hotkey_7k", L"j", filePath);
         
@@ -619,6 +619,19 @@ int __cdecl main(int argc, char** argv){
             return -3;
         }
     }
+    //hDLL2 = LoadLibrary(L"krekens_overlay2");
+    //if (hDLL2 != NULL)
+    //{
+        //lpfnDllOverlay2 = (LPFNDLLMYPUTS)GetProcAddress(hDLL2, "Overlay");
+        //if (!lpfnDllOverlay2)
+        //{
+            //// handle the error
+            //FreeLibrary(hDLL);
+            //_tprintf(_T("handle the error"));
+            //return -3;
+        //}
+    //}
+    //lpfnDllOverlay2(L""); // call it instantly to force the window to be drawn first
     
 
 
@@ -699,6 +712,7 @@ void updateOverlay(){
     wcscat_s(combined_overlay, szCombined_overlay, L"\n");
     wcscat_s(combined_overlay, szCombined_overlay, overlay_line_6);
     wcscat_s(combined_overlay, szCombined_overlay, L"\n");
+    //lpfnDllOverlay2(combined_overlay);
     lpfnDllOverlay(combined_overlay);
 }
 
@@ -747,7 +761,8 @@ void combinerules(){
         strcat_s(myNetRules, sizeof(myNetRules), " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
     }
     if (state7k){
-        strcat_s(myNetRules, sizeof(myNetRules), " or (inbound and udp.SrcPort >= 7500 and udp.SrcPort <= 7509) or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
+        //strcat_s(myNetRules, sizeof(myNetRules), " or (inbound and udp.SrcPort >= 7500 and udp.SrcPort <= 7509) or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
+        strcat_s(myNetRules, sizeof(myNetRules), " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
     }
     printf("filter: %s\n", myNetRules);
     if (handle != NULL){
@@ -971,27 +986,28 @@ unsigned long block_traffic(LPVOID lpParam)
 
             if (ip_header != NULL && !tcp_header->Rst && !tcp_header->Fin)
             {
-                reset->ip.SrcAddr = ip_header->DstAddr;
-                reset->ip.DstAddr = ip_header->SrcAddr;
-                reset->tcp.SrcPort = tcp_header->DstPort;
-                reset->tcp.DstPort = tcp_header->SrcPort;
-                reset->tcp.SeqNum = 
-                    (tcp_header->Ack? tcp_header->AckNum: 0);
-                reset->tcp.AckNum =
-                    (tcp_header->Syn?
-                        htonl(ntohl(tcp_header->SeqNum) + 1):
-                        htonl(ntohl(tcp_header->SeqNum) + payload_len));
+                //tcp_header->Type, tcp_header->Code;
+                //reset->ip.SrcAddr = ip_header->DstAddr;
+                //reset->ip.DstAddr = ip_header->SrcAddr;
+                //reset->tcp.SrcPort = tcp_header->DstPort;
+                //reset->tcp.DstPort = tcp_header->SrcPort;
+                //reset->tcp.SeqNum = 
+                    //(tcp_header->Ack? tcp_header->AckNum: 0);
+                //reset->tcp.AckNum =
+                    //(tcp_header->Syn?
+                        //htonl(ntohl(tcp_header->SeqNum) + 1):
+                        //htonl(ntohl(tcp_header->SeqNum) + payload_len));
 
-                memcpy(&send_addr, &recv_addr, sizeof(send_addr));
-                send_addr.Outbound = !recv_addr.Outbound;
-                WinDivertHelperCalcChecksums((PVOID)reset, sizeof(TCPPACKET),
-                    &send_addr, 0);
-                if (!WinDivertSend(handle, (PVOID)reset, sizeof(TCPPACKET),
-                        NULL, &send_addr))
-                {
-                    fprintf(stderr, "warning: failed to send TCP reset (%lu)\n",
-                        GetLastError());
-                }
+                //memcpy(&send_addr, &recv_addr, sizeof(send_addr));
+                //send_addr.Outbound = !recv_addr.Outbound;
+                //WinDivertHelperCalcChecksums((PVOID)reset, sizeof(TCPPACKET),
+                    //&send_addr, 0);
+                //if (!WinDivertSend(handle, (PVOID)reset, sizeof(TCPPACKET),
+                        //NULL, &send_addr))
+                //{
+                    //fprintf(stderr, "warning: failed to send TCP reset (%lu)\n",
+                        //GetLastError());
+                //}
             }
 
             if (ipv6_header != NULL && !tcp_header->Rst && !tcp_header->Fin)
