@@ -232,25 +232,24 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
         if (key != (VK_SHIFT | VK_CONTROL | VK_MENU))   // this might be a bit broken
         {
             // TODO check if CTRL_key != 0 and GetAsyncKeyState is needed here
-            switch(key){
-                case hotkey_3074:
-                    hotkey_3074_keydown = FALSE;
-                    break;
-                case hotkey_3074_UL:
-                    hotkey_3074_UL_keydown = FALSE;
-                    break;
-                case hotkey_27k:
-                    hotkey_27k_keydown = FALSE;
-                    break;
-                case hotkey_30k:
-                    hotkey_30k_keydown = FALSE;
-                    break;
-                case hotkey_7k:
-                    hotkey_7k_keydown = FALSE;
-                    break;
+            if (key == hotkey_3074 ){
+                hotkey_3074_keydown = FALSE;
+            }
+            if (key == hotkey_3074_UL ){
+                hotkey_3074_UL_keydown = FALSE;
+            }
+            if (key == hotkey_27k){
+                hotkey_27k_keydown = FALSE;
+            }
+            if (key == hotkey_30k){
+                hotkey_30k_keydown = FALSE;
+            }
+            if (key == hotkey_7k){
+                hotkey_7k_keydown = FALSE;
             }
         }
     }
+
 
     if  ((nCode == HC_ACTION) &&   ((wParam == WM_SYSKEYDOWN) ||  (wParam == WM_KEYDOWN)))      
     {
