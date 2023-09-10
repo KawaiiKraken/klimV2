@@ -104,18 +104,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SetBkColor(hdc, RGB(10, 10, 10));
             // !!!FONT!!!
             RECT rect;
-            HFONT hFontOriginal, hFont1;
-            hFont1 = CreateFont(30, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
+            HFONT hFontOriginal, hFont1, hFont2;
+            hFont1 = CreateFont(20, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
                 CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
             hFontOriginal = (HFONT)SelectObject(hdc, hFont1);
+            SetRect(&rect, 5, 5, screenSize.right, 225); // set to screen width so text is never cut
+            SetTextColor(hdc, RGB(255,255,255));
+            DrawText(hdc, L"made by _kreken", -1, &rect, NULL);
+            SelectObject(hdc,hFontOriginal);
+            DeleteObject(hFont1);
+
+            hFont2 = CreateFont(30, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
+                CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
+            hFontOriginal = (HFONT)SelectObject(hdc, hFont2);
             
             //Sets the coordinates for the rectangle in which the text is to be formatted.
-            SetRect(&rect, 25, 25, screenSize.right, 225); // set to screen width so text is never cut
-            SetTextColor(hdc, RGB(255,255,255));
+            SetRect(&rect, 15, 25, screenSize.right, 225); // set to screen width so text is never cut
             DrawText(hdc, mytext, -1, &rect, NULL);
             //std::wcout << L"dll: DrawText " << mytext << std::endl;
             SelectObject(hdc,hFontOriginal);
-            DeleteObject(hFont1);
+            DeleteObject(hFont2);
         
             // !!!ENDFONT!!!
 

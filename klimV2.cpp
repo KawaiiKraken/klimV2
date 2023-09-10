@@ -527,7 +527,7 @@ void setGlobalHotkeyVars(){
 
 }
 
-void triggerHotkeyString(wchar_t* wcstring, int szWcstring, char hotkey, wchar_t* action){ // TODO better name for this
+void triggerHotkeyString(wchar_t* wcstring, int szWcstring, char hotkey, wchar_t* action, wchar_t* state){ // TODO better name for this
     char charbuf[2];
     charbuf[0] = hotkey;
     charbuf[1] = '\0'; // has to be null terminated for strlen to work 
@@ -537,10 +537,11 @@ void triggerHotkeyString(wchar_t* wcstring, int szWcstring, char hotkey, wchar_t
     size_t outSize;
 
     mbstowcs_s(&outSize, wcstringbuf, szCharbuf, charbuf, szCharbuf-1);
-    wcscpy_s(wcstring, szWcstring, L"ctrl+");
+    wcscpy_s(wcstring, szWcstring-1, L"ctrl+");
     wcscat_s(wcstring, szWcstring, wcstringbuf);
     wcscat_s(wcstring, szWcstring, L" to ");
     wcscat_s(wcstring, szWcstring, action);
+    wcscat_s(wcstring, szWcstring, state);
 
     delete []wcstringbuf;
 }
@@ -662,22 +663,22 @@ int __cdecl main(int argc, char** argv){
 
     // TODO make this into a function
     wchar_t* wcstring = new wchar_t[200];
-    triggerHotkeyString(wcstring, 200, hotkey_3074, (wchar_t *)L"3074");
+    triggerHotkeyString(wcstring, 200, hotkey_3074, (wchar_t *)L"3074", (wchar_t*)L"");
     updateOverlayLine1(wcstring);
 
-    triggerHotkeyString(wcstring, 200, hotkey_3074_UL, (wchar_t *)L"3074UL");
+    triggerHotkeyString(wcstring, 200, hotkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L"");
     updateOverlayLine2(wcstring);
 
-    triggerHotkeyString(wcstring, 200, hotkey_27k, (wchar_t *)L"27k");
+    triggerHotkeyString(wcstring, 200, hotkey_27k, (wchar_t *)L"27k", (wchar_t*)L"");
     updateOverlayLine3(wcstring);
 
-    triggerHotkeyString(wcstring, 200, hotkey_30k, (wchar_t *)L"30k");
+    triggerHotkeyString(wcstring, 200, hotkey_30k, (wchar_t *)L"30k", (wchar_t*)L"");
     updateOverlayLine4(wcstring);
 
-    triggerHotkeyString(wcstring, 200, hotkey_7k, (wchar_t *)L"7k");
+    triggerHotkeyString(wcstring, 200, hotkey_7k, (wchar_t *)L"7k", (wchar_t*)L"");
     updateOverlayLine5(wcstring);
 
-    triggerHotkeyString(wcstring, 200, hotkey_exitapp, (wchar_t *)L"close");
+    triggerHotkeyString(wcstring, 200, hotkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"");
     updateOverlayLine6(wcstring);
     
     delete []wcstring;
@@ -791,63 +792,68 @@ void combinerules(){
 }
 
 void toggle3074(){
-    if (!state3074){
-        state3074 = !state3074;
-        printf("state3074 %s\n", state3074 ? "true" : "false");
-        updateOverlayLine1((wchar_t *)L"3074 on");
+    state3074 = !state3074;
+    printf("state3074 %s\n", state3074 ? "true" : "false");
+    wchar_t* wcstring = new wchar_t[200];
+    if (state3074){
+        triggerHotkeyString(wcstring, 200, hotkey_3074, (wchar_t *)L"3074", (wchar_t*)L" on");
     } else {
-        state3074 = !state3074;
-        printf("state3074 %s\n", state3074 ? "true" : "false");
-        updateOverlayLine1((wchar_t *)L"3074 off");
+        triggerHotkeyString(wcstring, 200, hotkey_3074, (wchar_t *)L"3074", (wchar_t*)L" off");
     }
+    updateOverlayLine1(wcstring);
+    delete []wcstring;
 }
 
 void toggle3074_UL(){
-    if (!state3074_UL){
-        state3074_UL = !state3074_UL;
-        printf("state3074_UL %s\n", state3074_UL ? "true" : "false");
-        updateOverlayLine2((wchar_t *)L"3074UL on");
+    state3074_UL = !state3074_UL;
+    printf("state3074UL %s\n", state3074_UL ? "true" : "false");
+    wchar_t* wcstring = new wchar_t[200];
+    if (state3074_UL){
+        triggerHotkeyString(wcstring, 200, hotkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L" on");
     } else {
-        state3074_UL = !state3074_UL;
-        printf("state3074_UL %s\n", state3074_UL ? "true" : "false");
-        updateOverlayLine2((wchar_t *)L"3074UL off");
+        triggerHotkeyString(wcstring, 200, hotkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L" off");
     }
+    updateOverlayLine2(wcstring);
+    delete []wcstring;
 }
 
 void toggle27k(){
-    if (!state27k){
-        state27k = !state27k;
-        printf("state27k %s\n", state27k ? "true" : "false");
-        updateOverlayLine3((wchar_t *)L"27k on");
+    state27k = !state27k;
+    printf("state3074UL %s\n", state27k ? "true" : "false");
+    wchar_t* wcstring = new wchar_t[200];
+    if (state27k){
+        triggerHotkeyString(wcstring, 200, state27k, (wchar_t *)L"27k", (wchar_t*)L" on");
     } else {
-        state27k = !state27k;
-        printf("state27k %s\n", state27k ? "true" : "false");
-        updateOverlayLine3((wchar_t *)L"27k off");
+        triggerHotkeyString(wcstring, 200, state27k, (wchar_t *)L"27k", (wchar_t*)L" off");
     }
+    updateOverlayLine3(wcstring);
+    delete []wcstring;
 }
 
 void toggle30k(){
-    if (!state30k){
-        state30k = !state30k;
-        printf("state30k %s\n", state30k ? "true" : "false");
-        updateOverlayLine4((wchar_t *)L"30k on");
+    state30k = !state30k;
+    printf("state30k %s\n", state30k ? "true" : "false");
+    wchar_t* wcstring = new wchar_t[200];
+    if (state30k){
+        triggerHotkeyString(wcstring, 200, state30k, (wchar_t *)L"30k", (wchar_t*)L" on");
     } else {
-        state30k = !state30k;
-        printf("state30k %s\n", state30k ? "true" : "false");
-        updateOverlayLine4((wchar_t *)L"30k off");
+        triggerHotkeyString(wcstring, 200, state30k, (wchar_t *)L"30k", (wchar_t*)L" off");
     }
+    updateOverlayLine4(wcstring);
+    delete []wcstring;
 }
 
 void toggle7k(){
-    if (!state7k){
-        state7k = !state7k;
-        printf("state7k %s\n", state7k ? "true" : "false");
-        updateOverlayLine5((wchar_t *)L"7k on");
+    state7k = !state7k;
+    printf("state7k %s\n", state7k ? "true" : "false");
+    wchar_t* wcstring = new wchar_t[200];
+    if (state7k){
+        triggerHotkeyString(wcstring, 200, state7k, (wchar_t *)L"7k", (wchar_t*)L" on");
     } else {
-        state7k = !state7k;
-        printf("state7k %s\n", state7k ? "true" : "false");
-        updateOverlayLine5((wchar_t *)L"7k off");
+        triggerHotkeyString(wcstring, 200, state7k, (wchar_t *)L"7k", (wchar_t*)L" off");
     }
+    updateOverlayLine5(wcstring);
+    delete []wcstring;
 }
 
 
@@ -986,7 +992,9 @@ unsigned long block_traffic(LPVOID lpParam)
 
             if (ip_header != NULL && !tcp_header->Rst && !tcp_header->Fin)
             {
-                //tcp_header->Type, tcp_header->Code;
+                // do nothing we just silently drop the packet
+                
+                // this code is for sending an RST packet
                 //reset->ip.SrcAddr = ip_header->DstAddr;
                 //reset->ip.DstAddr = ip_header->SrcAddr;
                 //reset->tcp.SrcPort = tcp_header->DstPort;
