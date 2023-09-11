@@ -14,7 +14,7 @@ an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
 - if needed ctrl+k to exit and adjust keybinds in the generated config file
 
 # how to use
-  soon™
+- https://docs.google.com/document/d/1CuFbJ4KlbSMqf22lVap2yiSMHxLWRJpiMO1eIIpgtJQ
   
 # upcoming features
 - better code
