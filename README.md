@@ -32,5 +32,7 @@ an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
   ```
   clang++.exe -o .\klimV2.exe -D "_UNICODE" -D "UNICODE" -l .\WinDivert.lib -Wall .\klimV2.cpp
   ```
-note: you may also have to include/link the windows sdk 
+notes: 
+- when compiling first clone the phnt module as well, you will have to manually change some <> to "" in it
+- you may also have to include/link the windows sdk 
 
