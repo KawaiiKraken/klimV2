@@ -46,12 +46,14 @@
  *
  * This program is similar to Linux's iptables with the "-j REJECT" target.
  */
-#define _WIN32_WINNT 0x0501
+#define _WIN32_WINNT_WIN10 0x0A00 // Windows 10
+#define PHNT_VERSION PHNT_THRESHOLD // Windows 10
 #pragma comment( lib, "user32.lib" )
 #pragma comment( lib, "kernel32.lib" )
 #pragma comment( lib, "shell32.lib" )
 #pragma comment( lib, "advapi32.lib" )
 #pragma comment( lib, "Psapi.lib" )
+#pragma comment( lib, "ntdll.lib" )
 #pragma clang diagnostic ignored "-Wwritable-strings"
 //#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // uncomment to hide debug console
 #include <windows.h>
@@ -64,6 +66,8 @@
 #include <wchar.h>
 #include <shellapi.h>
 #include <psapi.h>
+#include "phnt/phnt_windows.h"
+#include "phnt/phnt.h"
 
 #include "windivert.h"
 
@@ -84,12 +88,13 @@ HANDLE handle = NULL;
 bool can_trigger_any_hotkey = TRUE;
 wchar_t pathToIni[MAX_PATH];
 wchar_t szFilePathSelf[MAX_PATH];
-char hotkey_exitapp, hotkey_3074, hotkey_3074_UL, hotkey_27k, hotkey_30k, hotkey_7k;
+char hotkey_exitapp, hotkey_3074, hotkey_3074_UL, hotkey_27k, hotkey_30k, hotkey_7k, hotkey_suspend;
 bool state3074 = FALSE;
 bool state3074_UL = FALSE;
 bool state27k = FALSE; 
 bool state30k = FALSE;
 bool state7k = FALSE;
+bool state_suspend = FALSE;
 bool debug = FALSE;
 // function declaration so function can be below main
 void toggle3074();
@@ -97,6 +102,7 @@ void toggle3074_UL();
 void toggle27k(); 
 void toggle30k(); 
 void toggle7k(); 
+void toggleSuspend(); 
 void combinerules();
 void updateOverlay();
 void updateOverlayLine1(wchar_t arg[]);
@@ -105,12 +111,13 @@ void updateOverlayLine3(wchar_t arg[]);
 void updateOverlayLine4(wchar_t arg[]);
 void updateOverlayLine5(wchar_t arg[]);
 void updateOverlayLine6(wchar_t arg[]);
+void updateOverlayLine7(wchar_t arg[]);
 const wchar_t* GetFileName(const wchar_t *path);
 unsigned long block_traffic(LPVOID lpParam);
 char myNetRules[1000];
 const char *err_str;
 INT16 priority = 1000;
-wchar_t combined_overlay[1000], overlay_line_1[100], overlay_line_2[100], overlay_line_3[100], overlay_line_4[100], overlay_line_5[100], overlay_line_6[100];
+wchar_t combined_overlay[1000], overlay_line_1[100], overlay_line_2[100], overlay_line_3[100], overlay_line_4[100], overlay_line_5[100], overlay_line_6[100], overlay_line_7[100];
 
 
 
@@ -209,6 +216,7 @@ bool hotkey_3074_UL_keydown = FALSE;
 bool hotkey_27k_keydown = FALSE;
 bool hotkey_30k_keydown = FALSE;
 bool hotkey_7k_keydown = FALSE;
+bool hotkey_suspend_keydown = FALSE;
 
 __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, LPARAM lParam)
 {
@@ -247,6 +255,9 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             if (key == hotkey_7k){
                 hotkey_7k_keydown = FALSE;
             }
+            if (key == hotkey_suspend){
+                hotkey_suspend_keydown = FALSE;
+            }
         }
     }
 
@@ -283,7 +294,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             {
                 wcout << L"hotkey_3074 detected\n";
                 if (isD2Active() | debug){
-                    if (can_trigger_any_hotkey && !hotkey_3074_keydown){ // prevent race condition
+                    if (can_trigger_any_hotkey && !hotkey_3074_keydown){ 
                         can_trigger_any_hotkey = FALSE;
                         hotkey_3074_keydown = TRUE;
                         toggle3074();
@@ -299,7 +310,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             {
                 wcout << L"hotkey_3074 detected\n";
                 if (isD2Active() | debug){
-                    if (can_trigger_any_hotkey && !hotkey_3074_UL_keydown){ // prevent race condition
+                    if (can_trigger_any_hotkey && !hotkey_3074_UL_keydown){ 
                         can_trigger_any_hotkey = FALSE;
                         hotkey_3074_UL_keydown = TRUE;
                         toggle3074_UL();
@@ -315,7 +326,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             {
                 wcout << L"hotkey_27k detected\n";
                 if (isD2Active() | debug){
-                    if (can_trigger_any_hotkey && !hotkey_27k_keydown){ // prevent race condition
+                    if (can_trigger_any_hotkey && !hotkey_27k_keydown){ 
                         can_trigger_any_hotkey = FALSE;
                         hotkey_27k_keydown = TRUE;
                         toggle27k();
@@ -331,7 +342,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             {
                 wcout << L"hotkey_30k detected\n";
                 if (isD2Active() | debug){
-                    if (can_trigger_any_hotkey && !hotkey_30k_keydown){ // prevent race condition
+                    if (can_trigger_any_hotkey && !hotkey_30k_keydown){ 
                         can_trigger_any_hotkey = FALSE;
                         hotkey_30k_keydown = TRUE;
                         toggle30k();
@@ -347,7 +358,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
             {
                 wcout << L"hotkey_7k detected\n";
                 if (isD2Active() | debug){
-                    if (can_trigger_any_hotkey && !hotkey_7k_keydown){ // prevent race condition
+                    if (can_trigger_any_hotkey && !hotkey_7k_keydown){ 
                         can_trigger_any_hotkey = FALSE;
                         hotkey_7k_keydown = TRUE;
                         toggle7k();
@@ -357,6 +368,20 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent (int nCode, WPARAM wParam, 
                 }
                 CTRL_key=0;
             } 
+            
+            
+            // ============= suspend ================
+            if (CTRL_key !=0 && key == hotkey_suspend) 
+            {
+                wcout << L"hotkey_suspend detected\n";
+                if (isD2Active() | debug){
+                    if (!hotkey_suspend_keydown){
+                        hotkey_suspend_keydown = TRUE;
+                        toggleSuspend();
+                    }
+                }
+                CTRL_key=0;
+            }
 
 
             // ============= exitapp ================
@@ -443,6 +468,7 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
         WritePrivateProfileString(L"hotkeys", L"hotkey_27k", L"6", filePath);
         WritePrivateProfileString(L"hotkeys", L"hotkey_30k", L"l", filePath);
         WritePrivateProfileString(L"hotkeys", L"hotkey_7k", L"j", filePath);
+        WritePrivateProfileString(L"hotkeys", L"hotkey_suspend", L"p", filePath);
         
     }
     wcsncpy_s(pathToIni, sizeof(pathToIni), filePath, sizeof(pathToIni));
@@ -522,6 +548,17 @@ void setGlobalHotkeyVars(){
         //printf("wcSingleChar: %ls\n", wcSingleChar);
         hotkey_7k = VkKeyScanW(*wcSingleChar);
         printf("set hotkey_7k to: %c\n", hotkey_7k);
+    } 
+    // suspennd
+    GetPrivateProfileStringW(L"hotkeys", L"hotkey_suspend", NULL, buffer, sizeof(buffer), pathToIni);
+    if (GetLastError() == 0x2){
+        printf("GetPrivateProfileString failed (%lu)\n", GetLastError());
+    } else {
+        //printf("buffer contains: %ls\n", buffer);
+        wcSingleChar = &buffer[0];
+        //printf("wcSingleChar: %ls\n", wcSingleChar);
+        hotkey_suspend = VkKeyScanW(*wcSingleChar);
+        printf("set hotkey_suspend to: %c\n", hotkey_suspend);
     } 
 
 
@@ -620,21 +657,6 @@ int __cdecl main(int argc, char** argv){
             return -3;
         }
     }
-    //hDLL2 = LoadLibrary(L"krekens_overlay2");
-    //if (hDLL2 != NULL)
-    //{
-        //lpfnDllOverlay2 = (LPFNDLLMYPUTS)GetProcAddress(hDLL2, "Overlay");
-        //if (!lpfnDllOverlay2)
-        //{
-            //// handle the error
-            //FreeLibrary(hDLL);
-            //_tprintf(_T("handle the error"));
-            //return -3;
-        //}
-    //}
-    //lpfnDllOverlay2(L""); // call it instantly to force the window to be drawn first
-    
-
 
     DWORD dwThread;
     // prepare timer
@@ -678,8 +700,11 @@ int __cdecl main(int argc, char** argv){
     triggerHotkeyString(wcstring, 200, hotkey_7k, (wchar_t *)L"7k", (wchar_t*)L"");
     updateOverlayLine5(wcstring);
 
-    triggerHotkeyString(wcstring, 200, hotkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"");
+    triggerHotkeyString(wcstring, 200, hotkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L"");
     updateOverlayLine6(wcstring);
+
+    triggerHotkeyString(wcstring, 200, hotkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"");
+    updateOverlayLine7(wcstring);
     
     delete []wcstring;
 
@@ -713,6 +738,8 @@ void updateOverlay(){
     wcscat_s(combined_overlay, szCombined_overlay, L"\n");
     wcscat_s(combined_overlay, szCombined_overlay, overlay_line_6);
     wcscat_s(combined_overlay, szCombined_overlay, L"\n");
+    wcscat_s(combined_overlay, szCombined_overlay, overlay_line_7);
+    wcscat_s(combined_overlay, szCombined_overlay, L"\n");
     //lpfnDllOverlay2(combined_overlay);
     lpfnDllOverlay(combined_overlay);
 }
@@ -744,6 +771,11 @@ void updateOverlayLine5(wchar_t arg[]){
 
 void updateOverlayLine6(wchar_t arg[]){
     wcscpy_s(overlay_line_6, arg);
+    updateOverlay();
+}
+
+void updateOverlayLine7(wchar_t arg[]){
+    wcscpy_s(overlay_line_7, arg);
     updateOverlay();
 }
 
@@ -822,9 +854,9 @@ void toggle27k(){
     printf("state3074UL %s\n", state27k ? "true" : "false");
     wchar_t* wcstring = new wchar_t[200];
     if (state27k){
-        triggerHotkeyString(wcstring, 200, state27k, (wchar_t *)L"27k", (wchar_t*)L" on");
+        triggerHotkeyString(wcstring, 200, hotkey_27k, (wchar_t *)L"27k", (wchar_t*)L" on");
     } else {
-        triggerHotkeyString(wcstring, 200, state27k, (wchar_t *)L"27k", (wchar_t*)L" off");
+        triggerHotkeyString(wcstring, 200, hotkey_27k, (wchar_t *)L"27k", (wchar_t*)L" off");
     }
     updateOverlayLine3(wcstring);
     delete []wcstring;
@@ -835,9 +867,9 @@ void toggle30k(){
     printf("state30k %s\n", state30k ? "true" : "false");
     wchar_t* wcstring = new wchar_t[200];
     if (state30k){
-        triggerHotkeyString(wcstring, 200, state30k, (wchar_t *)L"30k", (wchar_t*)L" on");
+        triggerHotkeyString(wcstring, 200, hotkey_30k, (wchar_t *)L"30k", (wchar_t*)L" on");
     } else {
-        triggerHotkeyString(wcstring, 200, state30k, (wchar_t *)L"30k", (wchar_t*)L" off");
+        triggerHotkeyString(wcstring, 200, hotkey_30k, (wchar_t *)L"30k", (wchar_t*)L" off");
     }
     updateOverlayLine4(wcstring);
     delete []wcstring;
@@ -848,14 +880,125 @@ void toggle7k(){
     printf("state7k %s\n", state7k ? "true" : "false");
     wchar_t* wcstring = new wchar_t[200];
     if (state7k){
-        triggerHotkeyString(wcstring, 200, state7k, (wchar_t *)L"7k", (wchar_t*)L" on");
+        triggerHotkeyString(wcstring, 200, hotkey_30k, (wchar_t *)L"7k", (wchar_t*)L" on");
     } else {
-        triggerHotkeyString(wcstring, 200, state7k, (wchar_t *)L"7k", (wchar_t*)L" off");
+        triggerHotkeyString(wcstring, 200, hotkey_30k, (wchar_t *)L"7k", (wchar_t*)L" off");
     }
     updateOverlayLine5(wcstring);
     delete []wcstring;
 }
 
+int getPidOfFilename( DWORD processID, wchar_t* process_name_to_match)
+{
+    TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
+
+    // Get a handle to the process.
+
+    HANDLE hProcess = OpenProcess( PROCESS_QUERY_INFORMATION |
+                                   PROCESS_VM_READ,
+                                   FALSE, processID );
+
+    // Get the process name.
+
+    if (NULL != hProcess )
+    {
+        HMODULE hMod;
+        DWORD cbNeeded;
+
+        if ( EnumProcessModulesEx( hProcess, &hMod, sizeof(hMod), 
+             //&cbNeeded, LIST_MODULES_64BIT) )
+             &cbNeeded, LIST_MODULES_ALL) )
+        {
+            GetModuleBaseName( hProcess, hMod, szProcessName, 
+                               sizeof(szProcessName)/sizeof(TCHAR) );
+        }
+    }
+
+
+    // Print and return the process name and identifier if matches.
+    printf("%ls (%lu)\n", szProcessName, processID);
+    if (wcscmp(szProcessName, process_name_to_match) == 0){
+        printf("match found: %lu\n", processID);
+        CloseHandle( hProcess );
+        return processID;
+        
+    }
+
+    // Release the handle to the process.
+
+    CloseHandle( hProcess );
+    return 0;
+}
+
+
+int getD2Pid(){
+    // Get the list of process identifiers.
+    DWORD aProcesses[1024], cbNeeded, cProcesses;
+    unsigned int i;
+
+    if ( !EnumProcesses( aProcesses, sizeof(aProcesses), &cbNeeded) )
+    {
+        return 0;
+    }
+
+     // Calculate how many process identifiers were returned.
+
+    cProcesses = cbNeeded / sizeof(DWORD);
+
+    // Print the name and process identifier for each process.
+
+    for ( i = 0; i < cProcesses; i++ )
+    {
+        if( aProcesses[i] != 0 )
+        {
+            if (getPidOfFilename( aProcesses[i], (wchar_t*)L"destiny2.exe" ) != 0){ // theres a way to simplify this to avoid an extra function
+                return aProcesses[i];
+            }
+        }
+    }
+
+    printf("error: no match found\n");
+    return 0;
+    
+}
+
+void toggleSuspend(){
+    state_suspend = !state_suspend;
+    printf("suspend %s\n", state_suspend ? "true" : "false");
+    wchar_t* wcstring = new wchar_t[200];
+    if (state_suspend){
+        triggerHotkeyString(wcstring, 200, hotkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" on");
+        int pid = getD2Pid();
+    //h:=DllCall("OpenProcess", "uInt", 0x1F0FFF, "Int", 0, "Int", pid)
+        if (pid != 0){
+            HANDLE procHandle = OpenProcess(0x1F0FFF, 0, pid);
+            if (procHandle != NULL){
+    //DllCall("ntdll.dll\NtSuspendProcess", "Int", h)
+                printf("suspending match\n");
+                NtSuspendProcess(procHandle);
+    //DllCall("CloseHandle", "Int", h)
+                CloseHandle(procHandle);
+            }
+        }
+        
+    } else {
+        triggerHotkeyString(wcstring, 200, hotkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" off");
+        int pid = getD2Pid();
+    //h:=DllCall("OpenProcess", "uInt", 0x1F0FFF, "Int", 0, "Int", pid)
+        if (pid != 0){
+            HANDLE procHandle = OpenProcess(0x1F0FFF, 0, pid);
+            if (procHandle != NULL){
+    //DllCall("ntdll.dll\NtResumeProcess", "Int", h)
+                printf("resuming match\n");
+                NtResumeProcess(procHandle);
+    //DllCall("CloseHandle", "Int", h)
+                CloseHandle(procHandle);
+            }
+        }
+    }
+    updateOverlayLine6(wcstring);
+    delete []wcstring;
+}
 
 unsigned long block_traffic(LPVOID lpParam)
 {
