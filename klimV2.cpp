@@ -905,9 +905,10 @@ int getPidOfFilename( DWORD processID, wchar_t* process_name_to_match)
         HMODULE hMod;
         DWORD cbNeeded;
 
-        if ( EnumProcessModulesEx( hProcess, &hMod, sizeof(hMod), 
-             //&cbNeeded, LIST_MODULES_64BIT) )
-             &cbNeeded, LIST_MODULES_ALL) )
+       // if ( EnumProcessModulesEx( hProcess, &hMod, sizeof(hMod), 
+             //&cbNeeded, LIST_MODULES_ALL) )
+        if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod), 
+             &cbNeeded ) )
         {
             GetModuleBaseName( hProcess, hMod, szProcessName, 
                                sizeof(szProcessName)/sizeof(TCHAR) );
@@ -931,7 +932,7 @@ int getPidOfFilename( DWORD processID, wchar_t* process_name_to_match)
 }
 
 
-int getD2Pid(){
+int getD2Pid(){ // TODO rework or remove
     // Get the list of process identifiers.
     DWORD aProcesses[1024], cbNeeded, cProcesses;
     unsigned int i;
@@ -951,7 +952,7 @@ int getD2Pid(){
     {
         if( aProcesses[i] != 0 )
         {
-            if (getPidOfFilename( aProcesses[i], (wchar_t*)L"destiny2.exe" ) != 0){ // theres a way to simplify this to avoid an extra function
+            if (getPidOfFilename( aProcesses[i], (wchar_t*)L"Destiny2.exe" ) != 0){ // theres a way to simplify this to avoid an extra function
                 return aProcesses[i];
             }
         }
@@ -963,41 +964,44 @@ int getD2Pid(){
 }
 
 void toggleSuspend(){
-    state_suspend = !state_suspend;
-    printf("suspend %s\n", state_suspend ? "true" : "false");
-    wchar_t* wcstring = new wchar_t[200];
-    if (state_suspend){
-        triggerHotkeyString(wcstring, 200, hotkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" on");
-        int pid = getD2Pid();
-    //h:=DllCall("OpenProcess", "uInt", 0x1F0FFF, "Int", 0, "Int", pid)
-        if (pid != 0){
-            HANDLE procHandle = OpenProcess(0x1F0FFF, 0, pid);
-            if (procHandle != NULL){
-    //DllCall("ntdll.dll\NtSuspendProcess", "Int", h)
-                printf("suspending match\n");
-                NtSuspendProcess(procHandle);
-    //DllCall("CloseHandle", "Int", h)
-                CloseHandle(procHandle);
+    if (isD2Active()){
+        DWORD pid = 0;
+        // shitty way to get pid but eh
+        GetWindowThreadProcessId(GetForegroundWindow(), &pid);
+        state_suspend = !state_suspend;
+        HANDLE procHandle = NULL;
+        printf("suspend %s\n", state_suspend ? "true" : "false");
+        wchar_t* wcstring = new wchar_t[200];
+
+        if (state_suspend){
+            triggerHotkeyString(wcstring, 200, hotkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" on");
+            if ( pid != 0 ){
+                printf("pid: %lu\n", pid);
+                procHandle = OpenProcess(0x1F0FFF, 0, pid);
+                //procHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ , FALSE, pid);
+                if (procHandle != NULL){
+                    printf("suspending match\n");
+                    NtSuspendProcess(procHandle);
+                }
             }
-        }
         
-    } else {
-        triggerHotkeyString(wcstring, 200, hotkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" off");
-        int pid = getD2Pid();
-    //h:=DllCall("OpenProcess", "uInt", 0x1F0FFF, "Int", 0, "Int", pid)
-        if (pid != 0){
-            HANDLE procHandle = OpenProcess(0x1F0FFF, 0, pid);
-            if (procHandle != NULL){
-    //DllCall("ntdll.dll\NtResumeProcess", "Int", h)
-                printf("resuming match\n");
-                NtResumeProcess(procHandle);
-    //DllCall("CloseHandle", "Int", h)
-                CloseHandle(procHandle);
+        } else {
+            if (pid != 0){
+                triggerHotkeyString(wcstring, 200, hotkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" off");
+                procHandle = OpenProcess(0x1F0FFF, 0, pid);
+                //procHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ , FALSE, pid);
+                if (procHandle != NULL){
+                    printf("resuming match\n");
+                    NtResumeProcess(procHandle);
+                }
             }
         }
+        if (procHandle != NULL){
+            CloseHandle(procHandle);
+        }
+        updateOverlayLine6(wcstring);
+        delete []wcstring;
     }
-    updateOverlayLine6(wcstring);
-    delete []wcstring;
 }
 
 unsigned long block_traffic(LPVOID lpParam)
