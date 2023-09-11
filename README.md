@@ -23,6 +23,10 @@ an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
 # known issues
 - the mod seasonal monochromatic maestro can cause desync to be permanent 
 
+# how it works 
+- packet manip: https://github.com/basil00/Divert
+- game pauser/suspend: https://github.com/diversenok/Suspending-Techniques#suspend-via-ntsuspendprocess
+
 # compiling from source
 - overlay dll
   ```
