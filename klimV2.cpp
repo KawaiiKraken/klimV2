@@ -40,14 +40,15 @@ HANDLE handle = NULL;
 bool can_trigger_any_hotkey = TRUE;
 wchar_t pathToIni[MAX_PATH];
 wchar_t szFilePathSelf[MAX_PATH];
-char hotkey_exitapp, hotkey_3074, hotkey_3074_UL, hotkey_27k, hotkey_27k_UL, hotkey_30k, hotkey_7k, hotkey_suspend;
-char modkey_exitapp, modkey_3074, modkey_3074_UL, modkey_27k, modkey_27k_UL, modkey_30k, modkey_7k, modkey_suspend;
+char hotkey_exitapp, hotkey_3074, hotkey_3074_UL, hotkey_27k, hotkey_27k_UL, hotkey_30k, hotkey_7k, hotkey_game, hotkey_suspend;
+char modkey_exitapp, modkey_3074, modkey_3074_UL, modkey_27k, modkey_27k_UL, modkey_30k, modkey_7k, modkey_game, modkey_suspend;
 bool state3074 = FALSE;
 bool state3074_UL = FALSE;
 bool state27k = FALSE; 
 bool state27k_UL = FALSE; 
 bool state30k = FALSE;
 bool state7k = FALSE;
+bool state_game = FALSE;
 bool state_suspend = FALSE;
 bool debug = FALSE;
 int __cdecl Overlay( LPTSTR );   
@@ -58,6 +59,7 @@ void toggle27k_UL();
 void toggle30k(); 
 void toggle7k(); 
 void toggleSuspend(); 
+void toggleGame(); 
 void combinerules();
 void updateOverlay();
 void updateOverlayLine1( wchar_t arg[] );
@@ -68,12 +70,13 @@ void updateOverlayLine5( wchar_t arg[] );
 void updateOverlayLine6( wchar_t arg[] );
 void updateOverlayLine7( wchar_t arg[] );
 void updateOverlayLine8( wchar_t arg[] );
+void updateOverlayLine9( wchar_t arg[] );
 const wchar_t* GetFileName( const wchar_t *path );
 unsigned long block_traffic( LPVOID lpParam );
 char myNetRules[1000];
 const char *err_str;
 INT16 priority = 1000;
-wchar_t combined_overlay[1000], overlay_line_1[100], overlay_line_2[100], overlay_line_3[100], overlay_line_4[100], overlay_line_5[100], overlay_line_6[100], overlay_line_7[100], overlay_line_8[100];
+wchar_t combined_overlay[1000], overlay_line_1[100], overlay_line_2[100], overlay_line_3[100], overlay_line_4[100], overlay_line_5[100], overlay_line_6[100], overlay_line_7[100], overlay_line_8[100], overlay_line_9[100];
 
 
 
@@ -157,6 +160,7 @@ bool hotkey_27k_keydown = FALSE;
 bool hotkey_27k_UL_keydown = FALSE;
 bool hotkey_30k_keydown = FALSE;
 bool hotkey_7k_keydown = FALSE;
+bool hotkey_game_keydown = FALSE;
 bool hotkey_suspend_keydown = FALSE;
 
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam )
@@ -167,6 +171,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
     DWORD modkey_27k_UL_state=0;
     DWORD modkey_30k_state=0;
     DWORD modkey_7k_state=0;
+    DWORD modkey_game =0;
     DWORD modkey_suspend_state=0;
     DWORD modkey_exitapp_state=0;
 
@@ -203,6 +208,9 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             if ( key == hotkey_7k){
                 hotkey_7k_keydown = FALSE;
             }
+            if ( key == hotkey_game){
+                hotkey_game_keydown = FALSE;
+            }
             if ( key == hotkey_suspend){
                 hotkey_suspend_keydown = FALSE;
             }
@@ -230,6 +238,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         DWORD modkey_27k_UL_state = 0;
         DWORD modkey_30k_state = 0;
         DWORD modkey_7k_state = 0;
+        DWORD modkey_game_state = 0;
         DWORD modkey_suspend_state = 0;
         DWORD modkey_exitapp_state = 0;
 
@@ -244,6 +253,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             modkey_27k_UL_state = GetAsyncKeyState( modkey_27k_UL );
             modkey_30k_state = GetAsyncKeyState( modkey_30k );
             modkey_7k_state = GetAsyncKeyState( modkey_7k );
+            modkey_game_state = GetAsyncKeyState( modkey_suspend );
             modkey_suspend_state = GetAsyncKeyState( modkey_suspend );
             modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
             // double cuz im lazy enough to not bitshift
@@ -253,6 +263,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             modkey_27k_UL_state = GetAsyncKeyState( modkey_27k_UL );
             modkey_30k_state = GetAsyncKeyState( modkey_30k );
             modkey_7k_state = GetAsyncKeyState( modkey_7k );
+            modkey_game_state = GetAsyncKeyState( modkey_suspend );
             modkey_suspend_state = GetAsyncKeyState( modkey_suspend );
             modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
 
@@ -356,7 +367,20 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
                 modkey_7k_state=0;
             } 
             
-            
+            // ============= game ================
+            if ( modkey_game_state !=0 && key == hotkey_game ) 
+            {
+                wcout << L"hotkey_game detected\n";
+                if ( isD2Active() | debug ){
+                    if ( !hotkey_game_keydown ){ 
+                        hotkey_game_keydown = TRUE;
+                        toggleGame();
+                    }
+                }
+                modkey_game_state=0;
+            }
+
+
             // ============= suspend ================
             if ( modkey_suspend_state !=0 && key == hotkey_suspend ) 
             {
@@ -444,6 +468,8 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
         printf( "creating config file\n" );
         CreateFileW( (LPCTSTR)filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
         printf( "setting config file to default settings\n" );
+        WritePrivateProfileString( L"", L"Modkey accepts any key that hotkey does or 'shift', 'alt', 'ctrl'. Capitilization matters.", L"", filePath );
+        WritePrivateProfileString( L"", L"game lim only works if you have windows pro edition", L"", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_exitapp", L"k", filePath );
         WritePrivateProfileString( L"hotkeys", L"modkey_exitapp", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_3074", L"g", filePath );
@@ -458,6 +484,8 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
         WritePrivateProfileString( L"hotkeys", L"modkey_30k", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_7k", L"j", filePath );
         WritePrivateProfileString( L"hotkeys", L"modkey_7k", L"ctrl", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_game", L"o", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_game", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_suspend", L"p", filePath );
         WritePrivateProfileString( L"hotkeys", L"modkey_suspend", L"ctrl", filePath );
         
@@ -512,6 +540,8 @@ void setGlobalHotkeyVars(){
     setGlobalHotkeyVar(L"modkey_30k", &modkey_30k);
     setGlobalHotkeyVar(L"hotkey_7k", &hotkey_7k);
     setGlobalHotkeyVar(L"modkey_7k", &modkey_7k);
+    setGlobalHotkeyVar(L"hotkey_game", &hotkey_game);
+    setGlobalHotkeyVar(L"modkey_game", &modkey_game);
     setGlobalHotkeyVar(L"hotkey_suspend", &hotkey_suspend);
     setGlobalHotkeyVar(L"modkey_suspend", &modkey_suspend);
 }
@@ -644,11 +674,14 @@ int __cdecl main( int argc, char** argv ){
     triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L"" );
     updateOverlayLine6( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L"" );
     updateOverlayLine7( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_exitapp, modkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L"" );
     updateOverlayLine8( wcstring );
+
+    triggerHotkeyString( wcstring, 200, hotkey_exitapp, modkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"" );
+    updateOverlayLine9( wcstring );
     
     delete []wcstring;
 
@@ -682,6 +715,8 @@ void updateOverlay(){
     wcscat_s( combined_overlay, szCombined_overlay, overlay_line_7 );
     wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
     wcscat_s( combined_overlay, szCombined_overlay, overlay_line_8 );
+    wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
+    wcscat_s( combined_overlay, szCombined_overlay, overlay_line_9 );
     wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
     lpfnDllOverlay( combined_overlay );
 }
@@ -723,6 +758,11 @@ void updateOverlayLine7( wchar_t arg[] ){
 
 void updateOverlayLine8( wchar_t arg[] ){
     wcscpy_s( overlay_line_8, arg );
+    updateOverlay();
+}
+
+void updateOverlayLine9( wchar_t arg[] ){
+    wcscpy_s( overlay_line_9, arg );
     updateOverlay();
 }
 
@@ -848,6 +888,22 @@ void toggle7k(){
     delete []wcstring;
 }
 
+void toggleGame(){
+    state_game = !state_game;
+    printf( "state_game %s\n", state_game ? "true" : "false" );
+    wchar_t* wcstring = new wchar_t[200];
+    if ( state_game ){
+        ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 800KB", NULL, SW_HIDE);
+        triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L" on" );
+    } else {
+        ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
+        triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L" off" );
+    }
+    updateOverlayLine7( wcstring );
+    delete []wcstring;
+    
+}
+
 
 void toggleSuspend(){
     if ( isD2Active() ){
@@ -883,7 +939,7 @@ void toggleSuspend(){
         if ( procHandle != NULL ){
             CloseHandle( procHandle );
         }
-        updateOverlayLine7( wcstring );
+        updateOverlayLine8( wcstring );
         delete []wcstring;
     }
 }
