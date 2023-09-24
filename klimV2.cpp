@@ -447,10 +447,12 @@ void setGlobalHotkeyVar(wchar_t* hotkey_name, char* hotkey_var){
         if ( wcscmp( buffer, L"alt" ) == 0 ){
             *hotkey_var = VK_MENU;
             printf( "set %ls to: alt\n", hotkey_name );
-        } else if ( wcscmp(buffer, L"shift") == 0 ){
+        } 
+        else if ( wcscmp( buffer, L"shift" ) == 0 ){
             *hotkey_var = VK_SHIFT;
             printf( "set %ls to: shift\n", hotkey_name );
-        } if ( wcscmp( buffer, L"ctrl" ) == 0 ){
+        } 
+        else if ( wcscmp( buffer, L"ctrl" ) == 0 ){
             *hotkey_var = VK_CONTROL;
             printf( "set %ls to: ctrl\n", hotkey_name );
         } else {
@@ -483,17 +485,33 @@ void setGlobalHotkeyVars(){
     setGlobalHotkeyVar(L"modkey_suspend", &modkey_suspend);
 }
 
-void triggerHotkeyString( wchar_t* wcstring, int szWcstring, char hotkey, wchar_t* action, wchar_t* state ){ // TODO better name for this
+void triggerHotkeyString( wchar_t* wcstring, int szWcstring, char hotkey, char modkey, wchar_t* action, wchar_t* state ){ // TODO better name for this
     char charbuf[2];
+    char charbuf2[2];
     charbuf[0] = hotkey;
     charbuf[1] = '\0'; // has to be null terminated for strlen to work 
+    charbuf2[0] = modkey;
+    charbuf2[1] = '\0'; // has to be null terminated for strlen to work 
     
     int szCharbuf = strlen( charbuf ) + 1;
+    int szCharbuf2 = strlen( charbuf2 ) + 1;
     wchar_t* wcstringbuf = new wchar_t[szCharbuf];
+    wchar_t* wcstringbuf2 = new wchar_t[szCharbuf2];
     size_t outSize;
 
     mbstowcs_s( &outSize, wcstringbuf, szCharbuf, charbuf, szCharbuf-1 );
-    wcscpy_s( wcstring, szWcstring-1, L"ctrl+" );
+    mbstowcs_s( &outSize, wcstringbuf2, szCharbuf2, charbuf2, szCharbuf2-1 );
+    wcscpy_s( wcstring, szWcstring-1, wcstringbuf2);
+    if ( modkey == VK_SHIFT ){
+        wcscpy_s( wcstring, sizeof(L"shift"), L"shift");
+    }
+    if ( modkey == VK_CONTROL ){
+        wcscpy_s( wcstring, sizeof(L"ctrl"), L"ctrl");
+    }
+    if ( modkey == VK_MENU ){
+        wcscpy_s( wcstring, sizeof(L"alt"), L"alt");
+    }
+    wcscat_s( wcstring, szWcstring, L"+");
     wcscat_s( wcstring, szWcstring, wcstringbuf );
     wcscat_s( wcstring, szWcstring, L" to " );
     wcscat_s( wcstring, szWcstring, action );
@@ -577,25 +595,25 @@ int __cdecl main( int argc, char** argv ){
 
     // TODO make this into a function
     wchar_t* wcstring = new wchar_t[200];
-    triggerHotkeyString( wcstring, 200, hotkey_3074, (wchar_t *)L"3074", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L"" );
     updateOverlayLine1( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_3074_UL, modkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L"" );
     updateOverlayLine2( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_27k, (wchar_t *)L"27k", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L"" );
     updateOverlayLine3( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_30k, (wchar_t *)L"30k", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L"" );
     updateOverlayLine4( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_7k, (wchar_t *)L"7k", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L"" );
     updateOverlayLine5( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L"" );
     updateOverlayLine6( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_exitapp, modkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"" );
     updateOverlayLine7( wcstring );
     
     delete []wcstring;
@@ -712,9 +730,9 @@ void toggle3074(){
     printf( "state3074 %s\n", state3074 ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state3074 ){
-        triggerHotkeyString( wcstring, 200, hotkey_3074, (wchar_t *)L"3074", (wchar_t*)L" on" );
+        triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L" on" );
     } else {
-        triggerHotkeyString( wcstring, 200, hotkey_3074, (wchar_t *)L"3074", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L" off" );
     }
     updateOverlayLine1( wcstring );
     delete []wcstring;
@@ -725,9 +743,9 @@ void toggle3074_UL(){
     printf( "state3074UL %s\n", state3074_UL ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state3074_UL ){
-        triggerHotkeyString( wcstring, 200, hotkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L" on" );
+        triggerHotkeyString( wcstring, 200, hotkey_3074_UL, modkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L" on" );
     } else {
-        triggerHotkeyString( wcstring, 200, hotkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, hotkey_3074_UL, modkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L" off" );
     }
     updateOverlayLine2( wcstring );
     delete []wcstring;
@@ -738,9 +756,9 @@ void toggle27k(){
     printf( "state3074UL %s\n", state27k ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state27k ){
-        triggerHotkeyString( wcstring, 200, hotkey_27k, (wchar_t *)L"27k", (wchar_t*)L" on" );
+        triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L" on" );
     } else {
-        triggerHotkeyString( wcstring, 200, hotkey_27k, (wchar_t *)L"27k", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L" off" );
     }
     updateOverlayLine3( wcstring );
     delete []wcstring;
@@ -751,9 +769,9 @@ void toggle30k(){
     printf( "state30k %s\n", state30k ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state30k ){
-        triggerHotkeyString( wcstring, 200, hotkey_30k, (wchar_t *)L"30k", (wchar_t*)L" on" );
+        triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L" on" );
     } else {
-        triggerHotkeyString( wcstring, 200, hotkey_30k, (wchar_t *)L"30k", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L" off" );
     }
     updateOverlayLine4( wcstring );
     delete []wcstring;
@@ -764,9 +782,9 @@ void toggle7k(){
     printf( "state7k %s\n", state7k ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state7k ){
-        triggerHotkeyString( wcstring, 200, hotkey_30k, (wchar_t *)L"7k", (wchar_t*)L" on" );
+        triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L" on" );
     } else {
-        triggerHotkeyString( wcstring, 200, hotkey_30k, (wchar_t *)L"7k", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L" off" );
     }
     updateOverlayLine5( wcstring );
     delete []wcstring;
@@ -784,7 +802,7 @@ void toggleSuspend(){
         wchar_t* wcstring = new wchar_t[200];
 
         if ( state_suspend ){
-            triggerHotkeyString( wcstring, 200, hotkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" on" );
+            triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" on" );
             if ( pid != 0 ){
                 printf( "pid: %lu\n", pid );
                 procHandle = OpenProcess( 0x1F0FFF, 0, pid ); // TODO remove magic numbers
@@ -796,7 +814,7 @@ void toggleSuspend(){
         
         } else {
             if ( pid != 0 ){
-                triggerHotkeyString( wcstring, 200, hotkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" off" );
+                triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" off" );
                 procHandle = OpenProcess( 0x1F0FFF, 0, pid ); // TODO remove magic numbers
                 if ( procHandle != NULL ){
                     printf( "resuming match\n" );
