@@ -400,6 +400,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             {
                 wcout << "shutting down\n";
                 if ( !debug ){
+                    ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
                     ShowWindow( GetConsoleWindow(), SW_RESTORE );
                 }
                 PostQuitMessage(0);
