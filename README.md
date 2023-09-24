@@ -25,7 +25,8 @@ an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
 - the mod seasonal monochromatic maestro can cause desync to be permanent 
 - whole game limit requires windows pro
 
-# switch windows version to pro (this could be potentially be considered piracy and i don't endorse it)
+# switch windows version to pro 
+this could be potentially be considered piracy and i don't endorse it
 - run cmd.exe as admin 
 - paste `changepk /ProductKey VK7JG-NPHTM-C97JM-9MPGT-3V66T`
 - reboot 
