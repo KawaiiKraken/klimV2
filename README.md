@@ -13,6 +13,7 @@ an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
 - download https://github.com/KawaiiKraken/klimV2/releases/latest
 - run exe 
 - if needed ctrl+k to exit and adjust keybinds in the generated config file
+- for support join our server at https://thrallway.com
 
 # how to use
 - https://docs.google.com/document/d/1CuFbJ4KlbSMqf22lVap2yiSMHxLWRJpiMO1eIIpgtJQ
@@ -34,7 +35,6 @@ this could be potentially be considered piracy and i don't endorse it
 - paste `irm https://massgrave.dev/get | iex`
 - chose hwid (unless youre using a spoofer)
 - reboot
-
 
 # how it works 
 - packet manip: https://github.com/basil00/Divert
