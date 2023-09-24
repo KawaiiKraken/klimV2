@@ -119,7 +119,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             hFontOriginal = (HFONT)SelectObject(hdc, hFont2);
             
             //Sets the coordinates for the rectangle in which the text is to be formatted.
-            SetRect(&rect, 8, 28, screenSize.right, 225); // set to screen width so text is never cut
+            SetRect(&rect, 8, 28, screenSize.right, screenSize.bottom); // set to screen width so text is never cut
             DrawText(hdc, mytext, -1, &rect, NULL);
             //std::wcout << L"dll: DrawText " << mytext << std::endl;
             SelectObject(hdc,hFontOriginal);
