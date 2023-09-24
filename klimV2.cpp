@@ -40,11 +40,12 @@ HANDLE handle = NULL;
 bool can_trigger_any_hotkey = TRUE;
 wchar_t pathToIni[MAX_PATH];
 wchar_t szFilePathSelf[MAX_PATH];
-char hotkey_exitapp, hotkey_3074, hotkey_3074_UL, hotkey_27k, hotkey_30k, hotkey_7k, hotkey_suspend;
-char modkey_exitapp, modkey_3074, modkey_3074_UL, modkey_27k, modkey_30k, modkey_7k, modkey_suspend;
+char hotkey_exitapp, hotkey_3074, hotkey_3074_UL, hotkey_27k, hotkey_27k_UL, hotkey_30k, hotkey_7k, hotkey_suspend;
+char modkey_exitapp, modkey_3074, modkey_3074_UL, modkey_27k, modkey_27k_UL, modkey_30k, modkey_7k, modkey_suspend;
 bool state3074 = FALSE;
 bool state3074_UL = FALSE;
 bool state27k = FALSE; 
+bool state27k_UL = FALSE; 
 bool state30k = FALSE;
 bool state7k = FALSE;
 bool state_suspend = FALSE;
@@ -53,6 +54,7 @@ int __cdecl Overlay( LPTSTR );
 void toggle3074();
 void toggle3074_UL();
 void toggle27k(); 
+void toggle27k_UL(); 
 void toggle30k(); 
 void toggle7k(); 
 void toggleSuspend(); 
@@ -65,12 +67,13 @@ void updateOverlayLine4( wchar_t arg[] );
 void updateOverlayLine5( wchar_t arg[] );
 void updateOverlayLine6( wchar_t arg[] );
 void updateOverlayLine7( wchar_t arg[] );
+void updateOverlayLine8( wchar_t arg[] );
 const wchar_t* GetFileName( const wchar_t *path );
 unsigned long block_traffic( LPVOID lpParam );
 char myNetRules[1000];
 const char *err_str;
 INT16 priority = 1000;
-wchar_t combined_overlay[1000], overlay_line_1[100], overlay_line_2[100], overlay_line_3[100], overlay_line_4[100], overlay_line_5[100], overlay_line_6[100], overlay_line_7[100];
+wchar_t combined_overlay[1000], overlay_line_1[100], overlay_line_2[100], overlay_line_3[100], overlay_line_4[100], overlay_line_5[100], overlay_line_6[100], overlay_line_7[100], overlay_line_8[100];
 
 
 
@@ -151,6 +154,7 @@ void startFilter(){
 bool hotkey_3074_keydown = FALSE;
 bool hotkey_3074_UL_keydown = FALSE;
 bool hotkey_27k_keydown = FALSE;
+bool hotkey_27k_UL_keydown = FALSE;
 bool hotkey_30k_keydown = FALSE;
 bool hotkey_7k_keydown = FALSE;
 bool hotkey_suspend_keydown = FALSE;
@@ -160,6 +164,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
     DWORD modkey_3074_state=0;
     DWORD modkey_3074_UL_state=0;
     DWORD modkey_27k_state=0;
+    DWORD modkey_27k_UL_state=0;
     DWORD modkey_30k_state=0;
     DWORD modkey_7k_state=0;
     DWORD modkey_suspend_state=0;
@@ -188,6 +193,9 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             }
             if ( key == hotkey_27k){
                 hotkey_27k_keydown = FALSE;
+            }
+            if ( key == hotkey_27k_UL){
+                hotkey_27k_UL_keydown = FALSE;
             }
             if ( key == hotkey_30k){
                 hotkey_30k_keydown = FALSE;
@@ -219,6 +227,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         DWORD modkey_3074_state = 0;
         DWORD modkey_3074_UL_state = 0;
         DWORD modkey_27k_state = 0;
+        DWORD modkey_27k_UL_state = 0;
         DWORD modkey_30k_state = 0;
         DWORD modkey_7k_state = 0;
         DWORD modkey_suspend_state = 0;
@@ -232,6 +241,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             modkey_3074_state = GetAsyncKeyState( modkey_3074 );
             modkey_3074_UL_state = GetAsyncKeyState( modkey_3074_UL );
             modkey_27k_state = GetAsyncKeyState( modkey_27k );
+            modkey_27k_UL_state = GetAsyncKeyState( modkey_27k_UL );
             modkey_30k_state = GetAsyncKeyState( modkey_30k );
             modkey_7k_state = GetAsyncKeyState( modkey_7k );
             modkey_suspend_state = GetAsyncKeyState( modkey_suspend );
@@ -240,7 +250,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
             modkey_3074_state = GetAsyncKeyState( modkey_3074 );
             modkey_3074_UL_state = GetAsyncKeyState( modkey_3074_UL );
-            modkey_27k_state = GetAsyncKeyState( modkey_27k );
+            modkey_27k_UL_state = GetAsyncKeyState( modkey_27k_UL );
             modkey_30k_state = GetAsyncKeyState( modkey_30k );
             modkey_7k_state = GetAsyncKeyState( modkey_7k );
             modkey_suspend_state = GetAsyncKeyState( modkey_suspend );
@@ -296,6 +306,23 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
                 }
                 modkey_27k_state=0;
             }
+
+            // ============= 27k_UL ================
+            if ( modkey_27k_UL_state !=0 && key == hotkey_27k_UL ) 
+            {
+                wcout << L"hotkey_27k detected\n";
+                if ( isD2Active() | debug ){
+                    if ( can_trigger_any_hotkey && !hotkey_27k_UL_keydown ){ 
+                        can_trigger_any_hotkey = FALSE;
+                        hotkey_27k_UL_keydown = TRUE;
+                        toggle27k_UL();
+                        combinerules();
+                        startFilter();
+                    }
+                }
+                modkey_27k_UL_state=0;
+            }
+
 
             // ============= 30k ================
             if ( modkey_30k_state !=0 && key == hotkey_30k ) 
@@ -425,6 +452,8 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
         WritePrivateProfileString( L"hotkeys", L"modkey_3074_UL", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_27k", L"6", filePath );
         WritePrivateProfileString( L"hotkeys", L"modkey_27k", L"ctrl", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_27k_UL", L"7", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_27k_UL", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_30k", L"l", filePath );
         WritePrivateProfileString( L"hotkeys", L"modkey_30k", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_7k", L"j", filePath );
@@ -477,6 +506,8 @@ void setGlobalHotkeyVars(){
     setGlobalHotkeyVar(L"modkey_3074_UL", &modkey_3074_UL);
     setGlobalHotkeyVar(L"hotkey_27k", &hotkey_27k);
     setGlobalHotkeyVar(L"modkey_27k", &modkey_27k);
+    setGlobalHotkeyVar(L"hotkey_27k_UL", &hotkey_27k_UL);
+    setGlobalHotkeyVar(L"modkey_27k_UL", &modkey_27k_UL);
     setGlobalHotkeyVar(L"hotkey_30k", &hotkey_30k);
     setGlobalHotkeyVar(L"modkey_30k", &modkey_30k);
     setGlobalHotkeyVar(L"hotkey_7k", &hotkey_7k);
@@ -604,17 +635,20 @@ int __cdecl main( int argc, char** argv ){
     triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L"" );
     updateOverlayLine3( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_27k_UL, modkey_27k_UL, (wchar_t *)L"27kUL", (wchar_t*)L"" );
     updateOverlayLine4( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L"" );
     updateOverlayLine5( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L"" );
     updateOverlayLine6( wcstring );
 
-    triggerHotkeyString( wcstring, 200, hotkey_exitapp, modkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L"" );
     updateOverlayLine7( wcstring );
+
+    triggerHotkeyString( wcstring, 200, hotkey_exitapp, modkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"" );
+    updateOverlayLine8( wcstring );
     
     delete []wcstring;
 
@@ -646,6 +680,8 @@ void updateOverlay(){
     wcscat_s( combined_overlay, szCombined_overlay, overlay_line_6 );
     wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
     wcscat_s( combined_overlay, szCombined_overlay, overlay_line_7 );
+    wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
+    wcscat_s( combined_overlay, szCombined_overlay, overlay_line_8 );
     wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
     lpfnDllOverlay( combined_overlay );
 }
@@ -685,6 +721,11 @@ void updateOverlayLine7( wchar_t arg[] ){
     updateOverlay();
 }
 
+void updateOverlayLine8( wchar_t arg[] ){
+    wcscpy_s( overlay_line_8, arg );
+    updateOverlay();
+}
+
 void combinerules(){
     strcpy_s( myNetRules, sizeof( myNetRules ), "(udp.DstPort < 1 and udp.DstPort > 1)" ); // set to rule that wont match anything
     if (state3074){
@@ -695,6 +736,9 @@ void combinerules(){
     }
     if (state27k){
         strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)" );
+    }
+    if (state27k_UL){
+        strcat_s( myNetRules, sizeof( myNetRules ), " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)" );
     }
     if (state30k){
         strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)" );
@@ -764,6 +808,20 @@ void toggle27k(){
     delete []wcstring;
 }
 
+void toggle27k_UL(){
+    state27k_UL = !state27k_UL;
+    printf( "state3074UL %s\n", state27k_UL ? "true" : "false" );
+    wchar_t* wcstring = new wchar_t[200];
+    if ( state27k_UL ){
+        triggerHotkeyString( wcstring, 200, hotkey_27k_UL, modkey_27k_UL, (wchar_t *)L"27kUL", (wchar_t*)L" on" );
+    } else {
+        triggerHotkeyString( wcstring, 200, hotkey_27k_UL, modkey_27k_UL, (wchar_t *)L"27kUL", (wchar_t*)L" off" );
+    }
+    updateOverlayLine4( wcstring );
+    delete []wcstring;
+}
+
+
 void toggle30k(){
     state30k = !state30k;
     printf( "state30k %s\n", state30k ? "true" : "false" );
@@ -773,7 +831,7 @@ void toggle30k(){
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L" off" );
     }
-    updateOverlayLine4( wcstring );
+    updateOverlayLine5( wcstring );
     delete []wcstring;
 }
 
@@ -786,7 +844,7 @@ void toggle7k(){
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L" off" );
     }
-    updateOverlayLine5( wcstring );
+    updateOverlayLine6( wcstring );
     delete []wcstring;
 }
 
@@ -825,7 +883,7 @@ void toggleSuspend(){
         if ( procHandle != NULL ){
             CloseHandle( procHandle );
         }
-        updateOverlayLine6( wcstring );
+        updateOverlayLine7( wcstring );
         delete []wcstring;
     }
 }
