@@ -23,6 +23,17 @@ an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
 
 # known issues
 - the mod seasonal monochromatic maestro can cause desync to be permanent 
+- whole game limit requires windows pro
+
+# switch windows version to pro (this could be potentially be considered piracy and i don't endorse it)
+- run cmd.exe as admin 
+- paste `changepk /ProductKey VK7JG-NPHTM-C97JM-9MPGT-3V66T`
+- reboot 
+- run powershell.exe as admin
+- paste `irm https://massgrave.dev/get | iex`
+- chose hwid (unless youre using a spoofer)
+- reboot
+
 
 # how it works 
 - packet manip: https://github.com/basil00/Divert
