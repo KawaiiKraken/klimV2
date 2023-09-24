@@ -2,7 +2,7 @@
 an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
 
 # features
-- ports: 3074DL, 3074UL, 27k, 30k, 7500
+- ports: 3074DL, 3074UL, 27kDL, 27UL, 30kDL, 7500DL, whole game 800b/sDL
 - game pauser
 - customizable hotkeys
 - undetected
