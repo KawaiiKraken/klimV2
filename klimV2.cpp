@@ -8,6 +8,8 @@
 #pragma comment( lib, "ntdll.lib" )
 // these 2 are just for the stuff in header files
 #pragma clang diagnostic ignored "-Wpragma-pack"
+#pragma clang diagnostic ignored "-Wwritable-strings"
+#pragma clang diagnostic ignored "-Wunused-variable"
 #pragma clang diagnostic ignored "-Wmicrosoft-enum-forward-reference"
 #include <windows.h>
 #include <stdio.h>
@@ -39,6 +41,7 @@ bool can_trigger_any_hotkey = TRUE;
 wchar_t pathToIni[MAX_PATH];
 wchar_t szFilePathSelf[MAX_PATH];
 char hotkey_exitapp, hotkey_3074, hotkey_3074_UL, hotkey_27k, hotkey_30k, hotkey_7k, hotkey_suspend;
+char modkey_exitapp, modkey_3074, modkey_3074_UL, modkey_27k, modkey_30k, modkey_7k, modkey_suspend;
 bool state3074 = FALSE;
 bool state3074_UL = FALSE;
 bool state27k = FALSE; 
@@ -154,9 +157,13 @@ bool hotkey_suspend_keydown = FALSE;
 
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam )
 {
-    DWORD SHIFT_key=0;
-    DWORD CTRL_key=0;
-    DWORD ALT_key=0;
+    DWORD modkey_3074_state=0;
+    DWORD modkey_3074_UL_state=0;
+    DWORD modkey_27k_state=0;
+    DWORD modkey_30k_state=0;
+    DWORD modkey_7k_state=0;
+    DWORD modkey_suspend_state=0;
+    DWORD modkey_exitapp_state=0;
 
     if  ( ( nCode == HC_ACTION ) &&   ( ( wParam == WM_SYSKEYUP ) ||  ( wParam == WM_KEYUP ) ) )      
     {
@@ -209,22 +216,41 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
         int key = hooked_key.vkCode;
 
-        SHIFT_key = GetAsyncKeyState( VK_SHIFT );
-        CTRL_key = GetAsyncKeyState( VK_CONTROL );
-        ALT_key = GetAsyncKeyState( VK_MENU );
+        DWORD modkey_3074_state = 0;
+        DWORD modkey_3074_UL_state = 0;
+        DWORD modkey_27k_state = 0;
+        DWORD modkey_30k_state = 0;
+        DWORD modkey_7k_state = 0;
+        DWORD modkey_suspend_state = 0;
+        DWORD modkey_exitapp_state = 0;
 
         //if (key >= 'A' && key <= 'Z')   
-        if ( key != ( VK_SHIFT | VK_CONTROL | VK_MENU ) )   // this might be a bit broken
+        //if ( key != ( modkey_3074 | modkey_3074_UL | modkey_27k | modkey_30k | modkey_7k | modkey_suspend | modkey_exitapp ) )   // this might be a bit broken or unneeded
+        if ( TRUE )   // this might be a bit broken or unneeded
         {
             // TODO use the hotkey system properly instead of using GetAsyncState, and add different modifiers to the config file
-            SHIFT_key = GetAsyncKeyState( VK_SHIFT ); // double because async normally only checks if key was pressed since last time it was called, there is a way to bypass that but im lazy
-            CTRL_key = GetAsyncKeyState( VK_CONTROL );
-            ALT_key = GetAsyncKeyState( VK_MENU );
+            modkey_3074_state = GetAsyncKeyState( modkey_3074 );
+            modkey_3074_UL_state = GetAsyncKeyState( modkey_3074_UL );
+            modkey_27k_state = GetAsyncKeyState( modkey_27k );
+            modkey_30k_state = GetAsyncKeyState( modkey_30k );
+            modkey_7k_state = GetAsyncKeyState( modkey_7k );
+            modkey_suspend_state = GetAsyncKeyState( modkey_suspend );
+            modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
+            // double cuz im lazy enough to not bitshift
+
+            modkey_3074_state = GetAsyncKeyState( modkey_3074 );
+            modkey_3074_UL_state = GetAsyncKeyState( modkey_3074_UL );
+            modkey_27k_state = GetAsyncKeyState( modkey_27k );
+            modkey_30k_state = GetAsyncKeyState( modkey_30k );
+            modkey_7k_state = GetAsyncKeyState( modkey_7k );
+            modkey_suspend_state = GetAsyncKeyState( modkey_suspend );
+            modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
+
 
             //if  (GetAsyncKeyState(VK_SHIFT)>= 0) key +=32;
             
             // ============= 3074 ================
-            if ( CTRL_key !=0 && key == hotkey_3074 ) 
+            if ( modkey_3074_state !=0 && key == hotkey_3074 ) 
             {
                 wcout << L"hotkey_3074 detected\n";
                 if ( isD2Active() | debug ){
@@ -236,11 +262,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
                         startFilter();
                     }
                 }
-                CTRL_key=0;
+                modkey_3074_state=0;
             }
 
             // ============= 3074UL ================
-            if ( CTRL_key !=0 && key == hotkey_3074_UL ) 
+            if ( modkey_3074_UL_state !=0 && key == hotkey_3074_UL ) 
             {
                 wcout << L"hotkey_3074 detected\n";
                 if ( isD2Active() | debug ){
@@ -252,11 +278,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
                         startFilter();
                     }
                 }
-                CTRL_key=0;
+                modkey_3074_UL_state=0;
             }
 
             // ============= 27k ================
-            if ( CTRL_key !=0 && key == hotkey_27k ) 
+            if ( modkey_27k_state !=0 && key == hotkey_27k ) 
             {
                 wcout << L"hotkey_27k detected\n";
                 if ( isD2Active() | debug ){
@@ -268,11 +294,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
                         startFilter();
                     }
                 }
-                CTRL_key=0;
+                modkey_27k_state=0;
             }
 
             // ============= 30k ================
-            if ( CTRL_key !=0 && key == hotkey_30k ) 
+            if ( modkey_30k_state !=0 && key == hotkey_30k ) 
             {
                 wcout << L"hotkey_30k detected\n";
                 if ( isD2Active() | debug ){
@@ -284,11 +310,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
                         startFilter();
                     }
                 }
-                CTRL_key=0;
+                modkey_30k_state=0;
             }
 
             // ============= 7k ================
-            if ( CTRL_key !=0 && key == hotkey_7k ) 
+            if ( modkey_7k_state !=0 && key == hotkey_7k ) 
             {
                 wcout << L"hotkey_7k detected\n";
                 if ( isD2Active() | debug ){
@@ -300,12 +326,12 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
                         startFilter();
                     }
                 }
-                CTRL_key=0;
+                modkey_7k_state=0;
             } 
             
             
             // ============= suspend ================
-            if ( CTRL_key !=0 && key == hotkey_suspend ) 
+            if ( modkey_suspend_state !=0 && key == hotkey_suspend ) 
             {
                 wcout << L"hotkey_suspend detected\n";
                 if ( isD2Active() | debug ){
@@ -314,12 +340,12 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
                         toggleSuspend();
                     }
                 }
-                CTRL_key=0;
+                modkey_suspend_state=0;
             }
 
 
             // ============= exitapp ================
-            if ( CTRL_key !=0 && key == hotkey_exitapp )
+            if ( modkey_exitapp_state !=0 && key == hotkey_exitapp )
             {
                 wcout << "shutting down\n";
                 if ( !debug ){
@@ -331,10 +357,6 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
 
             //printf("key = %c\n", key);
-
-            SHIFT_key = 0; // not sure if this is needed
-            CTRL_key = 0;
-            ALT_key = 0;
 
         }
 
@@ -395,92 +417,70 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
         printf( "creating config file\n" );
         CreateFileW( (LPCTSTR)filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
         printf( "setting config file to default settings\n" );
-        WritePrivateProfileString( L"hotkeys", L"exitapp", L"k", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_exitapp", L"k", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_exitapp", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_3074", L"g", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_3074", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_3074_UL", L"c", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_3074_UL", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_27k", L"6", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_27k", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_30k", L"l", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_30k", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_7k", L"j", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_7k", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_suspend", L"p", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_suspend", L"ctrl", filePath );
         
     }
     wcsncpy_s( pathToIni, sizeof( pathToIni ), filePath, sizeof( pathToIni ) );
 }
 
-void setGlobalHotkeyVars(){
+void setGlobalHotkeyVar(wchar_t* hotkey_name, char* hotkey_var){
     wchar_t buffer[50];
     wchar_t* wcSingleChar = nullptr;
-    // exitapp
-    GetPrivateProfileStringW( L"hotkeys", L"exitapp", NULL, buffer, sizeof(buffer), pathToIni );
+
+    GetPrivateProfileStringW( L"hotkeys", hotkey_name, NULL, buffer, sizeof(buffer), pathToIni );
     if ( GetLastError() == 0x2 ){
         printf( "GetPrivateProfileString failed (%lu)\n", GetLastError() );
     } else {
-        wcSingleChar = &buffer[0];
-        hotkey_exitapp = VkKeyScanW( *wcSingleChar );
-        printf( "set hotkey_exitapp to: %c\n", hotkey_exitapp );
-    } 
-    
-    // TODO make this bs into a function
-    // 3074
-    GetPrivateProfileStringW( L"hotkeys", L"hotkey_3074", NULL, buffer, sizeof( buffer ), pathToIni );
-    if ( GetLastError() == 0x2 ){
-        printf( "GetPrivateProfileString failed (%lu)\n", GetLastError() );
-    } else {
-        wcSingleChar = &buffer[0];
-        hotkey_3074 = VkKeyScanW(*wcSingleChar);
-        printf( "set hotkey_3074 to: %c\n", hotkey_3074 );
-    } 
-
-    // 3074_UL
-    GetPrivateProfileStringW( L"hotkeys", L"hotkey_3074_UL", NULL, buffer, sizeof( buffer ), pathToIni );
-    if ( GetLastError() == 0x2 ){
-        printf( "GetPrivateProfileString failed (%lu)\n", GetLastError() );
-    } else {
-        wcSingleChar = &buffer[0];
-        hotkey_3074_UL = VkKeyScanW( *wcSingleChar );
-        printf( "set hotkey_3074_UL to: %c\n", hotkey_3074_UL );
-    } 
-
-    // 27k
-    GetPrivateProfileStringW( L"hotkeys", L"hotkey_27k", NULL, buffer, sizeof( buffer ), pathToIni );
-    if ( GetLastError() == 0x2 ){
-        printf( "GetPrivateProfileString failed (%lu)\n", GetLastError() );
-    } else {
-        wcSingleChar = &buffer[0];
-        hotkey_27k = VkKeyScanW( *wcSingleChar );
-        printf( "set hotkey_27k to: %c\n", hotkey_27k );
-    } 
-
-    // 30k 
-    GetPrivateProfileStringW( L"hotkeys", L"hotkey_30k", NULL, buffer, sizeof( buffer ), pathToIni );
-    if (GetLastError() == 0x2){
-        printf( "GetPrivateProfileString failed (%lu)\n", GetLastError() );
-    } else {
-        wcSingleChar = &buffer[0];
-        hotkey_30k = VkKeyScanW( *wcSingleChar );
-        printf( "set hotkey_30k to: %c\n", hotkey_30k );
-    } 
-
-    // 7k
-    GetPrivateProfileStringW( L"hotkeys", L"hotkey_7k", NULL, buffer, sizeof( buffer ), pathToIni );
-    if ( GetLastError() == 0x2 ){
-        printf( "GetPrivateProfileString failed (%lu)\n", GetLastError() );
-    } else {
-        wcSingleChar = &buffer[0];
-        hotkey_7k = VkKeyScanW( *wcSingleChar );
-        printf( "set hotkey_7k to: %c\n", hotkey_7k );
-    } 
-    // suspennd
-    GetPrivateProfileStringW( L"hotkeys", L"hotkey_suspend", NULL, buffer, sizeof( buffer ), pathToIni );
-    if (GetLastError() == 0x2){
-        printf( "GetPrivateProfileString failed (%lu)\n", GetLastError() );
-    } else {
-        wcSingleChar = &buffer[0];
-        hotkey_suspend = VkKeyScanW( *wcSingleChar );
-        printf( "set hotkey_suspend to: %c\n", hotkey_suspend );
+        if ( wcscmp( buffer, L"alt" ) == 0 ){
+            *hotkey_var = VK_MENU;
+            printf( "set %ls to: alt\n", hotkey_name );
+        } else if ( wcscmp(buffer, L"shift") == 0 ){
+            *hotkey_var = VK_SHIFT;
+            printf( "set %ls to: shift\n", hotkey_name );
+        } if ( wcscmp( buffer, L"ctrl" ) == 0 ){
+            *hotkey_var = VK_CONTROL;
+            printf( "set %ls to: ctrl\n", hotkey_name );
+        } else {
+            wcSingleChar = &buffer[0];
+            *hotkey_var = VkKeyScanW( *wcSingleChar );
+            // TODO fix weird printf memory leak from hotkey_var
+            printf( "set %ls to: %s\n", hotkey_name, hotkey_var);
+        }
     } 
 
 
+}
+
+void setGlobalHotkeyVars(){ 
+    wchar_t buffer[50];
+    wchar_t* wcSingleChar = nullptr;
+    setGlobalHotkeyVar(L"hotkey_exitapp", &hotkey_exitapp);
+    setGlobalHotkeyVar(L"modkey_exitapp", &modkey_exitapp);
+    setGlobalHotkeyVar(L"hotkey_3074", &hotkey_3074);
+    setGlobalHotkeyVar(L"modkey_3074", &modkey_3074);
+    setGlobalHotkeyVar(L"hotkey_3074_UL", &hotkey_3074_UL);
+    setGlobalHotkeyVar(L"modkey_3074_UL", &modkey_3074_UL);
+    setGlobalHotkeyVar(L"hotkey_27k", &hotkey_27k);
+    setGlobalHotkeyVar(L"modkey_27k", &modkey_27k);
+    setGlobalHotkeyVar(L"hotkey_30k", &hotkey_30k);
+    setGlobalHotkeyVar(L"modkey_30k", &modkey_30k);
+    setGlobalHotkeyVar(L"hotkey_7k", &hotkey_7k);
+    setGlobalHotkeyVar(L"modkey_7k", &modkey_7k);
+    setGlobalHotkeyVar(L"hotkey_suspend", &hotkey_suspend);
+    setGlobalHotkeyVar(L"modkey_suspend", &modkey_suspend);
 }
 
 void triggerHotkeyString( wchar_t* wcstring, int szWcstring, char hotkey, wchar_t* action, wchar_t* state ){ // TODO better name for this
