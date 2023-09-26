@@ -6,7 +6,6 @@ an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
 - game pauser
 - customizable hotkeys
 - undetected
-- stream proof overlay 
 - limits without a delay 
  
 # installation
