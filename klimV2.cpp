@@ -28,12 +28,12 @@
 
 // random TODO more sensible variable and function names
 
-typedef UINT ( CALLBACK* LPFNDLLMYPUTS )( LPTSTR );
+typedef UINT ( CALLBACK* LPFNDLLMYPUTS )( LPTSTR , bool );
 
 using namespace std;
 
 HINSTANCE hDLL, hDLL2;               
-LPFNDLLMYPUTS lpfnDllOverlay, lpfnDllOverlay2;    
+LPFNDLLMYPUTS lpfnDllOverlay;    
 HHOOK hKeyboardHook;
 HANDLE gDoneEvent;
 HANDLE hThread = NULL;
@@ -52,6 +52,7 @@ bool state7k = FALSE;
 bool state_game = FALSE;
 bool state_suspend = FALSE;
 bool debug = FALSE;
+bool useOverlay;
 int __cdecl Overlay( LPTSTR );   
 void toggle3074();
 void toggle3074_UL();
@@ -491,12 +492,13 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
         WritePrivateProfileString( L"hotkeys", L"modkey_game", L"ctrl", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_suspend", L"p", filePath );
         WritePrivateProfileString( L"hotkeys", L"modkey_suspend", L"ctrl", filePath );
+        WritePrivateProfileString( L"other", L"useOverlay", L"true", filePath );
         
     }
     wcsncpy_s( pathToIni, sizeof( pathToIni ), filePath, sizeof( pathToIni ) );
 }
 
-void setGlobalHotkeyVar(wchar_t* hotkey_name, char* hotkey_var){
+void setVarFromIni(wchar_t* hotkey_name, char* hotkey_var){
     wchar_t buffer[50];
     wchar_t* wcSingleChar = nullptr;
 
@@ -526,27 +528,27 @@ void setGlobalHotkeyVar(wchar_t* hotkey_name, char* hotkey_var){
 
 }
 
-void setGlobalHotkeyVars(){ 
+void setVarsFromIni(){ 
     wchar_t buffer[50];
     wchar_t* wcSingleChar = nullptr;
-    setGlobalHotkeyVar(L"hotkey_exitapp", &hotkey_exitapp);
-    setGlobalHotkeyVar(L"modkey_exitapp", &modkey_exitapp);
-    setGlobalHotkeyVar(L"hotkey_3074", &hotkey_3074);
-    setGlobalHotkeyVar(L"modkey_3074", &modkey_3074);
-    setGlobalHotkeyVar(L"hotkey_3074_UL", &hotkey_3074_UL);
-    setGlobalHotkeyVar(L"modkey_3074_UL", &modkey_3074_UL);
-    setGlobalHotkeyVar(L"hotkey_27k", &hotkey_27k);
-    setGlobalHotkeyVar(L"modkey_27k", &modkey_27k);
-    setGlobalHotkeyVar(L"hotkey_27k_UL", &hotkey_27k_UL);
-    setGlobalHotkeyVar(L"modkey_27k_UL", &modkey_27k_UL);
-    setGlobalHotkeyVar(L"hotkey_30k", &hotkey_30k);
-    setGlobalHotkeyVar(L"modkey_30k", &modkey_30k);
-    setGlobalHotkeyVar(L"hotkey_7k", &hotkey_7k);
-    setGlobalHotkeyVar(L"modkey_7k", &modkey_7k);
-    setGlobalHotkeyVar(L"hotkey_game", &hotkey_game);
-    setGlobalHotkeyVar(L"modkey_game", &modkey_game);
-    setGlobalHotkeyVar(L"hotkey_suspend", &hotkey_suspend);
-    setGlobalHotkeyVar(L"modkey_suspend", &modkey_suspend);
+    setVarFromIni(L"hotkey_exitapp", &hotkey_exitapp);
+    setVarFromIni(L"modkey_exitapp", &modkey_exitapp);
+    setVarFromIni(L"hotkey_3074", &hotkey_3074);
+    setVarFromIni(L"modkey_3074", &modkey_3074);
+    setVarFromIni(L"hotkey_3074_UL", &hotkey_3074_UL);
+    setVarFromIni(L"modkey_3074_UL", &modkey_3074_UL);
+    setVarFromIni(L"hotkey_27k", &hotkey_27k);
+    setVarFromIni(L"modkey_27k", &modkey_27k);
+    setVarFromIni(L"hotkey_27k_UL", &hotkey_27k_UL);
+    setVarFromIni(L"modkey_27k_UL", &modkey_27k_UL);
+    setVarFromIni(L"hotkey_30k", &hotkey_30k);
+    setVarFromIni(L"modkey_30k", &modkey_30k);
+    setVarFromIni(L"hotkey_7k", &hotkey_7k);
+    setVarFromIni(L"modkey_7k", &modkey_7k);
+    setVarFromIni(L"hotkey_game", &hotkey_game);
+    setVarFromIni(L"modkey_game", &modkey_game);
+    setVarFromIni(L"hotkey_suspend", &hotkey_suspend);
+    setVarFromIni(L"modkey_suspend", &modkey_suspend);
 }
 
 void triggerHotkeyString( wchar_t* wcstring, int szWcstring, char hotkey, char modkey, wchar_t* action, wchar_t* state ){ // TODO better name for this
@@ -648,13 +650,24 @@ int __cdecl main( int argc, char** argv ){
         }
     }
 
+
     DWORD dwThread;
     
     // ini file stuff
     setGlobalPathToIni(); 
+    wchar_t wc_buffer[50];
+    GetPrivateProfileStringW( L"other", L"useOverlay", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
+    if ( wcscmp(wc_buffer, L"true") == 0 ){
+        useOverlay = true;
+    } else if ( wcscmp(wc_buffer, L"false") == 0 ){
+        useOverlay = false;
+    } else {
+        MessageBox(NULL, L"useOverlay config option is set to an incorrect value.. exiting.", NULL, MB_OK);
+        return 0;
+    }
     printf( "pathToIni %ls\n", pathToIni );
 
-    setGlobalHotkeyVars();
+    setVarsFromIni();
     
 
     // TODO make this into a function
@@ -721,7 +734,7 @@ void updateOverlay(){
     wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
     wcscat_s( combined_overlay, szCombined_overlay, overlay_line_9 );
     wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
-    lpfnDllOverlay( combined_overlay );
+    lpfnDllOverlay( combined_overlay, useOverlay );
 }
 
 void updateOverlayLine1( wchar_t arg[] ){

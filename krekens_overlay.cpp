@@ -19,7 +19,10 @@ HWND hwnd, emptyhwnd;
 HINSTANCE dllHinst;
 HANDLE threadHandle = nullptr;
 int nCmdShow = NULL;
+bool isOverlay;
 RECT screenSize;
+bool mousedown = false;
+POINT lastLocation;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -34,16 +37,22 @@ DWORD WINAPI myfunc(LPVOID lpParam)
 
     wc.lpfnWndProc   = WindowProc;
     wc.hInstance     = hInstance;
+    wc.style = CS_VREDRAW | CS_HREDRAW;
     wc.lpszClassName = CLASS_NAME;
 
     RegisterClass(&wc);
 
     // Create the window.
     int winstyle = (WS_VISIBLE | WS_SYSMENU | WS_DISABLED);
+    int ex_winstyle = ( WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE );
+    if ( isOverlay == false ){
+        winstyle = ( WS_VISIBLE | WS_OVERLAPPEDWINDOW );
+        ex_winstyle = ( 0 );
+    }
     hwnd = CreateWindowEx(
-        WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,// Optional window styles. // remove WS_EX_APPWINDOW to hide from taskbar WS_EX_TOOLWINDOW??
+        ex_winstyle,// Optional window styles. // remove WS_EX_APPWINDOW to hide from taskbar WS_EX_TOOLWINDOW??
         CLASS_NAME,                     // Window class
-        L"Learn to Program Windows",    // Window text
+        L"klimV2",    // Window text
         winstyle,          // Window style
         //WS_VISIBLE | WS_POPUP,          // Window style
 
@@ -56,16 +65,20 @@ DWORD WINAPI myfunc(LPVOID lpParam)
         NULL        // Additional application data
         );
     SetLayeredWindowAttributes(hwnd, RGB(10,10,10), 0, LWA_COLORKEY);
-    SetWindowLong(hwnd, GWL_STYLE, winstyle & ~WS_BORDER);
+    if ( isOverlay == true ){
+        SetWindowLong(hwnd, GWL_STYLE, winstyle & ~WS_BORDER);
+    }
     // set window pos
     SystemParametersInfoA(SPI_GETWORKAREA, NULL, &screenSize, NULL);
     int ret;
     //ret = AdjustWindowRect(&screenSize, NULL, 0);
-    ret = SetWindowPos(hwnd, HWND_TOPMOST, screenSize.left, screenSize.top, screenSize.right, screenSize.bottom, SWP_NOACTIVATE | SWP_SHOWWINDOW);
-    if (ret == 0){
-        std::cout << "dll: adjustWindowRect FAILED" << std::endl;
+    if ( isOverlay == true ){
+        ret = SetWindowPos(hwnd, HWND_TOPMOST, screenSize.left, screenSize.top, screenSize.right, screenSize.bottom, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        if (ret == 0){
+            std::cout << "dll: adjustWindowRect FAILED" << std::endl;
+        }
+        std::cout << "dll: xpos - " << screenSize.left << "; ypos - " << screenSize.top << "; cx - " << screenSize.right << "; cy - " << screenSize.bottom << std::endl;
     }
-    std::cout << "dll: xpos - " << screenSize.left << "; ypos - " << screenSize.top << "; cx - " << screenSize.right << "; cy - " << screenSize.bottom << std::endl;
 
     if (hwnd == NULL)
     {
@@ -128,6 +141,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             // !!!ENDFONT!!!
 
             EndPaint(hwnd, &ps);
+            return 0;
         }
         return 0;
 
@@ -143,9 +157,10 @@ extern "C" {          // we need to export the C interface
 #endif
  
 int threadId = 0;
-__declspec(dllexport) DWORD WINAPI Overlay(LPTSTR inputText)
+__declspec(dllexport) DWORD WINAPI Overlay(LPTSTR inputText, bool isOverlayArg)
 {
     mytext = inputText;
+    isOverlay = isOverlayArg;
     //std::cout << "dll: attach" << std::endl;
     //std::wcout << L"dll: mytext = " << mytext << std::endl;
     //std::cout << "dll: get thread id" << std::endl;
