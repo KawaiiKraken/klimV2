@@ -29,7 +29,7 @@
 // random TODO more sensible variable and function names
 
 typedef UINT ( CALLBACK* LPFNDLLSTARTOVERLAY )( bool );
-typedef UINT ( CALLBACK* LPFNDLLUPDATEOVERLAYLINE )( LPTSTR, int );
+typedef UINT ( CALLBACK* LPFNDLLUPDATEOVERLAYLINE )( LPTSTR, int, COLORREF );
 
 using namespace std;
 
@@ -70,6 +70,7 @@ unsigned long block_traffic( LPVOID lpParam );
 char myNetRules[1000];
 const char *err_str;
 INT16 priority = 1000;
+COLORREF colorDefault, colorOff, colorOn;
 
 
 
@@ -484,6 +485,9 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
         WritePrivateProfileString( L"hotkeys", L"hotkey_suspend", L"p", filePath );
         WritePrivateProfileString( L"hotkeys", L"modkey_suspend", L"ctrl", filePath );
         WritePrivateProfileString( L"other", L"useOverlay", L"true", filePath );
+        WritePrivateProfileString( L"other", L"colorDefault", L"0x00FFFFFF", filePath );
+        WritePrivateProfileString( L"other", L"colorOn", L"0x000000FF", filePath );
+        WritePrivateProfileString( L"other", L"colorOff", L"0x00FFFFFF", filePath );
         
     }
     wcsncpy_s( pathToIni, sizeof( pathToIni ), filePath, sizeof( pathToIni ) );
@@ -666,6 +670,13 @@ int __cdecl main( int argc, char** argv ){
     }
     printf( "pathToIni %ls\n", pathToIni );
 
+    GetPrivateProfileStringW( L"other", L"colorDefault", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
+    colorDefault = wcstol(wc_buffer, NULL, 16);
+    GetPrivateProfileStringW( L"other", L"colorOn", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
+    colorOn = wcstol(wc_buffer, NULL, 16);
+    GetPrivateProfileStringW( L"other", L"colorOff", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
+    colorOff = wcstol(wc_buffer, NULL, 16);
+
     setVarsFromIni();
     
 
@@ -673,31 +684,31 @@ int __cdecl main( int argc, char** argv ){
     // TODO make this into a function
     wchar_t* wcstring = new wchar_t[200];
     triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( (wchar_t*)wcstring, 1 );
+    lpfnDllUpdateOverlayLine( wcstring, 1, colorDefault);
 
     triggerHotkeyString( wcstring, 200, hotkey_3074_UL, modkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 2 );
+    lpfnDllUpdateOverlayLine( wcstring, 2, colorDefault);
 
     triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 3 );
+    lpfnDllUpdateOverlayLine( wcstring, 3, colorDefault);
 
     triggerHotkeyString( wcstring, 200, hotkey_27k_UL, modkey_27k_UL, (wchar_t *)L"27kUL", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 4 );
+    lpfnDllUpdateOverlayLine( wcstring, 4, colorDefault);
 
     triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 5 );
+    lpfnDllUpdateOverlayLine( wcstring, 5, colorDefault);
 
     triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 6 );
+    lpfnDllUpdateOverlayLine( wcstring, 6, colorDefault);
 
     triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 7 );
+    lpfnDllUpdateOverlayLine( wcstring, 7, colorDefault);
 
     triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 8 );
+    lpfnDllUpdateOverlayLine( wcstring, 8, colorDefault);
 
     triggerHotkeyString( wcstring, 200, hotkey_exitapp, modkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 9 );
+    lpfnDllUpdateOverlayLine( wcstring, 9, colorDefault);
     
     delete []wcstring;
 
@@ -757,102 +768,124 @@ void combinerules(){
 }
 
 void toggle3074(){
+    COLORREF color;
     state3074 = !state3074;
     printf( "state3074 %s\n", state3074 ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state3074 ){
         triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L" on" );
+        color = colorOn;
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L" off" );
+        color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 1 );
+    lpfnDllUpdateOverlayLine( wcstring, 1, color);
     delete []wcstring;
 }
 
 void toggle3074_UL(){
+    COLORREF color;
     state3074_UL = !state3074_UL;
     printf( "state3074UL %s\n", state3074_UL ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state3074_UL ){
         triggerHotkeyString( wcstring, 200, hotkey_3074_UL, modkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L" on" );
+        color = colorOn;
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_3074_UL, modkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L" off" );
+        color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 2 );
+    lpfnDllUpdateOverlayLine( wcstring, 2, color);
     delete []wcstring;
 }
 
 void toggle27k(){
+    COLORREF color;
     state27k = !state27k;
     printf( "state3074UL %s\n", state27k ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state27k ){
         triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L" on" );
+        color = colorOn;
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L" off" );
+        color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 3 );
+    lpfnDllUpdateOverlayLine( wcstring, 3, color);
     delete []wcstring;
 }
 
 void toggle27k_UL(){
+    COLORREF color;
     state27k_UL = !state27k_UL;
     printf( "state3074UL %s\n", state27k_UL ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state27k_UL ){
         triggerHotkeyString( wcstring, 200, hotkey_27k_UL, modkey_27k_UL, (wchar_t *)L"27kUL", (wchar_t*)L" on" );
+        color = colorOn;
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_27k_UL, modkey_27k_UL, (wchar_t *)L"27kUL", (wchar_t*)L" off" );
+        color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 4 );
+    lpfnDllUpdateOverlayLine( wcstring, 4, color);
     delete []wcstring;
 }
 
 
 void toggle30k(){
+    COLORREF color;
     state30k = !state30k;
     printf( "state30k %s\n", state30k ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state30k ){
         triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L" on" );
+        color = colorOn;
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L" off" );
+        color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 5 );
+    lpfnDllUpdateOverlayLine( wcstring, 5, color);
     delete []wcstring;
 }
 
 void toggle7k(){
+    COLORREF color;
     state7k = !state7k;
     printf( "state7k %s\n", state7k ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state7k ){
         triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L" on" );
+        color = colorOn;
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L" off" );
+        color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 6 );
+    lpfnDllUpdateOverlayLine( wcstring, 6, color);
     delete []wcstring;
 }
 
 void toggleGame(){
+    COLORREF color;
     state_game = !state_game;
     printf( "state_game %s\n", state_game ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state_game ){
         ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 800KB", NULL, SW_HIDE);
         triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L" on" );
+        color = colorOn;
     } else {
         ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
         triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L" off" );
+        color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 7 );
+    lpfnDllUpdateOverlayLine( wcstring, 7, color);
     delete []wcstring;
     
 }
 
 
 void toggleSuspend(){
+    COLORREF color;
     if ( isD2Active() ){
         DWORD pid = 0;
         // shitty way to get pid but eh
@@ -864,6 +897,7 @@ void toggleSuspend(){
 
         if ( state_suspend ){
             triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" on" );
+            color = colorOn;
             if ( pid != 0 ){
                 printf( "pid: %lu\n", pid );
                 procHandle = OpenProcess( 0x1F0FFF, 0, pid ); // TODO remove magic numbers
@@ -874,8 +908,9 @@ void toggleSuspend(){
             }
         
         } else {
+            triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" off" );
+            color = colorOff;
             if ( pid != 0 ){
-                triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" off" );
                 procHandle = OpenProcess( 0x1F0FFF, 0, pid ); // TODO remove magic numbers
                 if ( procHandle != NULL ){
                     printf( "resuming match\n" );
@@ -886,7 +921,7 @@ void toggleSuspend(){
         if ( procHandle != NULL ){
             CloseHandle( procHandle );
         }
-        lpfnDllUpdateOverlayLine( wcstring, 8 );
+        lpfnDllUpdateOverlayLine( wcstring, 8, color);
         delete []wcstring;
     }
 }

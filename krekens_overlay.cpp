@@ -23,10 +23,12 @@ HANDLE threadHandle = nullptr;
 int nCmdShow = NULL;
 bool isOverlay;
 RECT screenSize;
+COLORREF colors[10];
 
 //using namespace std;
 
 RECT myDrawText(wchar_t* text, int index, RECT rect, HDC hdc){
+            SetTextColor(hdc, colors[index]);
             DrawText(hdc, ::mytext[index], -1, &rect, NULL);
             DrawText(hdc, ::mytext[index], -1, &rect, DT_CALCRECT);
             rect.top = rect.bottom;
@@ -192,8 +194,9 @@ __declspec( dllexport ) DWORD WINAPI startOverlay( bool isOverlayArg ) // TODO s
     return 0;
 }
 
-__declspec(dllexport) DWORD WINAPI updateOverlayLine( LPTSTR text, int linenum ) // TODO split into multiple functions
+__declspec(dllexport) DWORD WINAPI updateOverlayLine( LPTSTR text, int linenum, COLORREF color) // TODO split into multiple functions
 {
+    colors[linenum-1] = color;
     wcscpy_s(::mytext[linenum-1], text);
     printf("1: mytext[%d] = \"%ls\"\n", linenum-1, ::mytext[linenum-1]);
     RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
