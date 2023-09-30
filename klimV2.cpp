@@ -8,7 +8,7 @@
 #pragma comment( lib, "ntdll.lib" )
 // these 2 are just for the stuff in header files
 #pragma clang diagnostic ignored "-Wpragma-pack"
-#pragma clang diagnostic ignored "-Wwritable-strings"
+//#pragma clang diagnostic ignored "-Wwritable-strings"
 #pragma clang diagnostic ignored "-Wunused-variable"
 #pragma clang diagnostic ignored "-Wmicrosoft-enum-forward-reference"
 #include <windows.h>
@@ -28,12 +28,14 @@
 
 // random TODO more sensible variable and function names
 
-typedef UINT ( CALLBACK* LPFNDLLMYPUTS )( LPTSTR , bool );
+typedef UINT ( CALLBACK* LPFNDLLSTARTOVERLAY )( bool );
+typedef UINT ( CALLBACK* LPFNDLLUPDATEOVERLAYLINE )( LPTSTR, int );
 
 using namespace std;
 
 HINSTANCE hDLL, hDLL2;               
-LPFNDLLMYPUTS lpfnDllOverlay;    
+LPFNDLLSTARTOVERLAY lpfnDllStartOverlay;    
+LPFNDLLUPDATEOVERLAYLINE lpfnDllUpdateOverlayLine;    
 HHOOK hKeyboardHook;
 HANDLE gDoneEvent;
 HANDLE hThread = NULL;
@@ -63,22 +65,11 @@ void toggle7k();
 void toggleSuspend(); 
 void toggleGame(); 
 void combinerules();
-void updateOverlay();
-void updateOverlayLine1( wchar_t arg[] );
-void updateOverlayLine2( wchar_t arg[] );
-void updateOverlayLine3( wchar_t arg[] );
-void updateOverlayLine4( wchar_t arg[] );
-void updateOverlayLine5( wchar_t arg[] );
-void updateOverlayLine6( wchar_t arg[] );
-void updateOverlayLine7( wchar_t arg[] );
-void updateOverlayLine8( wchar_t arg[] );
-void updateOverlayLine9( wchar_t arg[] );
 const wchar_t* GetFileName( const wchar_t *path );
 unsigned long block_traffic( LPVOID lpParam );
 char myNetRules[1000];
 const char *err_str;
 INT16 priority = 1000;
-wchar_t combined_overlay[1000], overlay_line_1[100], overlay_line_2[100], overlay_line_3[100], overlay_line_4[100], overlay_line_5[100], overlay_line_6[100], overlay_line_7[100], overlay_line_8[100], overlay_line_9[100];
 
 
 
@@ -531,24 +522,24 @@ void setVarFromIni(wchar_t* hotkey_name, char* hotkey_var){
 void setVarsFromIni(){ 
     wchar_t buffer[50];
     wchar_t* wcSingleChar = nullptr;
-    setVarFromIni(L"hotkey_exitapp", &hotkey_exitapp);
-    setVarFromIni(L"modkey_exitapp", &modkey_exitapp);
-    setVarFromIni(L"hotkey_3074", &hotkey_3074);
-    setVarFromIni(L"modkey_3074", &modkey_3074);
-    setVarFromIni(L"hotkey_3074_UL", &hotkey_3074_UL);
-    setVarFromIni(L"modkey_3074_UL", &modkey_3074_UL);
-    setVarFromIni(L"hotkey_27k", &hotkey_27k);
-    setVarFromIni(L"modkey_27k", &modkey_27k);
-    setVarFromIni(L"hotkey_27k_UL", &hotkey_27k_UL);
-    setVarFromIni(L"modkey_27k_UL", &modkey_27k_UL);
-    setVarFromIni(L"hotkey_30k", &hotkey_30k);
-    setVarFromIni(L"modkey_30k", &modkey_30k);
-    setVarFromIni(L"hotkey_7k", &hotkey_7k);
-    setVarFromIni(L"modkey_7k", &modkey_7k);
-    setVarFromIni(L"hotkey_game", &hotkey_game);
-    setVarFromIni(L"modkey_game", &modkey_game);
-    setVarFromIni(L"hotkey_suspend", &hotkey_suspend);
-    setVarFromIni(L"modkey_suspend", &modkey_suspend);
+    setVarFromIni((wchar_t*)L"hotkey_exitapp", &hotkey_exitapp);
+    setVarFromIni((wchar_t*)L"modkey_exitapp", &modkey_exitapp);
+    setVarFromIni((wchar_t*)L"hotkey_3074", &hotkey_3074);
+    setVarFromIni((wchar_t*)L"modkey_3074", &modkey_3074);
+    setVarFromIni((wchar_t*)L"hotkey_3074_UL", &hotkey_3074_UL);
+    setVarFromIni((wchar_t*)L"modkey_3074_UL", &modkey_3074_UL);
+    setVarFromIni((wchar_t*)L"hotkey_27k", &hotkey_27k);
+    setVarFromIni((wchar_t*)L"modkey_27k", &modkey_27k);
+    setVarFromIni((wchar_t*)L"hotkey_27k_UL", &hotkey_27k_UL);
+    setVarFromIni((wchar_t*)L"modkey_27k_UL", &modkey_27k_UL);
+    setVarFromIni((wchar_t*)L"hotkey_30k", &hotkey_30k);
+    setVarFromIni((wchar_t*)L"modkey_30k", &modkey_30k);
+    setVarFromIni((wchar_t*)L"hotkey_7k", &hotkey_7k);
+    setVarFromIni((wchar_t*)L"modkey_7k", &modkey_7k);
+    setVarFromIni((wchar_t*)L"hotkey_game", &hotkey_game);
+    setVarFromIni((wchar_t*)L"modkey_game", &modkey_game);
+    setVarFromIni((wchar_t*)L"hotkey_suspend", &hotkey_suspend);
+    setVarFromIni((wchar_t*)L"modkey_suspend", &modkey_suspend);
 }
 
 void triggerHotkeyString( wchar_t* wcstring, int szWcstring, char hotkey, char modkey, wchar_t* action, wchar_t* state ){ // TODO better name for this
@@ -640,8 +631,16 @@ int __cdecl main( int argc, char** argv ){
     hDLL = LoadLibrary( L"krekens_overlay" );
     if ( hDLL != NULL )
     {
-        lpfnDllOverlay = (LPFNDLLMYPUTS)GetProcAddress( hDLL, "Overlay" );
-        if ( !lpfnDllOverlay )
+        lpfnDllStartOverlay = (LPFNDLLSTARTOVERLAY)GetProcAddress( hDLL, "startOverlay" );
+        if ( !lpfnDllStartOverlay )
+        {
+            // handle the error
+            FreeLibrary( hDLL );
+            printf( "handle the error");
+            return -3;
+        }
+        lpfnDllUpdateOverlayLine = (LPFNDLLUPDATEOVERLAYLINE)GetProcAddress( hDLL, "updateOverlayLine" );
+        if ( !lpfnDllUpdateOverlayLine )
         {
             // handle the error
             FreeLibrary( hDLL );
@@ -670,34 +669,35 @@ int __cdecl main( int argc, char** argv ){
     setVarsFromIni();
     
 
+    lpfnDllStartOverlay(useOverlay);
     // TODO make this into a function
     wchar_t* wcstring = new wchar_t[200];
     triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L"" );
-    updateOverlayLine1( wcstring );
+    lpfnDllUpdateOverlayLine( (wchar_t*)wcstring, 1 );
 
     triggerHotkeyString( wcstring, 200, hotkey_3074_UL, modkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L"" );
-    updateOverlayLine2( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 2 );
 
     triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L"" );
-    updateOverlayLine3( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 3 );
 
     triggerHotkeyString( wcstring, 200, hotkey_27k_UL, modkey_27k_UL, (wchar_t *)L"27kUL", (wchar_t*)L"" );
-    updateOverlayLine4( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 4 );
 
     triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L"" );
-    updateOverlayLine5( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 5 );
 
     triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L"" );
-    updateOverlayLine6( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 6 );
 
     triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L"" );
-    updateOverlayLine7( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 7 );
 
     triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L"" );
-    updateOverlayLine8( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 8 );
 
     triggerHotkeyString( wcstring, 200, hotkey_exitapp, modkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"" );
-    updateOverlayLine9( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 9 );
     
     delete []wcstring;
 
@@ -712,75 +712,6 @@ int __cdecl main( int argc, char** argv ){
     return 0;
 }
 
-// tbh this is shit and i just need to fix the dll but i cant be bothered
-void updateOverlay(){
-    wcscpy_s( combined_overlay, L"" );
-    int szCombined_overlay = sizeof( combined_overlay );
-    wcscat_s( combined_overlay, szCombined_overlay, overlay_line_1 );
-    wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
-    wcscat_s( combined_overlay, szCombined_overlay, overlay_line_2 );
-    wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
-    wcscat_s( combined_overlay, szCombined_overlay, overlay_line_3 );
-    wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
-    wcscat_s( combined_overlay, szCombined_overlay, overlay_line_4 );
-    wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
-    wcscat_s( combined_overlay, szCombined_overlay, overlay_line_5 );
-    wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
-    wcscat_s( combined_overlay, szCombined_overlay, overlay_line_6 );
-    wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
-    wcscat_s( combined_overlay, szCombined_overlay, overlay_line_7 );
-    wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
-    wcscat_s( combined_overlay, szCombined_overlay, overlay_line_8 );
-    wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
-    wcscat_s( combined_overlay, szCombined_overlay, overlay_line_9 );
-    wcscat_s( combined_overlay, szCombined_overlay, L"\n" );
-    lpfnDllOverlay( combined_overlay, useOverlay );
-}
-
-void updateOverlayLine1( wchar_t arg[] ){
-    wcscpy_s( overlay_line_1, arg );
-    updateOverlay();
-}
-
-void updateOverlayLine2( wchar_t arg[] ){
-    wcscpy_s( overlay_line_2, arg );
-    updateOverlay();
-}
-
-void updateOverlayLine3( wchar_t arg[] ){
-    wcscpy_s( overlay_line_3, arg );
-    updateOverlay();
-}
-
-void updateOverlayLine4( wchar_t arg[] ){
-    wcscpy_s( overlay_line_4, arg );
-    updateOverlay();
-}
-
-void updateOverlayLine5( wchar_t arg[] ){
-    wcscpy_s( overlay_line_5, arg );
-    updateOverlay();
-}
-
-void updateOverlayLine6( wchar_t arg[] ){
-    wcscpy_s( overlay_line_6, arg );
-    updateOverlay();
-}
-
-void updateOverlayLine7( wchar_t arg[] ){
-    wcscpy_s( overlay_line_7, arg );
-    updateOverlay();
-}
-
-void updateOverlayLine8( wchar_t arg[] ){
-    wcscpy_s( overlay_line_8, arg );
-    updateOverlay();
-}
-
-void updateOverlayLine9( wchar_t arg[] ){
-    wcscpy_s( overlay_line_9, arg );
-    updateOverlay();
-}
 
 void combinerules(){
     strcpy_s( myNetRules, sizeof( myNetRules ), "(udp.DstPort < 1 and udp.DstPort > 1)" ); // set to rule that wont match anything
@@ -834,7 +765,7 @@ void toggle3074(){
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L" off" );
     }
-    updateOverlayLine1( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 1 );
     delete []wcstring;
 }
 
@@ -847,7 +778,7 @@ void toggle3074_UL(){
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_3074_UL, modkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L" off" );
     }
-    updateOverlayLine2( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 2 );
     delete []wcstring;
 }
 
@@ -860,7 +791,7 @@ void toggle27k(){
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L" off" );
     }
-    updateOverlayLine3( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 3 );
     delete []wcstring;
 }
 
@@ -873,7 +804,7 @@ void toggle27k_UL(){
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_27k_UL, modkey_27k_UL, (wchar_t *)L"27kUL", (wchar_t*)L" off" );
     }
-    updateOverlayLine4( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 4 );
     delete []wcstring;
 }
 
@@ -887,7 +818,7 @@ void toggle30k(){
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L" off" );
     }
-    updateOverlayLine5( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 5 );
     delete []wcstring;
 }
 
@@ -900,7 +831,7 @@ void toggle7k(){
     } else {
         triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L" off" );
     }
-    updateOverlayLine6( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 6 );
     delete []wcstring;
 }
 
@@ -915,7 +846,7 @@ void toggleGame(){
         ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
         triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L" off" );
     }
-    updateOverlayLine7( wcstring );
+    lpfnDllUpdateOverlayLine( wcstring, 7 );
     delete []wcstring;
     
 }
@@ -955,7 +886,7 @@ void toggleSuspend(){
         if ( procHandle != NULL ){
             CloseHandle( procHandle );
         }
-        updateOverlayLine8( wcstring );
+        lpfnDllUpdateOverlayLine( wcstring, 8 );
         delete []wcstring;
     }
 }

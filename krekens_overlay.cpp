@@ -11,18 +11,29 @@
 #pragma comment( lib, "kernel32.lib" )
 #pragma comment( lib, "shell32.lib" )
 #pragma comment( lib, "gdi32.lib" )
+//#pragma clang diagnostic ignored "-Wwritable-strings"
 
 // TODO make it not take away focus when spawned
 
-LPCTSTR mytext;
+//LPCTSTR mytext;
+wchar_t mytext[10][1000];
 HWND hwnd, emptyhwnd;
 HINSTANCE dllHinst;
 HANDLE threadHandle = nullptr;
 int nCmdShow = NULL;
 bool isOverlay;
 RECT screenSize;
-bool mousedown = false;
-POINT lastLocation;
+
+//using namespace std;
+
+RECT myDrawText(wchar_t* text, int index, RECT rect, HDC hdc){
+            DrawText(hdc, ::mytext[index], -1, &rect, NULL);
+            DrawText(hdc, ::mytext[index], -1, &rect, DT_CALCRECT);
+            rect.top = rect.bottom;
+            rect.bottom = screenSize.bottom;
+            rect.right = screenSize.right;
+            return rect;
+}
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -121,9 +132,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             hFont1 = CreateFont(20, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
                 CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
             hFontOriginal = (HFONT)SelectObject(hdc, hFont1);
-            SetRect(&rect, 8, 8, screenSize.right, 225); // set to screen width so text is never cut
+            SetRect(&rect, 8, 8, screenSize.right, screenSize.bottom); // set to screen width so text is never cut
             SetTextColor(hdc, RGB(255,255,255));
             DrawText(hdc, L"made by _kreken", -1, &rect, NULL);
+            DrawText(hdc, L"made by _kreken", -1, &rect, DT_CALCRECT);
             SelectObject(hdc,hFontOriginal);
             DeleteObject(hFont1);
 
@@ -131,10 +143,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
             hFontOriginal = (HFONT)SelectObject(hdc, hFont2);
             
-            //Sets the coordinates for the rectangle in which the text is to be formatted.
-            SetRect(&rect, 8, 28, screenSize.right, screenSize.bottom); // set to screen width so text is never cut
-            DrawText(hdc, mytext, -1, &rect, NULL);
-            //std::wcout << L"dll: DrawText " << mytext << std::endl;
+            rect.top = rect.bottom;
+            rect.bottom = screenSize.bottom;
+            rect.right = screenSize.right;
+            rect = myDrawText(::mytext[0], 0, rect, hdc);
+            rect = myDrawText(::mytext[0], 1, rect, hdc);
+            rect = myDrawText(::mytext[0], 2, rect, hdc);
+            rect = myDrawText(::mytext[0], 3, rect, hdc);
+            rect = myDrawText(::mytext[0], 4, rect, hdc);
+            rect = myDrawText(::mytext[0], 5, rect, hdc);
+            rect = myDrawText(::mytext[0], 6, rect, hdc);
+            rect = myDrawText(::mytext[0], 7, rect, hdc);
+            rect = myDrawText(::mytext[0], 8, rect, hdc);
+            rect = myDrawText(::mytext[0], 9, rect, hdc);
             SelectObject(hdc,hFontOriginal);
             DeleteObject(hFont2);
         
@@ -157,22 +178,25 @@ extern "C" {          // we need to export the C interface
 #endif
  
 int threadId = 0;
-__declspec(dllexport) DWORD WINAPI Overlay(LPTSTR inputText, bool isOverlayArg)
+__declspec( dllexport ) DWORD WINAPI startOverlay( bool isOverlayArg ) // TODO split into multiple functions
 {
-    mytext = inputText;
+    std::cout << "overlay startup\n";
+    //::mytext = L"a";
+    wcscpy_s(::mytext[0], (wchar_t*)L"asdf");
+    std::cout << "overlay startup 2\n";
     isOverlay = isOverlayArg;
-    //std::cout << "dll: attach" << std::endl;
-    //std::wcout << L"dll: mytext = " << mytext << std::endl;
-    //std::cout << "dll: get thread id" << std::endl;
     threadId = GetThreadId(threadHandle);
-    //std::cout << "dll: " << threadId << std::endl;
     if (threadId == 0){ // if window created update instead
-        //std::cout << "dll: create thread" << std::endl;
         threadHandle = CreateThread(NULL, NULL, myfunc, NULL, 0, NULL);
-    } else {
-        //std::cout << "dll: update window " << hwnd << std::endl;
-        RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
+    return 0;
+}
+
+__declspec(dllexport) DWORD WINAPI updateOverlayLine( LPTSTR text, int linenum ) // TODO split into multiple functions
+{
+    wcscpy_s(::mytext[linenum-1], text);
+    printf("1: mytext[%d] = \"%ls\"\n", linenum-1, ::mytext[linenum-1]);
+    RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
     return 0;
 }
 
