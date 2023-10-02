@@ -8,9 +8,10 @@
 #pragma comment( lib, "ntdll.lib" )
 // these 2 are just for the stuff in header files
 #pragma clang diagnostic ignored "-Wpragma-pack"
-//#pragma clang diagnostic ignored "-Wwritable-strings"
-#pragma clang diagnostic ignored "-Wunused-variable"
 #pragma clang diagnostic ignored "-Wmicrosoft-enum-forward-reference"
+
+#pragma clang diagnostic ignored "-Wunused-variable"
+//#pragma clang diagnostic ignored "-Wwritable-strings"
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -140,10 +141,9 @@ bool isD2Active(){
 
 
 void startFilter(){
-    printf( "Starting thread\n" );
     hThread = CreateThread( NULL, 0, block_traffic, NULL, 0, NULL );
     can_trigger_any_hotkey = TRUE;
-    printf( "hotkley re-enabled\n" );
+    printf( "hotkeys re-enabled\n" );
 }
 
 bool hotkey_3074_keydown = FALSE;
@@ -248,8 +248,8 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             modkey_game_state = GetAsyncKeyState( modkey_suspend );
             modkey_suspend_state = GetAsyncKeyState( modkey_suspend );
             modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
-            // double cuz im lazy enough to not bitshift
 
+            // double cuz im lazy enough to not bitshift
             modkey_3074_state = GetAsyncKeyState( modkey_3074 );
             modkey_3074_UL_state = GetAsyncKeyState( modkey_3074_UL );
             modkey_27k_UL_state = GetAsyncKeyState( modkey_27k_UL );
@@ -260,7 +260,6 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
 
 
-            //if  (GetAsyncKeyState(VK_SHIFT)>= 0) key +=32;
             
             // ============= 3074 ================
             if ( modkey_3074_state !=0 && key == hotkey_3074 ) 
@@ -397,14 +396,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
                 }
                 PostQuitMessage(0);
             }
-            //printf("key: %d\n", key);
-
-
-            //printf("key = %c\n", key);
-
         }
-
-        //printf("lpszKeyName = %ls\n",  lpszKeyName );
     }
     return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
 }
@@ -525,24 +517,24 @@ void setVarFromIni(wchar_t* hotkey_name, char* hotkey_var){
 void setVarsFromIni(){ 
     wchar_t buffer[50];
     wchar_t* wcSingleChar = nullptr;
-    setVarFromIni((wchar_t*)L"hotkey_exitapp", &hotkey_exitapp);
-    setVarFromIni((wchar_t*)L"modkey_exitapp", &modkey_exitapp);
-    setVarFromIni((wchar_t*)L"hotkey_3074", &hotkey_3074);
-    setVarFromIni((wchar_t*)L"modkey_3074", &modkey_3074);
-    setVarFromIni((wchar_t*)L"hotkey_3074_UL", &hotkey_3074_UL);
-    setVarFromIni((wchar_t*)L"modkey_3074_UL", &modkey_3074_UL);
-    setVarFromIni((wchar_t*)L"hotkey_27k", &hotkey_27k);
-    setVarFromIni((wchar_t*)L"modkey_27k", &modkey_27k);
-    setVarFromIni((wchar_t*)L"hotkey_27k_UL", &hotkey_27k_UL);
-    setVarFromIni((wchar_t*)L"modkey_27k_UL", &modkey_27k_UL);
-    setVarFromIni((wchar_t*)L"hotkey_30k", &hotkey_30k);
-    setVarFromIni((wchar_t*)L"modkey_30k", &modkey_30k);
-    setVarFromIni((wchar_t*)L"hotkey_7k", &hotkey_7k);
-    setVarFromIni((wchar_t*)L"modkey_7k", &modkey_7k);
-    setVarFromIni((wchar_t*)L"hotkey_game", &hotkey_game);
-    setVarFromIni((wchar_t*)L"modkey_game", &modkey_game);
-    setVarFromIni((wchar_t*)L"hotkey_suspend", &hotkey_suspend);
-    setVarFromIni((wchar_t*)L"modkey_suspend", &modkey_suspend);
+    setVarFromIni( (wchar_t*)L"hotkey_exitapp", &hotkey_exitapp );
+    setVarFromIni( (wchar_t*)L"modkey_exitapp", &modkey_exitapp );
+    setVarFromIni( (wchar_t*)L"hotkey_3074", &hotkey_3074 );
+    setVarFromIni( (wchar_t*)L"modkey_3074", &modkey_3074 );
+    setVarFromIni( (wchar_t*)L"hotkey_3074_UL", &hotkey_3074_UL );
+    setVarFromIni( (wchar_t*)L"modkey_3074_UL", &modkey_3074_UL );
+    setVarFromIni( (wchar_t*)L"hotkey_27k", &hotkey_27k );
+    setVarFromIni( (wchar_t*)L"modkey_27k", &modkey_27k );
+    setVarFromIni( (wchar_t*)L"hotkey_27k_UL", &hotkey_27k_UL );
+    setVarFromIni( (wchar_t*)L"modkey_27k_UL", &modkey_27k_UL );
+    setVarFromIni( (wchar_t*)L"hotkey_30k", &hotkey_30k );
+    setVarFromIni( (wchar_t*)L"modkey_30k", &modkey_30k );
+    setVarFromIni( (wchar_t*)L"hotkey_7k", &hotkey_7k );
+    setVarFromIni( (wchar_t*)L"modkey_7k", &modkey_7k );
+    setVarFromIni( (wchar_t*)L"hotkey_game", &hotkey_game );
+    setVarFromIni( (wchar_t*)L"modkey_game", &modkey_game );
+    setVarFromIni( (wchar_t*)L"hotkey_suspend", &hotkey_suspend );
+    setVarFromIni( (wchar_t*)L"modkey_suspend", &modkey_suspend );
 }
 
 void triggerHotkeyString( wchar_t* wcstring, int szWcstring, char hotkey, char modkey, wchar_t* action, wchar_t* state ){ // TODO better name for this
@@ -563,13 +555,13 @@ void triggerHotkeyString( wchar_t* wcstring, int szWcstring, char hotkey, char m
     mbstowcs_s( &outSize, wcstringbuf2, szCharbuf2, charbuf2, szCharbuf2-1 );
     wcscpy_s( wcstring, szWcstring-1, wcstringbuf2);
     if ( modkey == VK_SHIFT ){
-        wcscpy_s( wcstring, sizeof(L"shift"), L"shift");
+        wcscpy_s( wcstring, sizeof(L"shift"), L"shift" );
     }
     if ( modkey == VK_CONTROL ){
-        wcscpy_s( wcstring, sizeof(L"ctrl"), L"ctrl");
+        wcscpy_s( wcstring, sizeof(L"ctrl"), L"ctrl" );
     }
     if ( modkey == VK_MENU ){
-        wcscpy_s( wcstring, sizeof(L"alt"), L"alt");
+        wcscpy_s( wcstring, sizeof(L"alt"), L"alt" );
     }
     wcscat_s( wcstring, szWcstring, L"+");
     wcscat_s( wcstring, szWcstring, wcstringbuf );
@@ -717,7 +709,7 @@ int __cdecl main( int argc, char** argv ){
 
 
     printf( "starting hotkey thread\n" );
-    hThread = CreateThread( NULL, NULL, (LPTHREAD_START_ROUTINE)my_HotKey, (LPVOID)NULL, NULL, &dwThread);
+    hThread = CreateThread( NULL, NULL, (LPTHREAD_START_ROUTINE)my_HotKey, (LPVOID)NULL, NULL, &dwThread );
 
     if ( hThread ) return WaitForSingleObject( hThread, INFINITE );
     else return 1;
@@ -873,11 +865,11 @@ void toggleGame(){
     printf( "state_game %s\n", state_game ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( state_game ){
-        ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 800KB", NULL, SW_HIDE);
+        ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 800KB", NULL, SW_HIDE );
         triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L" on" );
         color = colorOn;
     } else {
-        ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
+        ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE );
         triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L" off" );
         color = colorOff;
     }
