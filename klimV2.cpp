@@ -26,9 +26,8 @@
 
 #include "windivert.h"
 
-// random TODO more sensible variable and function names
 
-typedef UINT ( CALLBACK* LPFNDLLSTARTOVERLAY )( bool );
+typedef UINT ( CALLBACK* LPFNDLLSTARTOVERLAY )( bool, int );
 typedef UINT ( CALLBACK* LPFNDLLUPDATEOVERLAYLINE )( LPTSTR, int, COLORREF );
 
 using namespace std;
@@ -54,7 +53,6 @@ bool state7k = FALSE;
 bool state_game = FALSE;
 bool state_suspend = FALSE;
 bool debug = FALSE;
-bool useOverlay;
 int __cdecl Overlay( LPTSTR );   
 void toggle3074();
 void toggle3074_UL();
@@ -240,7 +238,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         //if ( key != ( modkey_3074 | modkey_3074_UL | modkey_27k | modkey_30k | modkey_7k | modkey_suspend | modkey_exitapp ) )   // this might be a bit broken or unneeded
         if ( TRUE )   // this might be a bit broken or unneeded
         {
-            // TODO use the hotkey system properly instead of using GetAsyncState, and add different modifiers to the config file
+            // TODO use the hotkey system properly instead of using GetAsyncState
             modkey_3074_state = GetAsyncKeyState( modkey_3074 );
             modkey_3074_UL_state = GetAsyncKeyState( modkey_3074_UL );
             modkey_27k_state = GetAsyncKeyState( modkey_27k );
@@ -485,6 +483,7 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
         WritePrivateProfileString( L"hotkeys", L"hotkey_suspend", L"p", filePath );
         WritePrivateProfileString( L"hotkeys", L"modkey_suspend", L"ctrl", filePath );
         WritePrivateProfileString( L"other", L"useOverlay", L"true", filePath );
+        WritePrivateProfileString( L"other", L"fontSize", L"30", filePath );
         WritePrivateProfileString( L"other", L"colorDefault", L"0x00FFFFFF", filePath );
         WritePrivateProfileString( L"other", L"colorOn", L"0x000000FF", filePath );
         WritePrivateProfileString( L"other", L"colorOff", L"0x00FFFFFF", filePath );
@@ -659,6 +658,7 @@ int __cdecl main( int argc, char** argv ){
     // ini file stuff
     setGlobalPathToIni(); 
     wchar_t wc_buffer[50];
+    bool useOverlay;
     GetPrivateProfileStringW( L"other", L"useOverlay", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
     if ( wcscmp(wc_buffer, L"true") == 0 ){
         useOverlay = true;
@@ -670,6 +670,9 @@ int __cdecl main( int argc, char** argv ){
     }
     printf( "pathToIni %ls\n", pathToIni );
 
+    int fontSize;
+    GetPrivateProfileStringW( L"other", L"fontSize", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
+    fontSize = wcstol(wc_buffer, NULL, 10);
     GetPrivateProfileStringW( L"other", L"colorDefault", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
     colorDefault = wcstol(wc_buffer, NULL, 16);
     GetPrivateProfileStringW( L"other", L"colorOn", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
@@ -680,7 +683,7 @@ int __cdecl main( int argc, char** argv ){
     setVarsFromIni();
     
 
-    lpfnDllStartOverlay(useOverlay);
+    lpfnDllStartOverlay( useOverlay, fontSize );
     // TODO make this into a function
     wchar_t* wcstring = new wchar_t[200];
     triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L"" );
@@ -730,7 +733,7 @@ void combinerules(){
         strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)" );
     }
     if (state3074_UL){
-        strcat_s( myNetRules, sizeof( myNetRules ), "or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); // TODO test this rule
+        strcat_s( myNetRules, sizeof( myNetRules ), "or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
     }
     if (state27k){
         strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)" );
