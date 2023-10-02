@@ -1,17 +1,21 @@
+// TODO comments
 #define _WIN32_WINNT_WIN10 0x0A00 // Windows 10
 #define PHNT_VERSION PHNT_THRESHOLD // Windows 10
+                                    //
 #pragma comment( lib, "user32.lib" )
 #pragma comment( lib, "kernel32.lib" )
 #pragma comment( lib, "shell32.lib" )
 #pragma comment( lib, "advapi32.lib" )
 #pragma comment( lib, "Psapi.lib" )
 #pragma comment( lib, "ntdll.lib" )
-// these 2 are just for the stuff in header files
+
+// these 2 are for the phnt header files
 #pragma clang diagnostic ignored "-Wpragma-pack"
 #pragma clang diagnostic ignored "-Wmicrosoft-enum-forward-reference"
 
 #pragma clang diagnostic ignored "-Wunused-variable"
 //#pragma clang diagnostic ignored "-Wwritable-strings"
+
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,10 +26,11 @@
 #include <wchar.h>
 #include <shellapi.h>
 #include <psapi.h>
+
 #include "phnt/phnt_windows.h"
 #include "phnt/phnt.h"
 
-#include "windivert.h"
+#include "WinDivert/windivert.h"
 
 
 typedef UINT ( CALLBACK* LPFNDLLSTARTOVERLAY )( bool, int );
