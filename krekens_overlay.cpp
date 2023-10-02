@@ -1,9 +1,3 @@
-// The export mechanism used here is the __declspec(export)
-// method supported by Microsoft Visual Studio, but any
-// other export method supported by your development
-// environment may be substituted.
- 
- 
 #include <windows.h>
 #include <iostream>
 
@@ -14,6 +8,7 @@
 //#pragma clang diagnostic ignored "-Wwritable-strings"
 
 // TODO make it not take away focus when spawned
+// TODO comments
 
 wchar_t mytext[10][1000];
 HWND hwnd, emptyhwnd;
