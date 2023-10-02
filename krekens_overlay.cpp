@@ -21,6 +21,7 @@ HWND hwnd, emptyhwnd;
 HINSTANCE dllHinst;
 HANDLE threadHandle = nullptr;
 int nCmdShow = NULL;
+int fontSize;
 bool isOverlay;
 RECT screenSize;
 COLORREF colors[10];
@@ -131,17 +132,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             // !!!FONT!!!
             RECT rect;
             HFONT hFontOriginal, hFont1, hFont2;
-            hFont1 = CreateFont(20, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
+            hFont1 = CreateFont(fontSize-3, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
                 CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
             hFontOriginal = (HFONT)SelectObject(hdc, hFont1);
-            SetRect(&rect, 8, 8, screenSize.right, screenSize.bottom); // set to screen width so text is never cut
+            SetRect(&rect, 5, 5, screenSize.right, screenSize.bottom); // set to screen width so text is never cut
             SetTextColor(hdc, RGB(255,255,255));
-            DrawText(hdc, L"made by _kreken", -1, &rect, NULL);
-            DrawText(hdc, L"made by _kreken", -1, &rect, DT_CALCRECT);
+            DrawText(hdc, L"made by kreken", -1, &rect, NULL);
+            DrawText(hdc, L"made by kreken", -1, &rect, DT_CALCRECT);
             SelectObject(hdc,hFontOriginal);
             DeleteObject(hFont1);
 
-            hFont2 = CreateFont(30, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
+            hFont2 = CreateFont(fontSize, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
                 CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
             hFontOriginal = (HFONT)SelectObject(hdc, hFont2);
             
@@ -180,10 +181,10 @@ extern "C" {          // we need to export the C interface
 #endif
  
 int threadId = 0;
-__declspec( dllexport ) DWORD WINAPI startOverlay( bool isOverlayArg ) // TODO split into multiple functions
+__declspec( dllexport ) DWORD WINAPI startOverlay( bool isOverlayArg, int fontSizeArg ) // TODO split into multiple functions
 {
     std::cout << "overlay startup\n";
-    //::mytext = L"a";
+    fontSize = fontSizeArg;
     wcscpy_s(::mytext[0], (wchar_t*)L"asdf");
     std::cout << "overlay startup 2\n";
     isOverlay = isOverlayArg;
