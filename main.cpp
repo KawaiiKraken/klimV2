@@ -32,6 +32,8 @@
 
 #include "WinDivert/windivert.h"
 
+#include "isD2Active.h"
+
 
 typedef UINT ( CALLBACK* LPFNDLLSTARTOVERLAY )( bool, int );
 typedef UINT ( CALLBACK* LPFNDLLUPDATEOVERLAYLINE )( LPTSTR, int, COLORREF );
@@ -69,7 +71,6 @@ void toggle7k();
 void toggleSuspend(); 
 void toggleGame(); 
 void combinerules();
-const wchar_t* GetFileName( const wchar_t *path );
 unsigned long block_traffic( LPVOID lpParam );
 char myNetRules[1000];
 const char *err_str;
@@ -127,22 +128,6 @@ static void PacketIpv6TcpInit( PTCPV6PACKET packet );
 static void PacketIpv6Icmpv6Init( PICMPV6PACKET packet );
 
 
-bool isD2Active(){
-    TCHAR buffer[MAX_PATH] = {0};
-    DWORD dwProcId = 0; 
-    GetWindowThreadProcessId( GetForegroundWindow(), &dwProcId );
-    HANDLE hProc = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ , FALSE, dwProcId );
-    GetModuleFileNameEx( hProc, NULL, buffer, MAX_PATH );
-    printf( "buffer: %ls\n", buffer );
-    const wchar_t* bufferFilename = GetFileName( buffer );
-    printf( "filename: %ls\n", bufferFilename );
-    CloseHandle( hProc );
-    if ( wcscmp( bufferFilename, L"destiny2.exe" ) == 0 ){
-        return TRUE;
-    } else {
-        return FALSE;
-    }
-}
 
 
 void startFilter(){
@@ -435,15 +420,6 @@ BOOL FileExists( LPCTSTR szPath )
   return ( dwAttrib != INVALID_FILE_ATTRIBUTES && !( dwAttrib & FILE_ATTRIBUTE_DIRECTORY ) );
 }
 
-const wchar_t* GetFileName( const wchar_t *path )
-{
-    const wchar_t *filename = wcsrchr( path, '\\' );
-    if ( filename == NULL )
-        filename = path;
-    else
-        filename++;
-    return filename;
-}
 
 
 void setGlobalPathToIni(){ // this function does a bit too much, should prob split it up
@@ -515,8 +491,6 @@ void setVarFromIni(wchar_t* hotkey_name, char* hotkey_var){
             printf( "set %ls to: %s\n", hotkey_name, hotkey_var);
         }
     } 
-
-
 }
 
 void setVarsFromIni(){ 
