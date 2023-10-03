@@ -27,12 +27,12 @@
 #include <shellapi.h>
 #include <psapi.h>
 
-#include "phnt/phnt_windows.h"
-#include "phnt/phnt.h"
+#include "../phnt/phnt_windows.h"
+#include "../phnt/phnt.h"
 
-#include "WinDivert/windivert.h"
+#include "../WinDivert/windivert.h"
 
-#include "isD2Active.h"
+#include "helperFunctions.h"
 
 
 typedef UINT ( CALLBACK* LPFNDLLSTARTOVERLAY )( bool, int );

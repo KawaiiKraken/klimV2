@@ -1,8 +1,4 @@
-#include <windows.h>
-#include <tchar.h>
-#include <iostream>
-#include <psapi.h>
-#include "isD2Active.h"
+#include "helperFunctions.h"
 
 const wchar_t* GetFileName( const wchar_t *path )
 {
