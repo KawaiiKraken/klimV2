@@ -38,3 +38,8 @@ release: ${BUILD_DIR}\krekens_overlay.dll ${BUILD_DIR}\klim.exe
 	-copy .\WinDivert\WinDivert.dll ${RELEASE_DIR}\ 
 	-copy .\WinDivert\WinDivert64.sys ${RELEASE_DIR}\ 
 	
+test:
+	-cmd.exe /k "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86
+	mt.exe -nologo -manifest "..\klimV2.exe.manifest" -outputresource:"klimV2.exe;#1"
+
+	
