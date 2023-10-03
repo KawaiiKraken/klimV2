@@ -1,4 +1,4 @@
-.PHONY: clean cleanup all fresh release 
+.PHONY: clean cleanup all fresh release test help
 CC=clang++.exe
 objects := klim.o helperFunctions.o
 BUILD_DIR := .\build
@@ -7,18 +7,30 @@ RELEASE_DIR := .\release
 INC_DIRS := .\phnt,.\WinDivert,${SRC_DIR}
 INC_FLAGS := -I,$(INC_DIRS)
 
-all: klim.exe krekens_overlay.dll cleanup
+all: ${BUILD_DIR}\klim.exe ${BUILD_DIR}\krekens_overlay.dll cleanup
 
-klim.o: ${SRC_DIR}\main.cpp
+help:
+	@echo available targets:
+	@echo    release             - makes a release dir with a ready to use klim (hopefully).
+	@echo    fresh               - compile all from scratch.
+	@echo    klim.exe            - self explanatory.
+	@echo    krekens_overlay.dll - self explanatory.
+	@echo    clean               - deletes contents of ${BUILD_DIR}.
+	@echo    help                - prints this message.
+	@echo    ..there are other targets but they should not be used.
+
+${BUILD_DIR}\klim.o: ${SRC_DIR}\main.cpp
+	-mkdir ${BUILD_DIR} 
 	${CC} -o ${BUILD_DIR}\main.o -D "_UNICODE" -D "UNICODE" -Wall -c ${INC_FLAGS} ${SRC_DIR}\main.cpp 
 	
-helperFunctions.o: 
+${BUILD_DIR}\helperFunctions.o: 
+	-mkdir ${BUILD_DIR} 
 	${CC} -o ${BUILD_DIR}\helperFunctions.o -D "_UNICODE" -D "UNICODE" -Wall -c ${INC_FLAGS} ${SRC_DIR}\helperFunctions.cpp 
 
-klim.exe: ${objects}
+${BUILD_DIR}\klim.exe: ${BUILD_DIR}\klim.o ${BUILD_DIR}\helperFunctions.o
 	${CC} -o ${BUILD_DIR}\klim.exe -l ".\Windivert\Windivert.lib" ${BUILD_DIR}\main.o ${BUILD_DIR}\helperFunctions.o 
 
-krekens_overlay.dll: ${SRC_DIR}\krekens_overlay.cpp
+${build}\krekens_overlay.dll: ${SRC_DIR}\krekens_overlay.cpp
 	${CC} -o ${BUILD_DIR}\krekens_overlay.dll -D "_UNICODE" -D "UNICODE" -shared -Wall ${SRC_DIR}\krekens_overlay.cpp 
 
 cleanup:
@@ -28,6 +40,7 @@ cleanup:
 	
 clean:
 	-del /F /Q ${BUILD_DIR}\*
+	-rmdir ${BUILD_DIR}
 
 fresh: clean all cleanup
 
@@ -39,7 +52,5 @@ release: ${BUILD_DIR}\krekens_overlay.dll ${BUILD_DIR}\klim.exe
 	-copy .\WinDivert\WinDivert64.sys ${RELEASE_DIR}\ 
 	
 test:
-	-cmd.exe /k "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86
-	mt.exe -nologo -manifest "..\klimV2.exe.manifest" -outputresource:"klimV2.exe;#1"
+	@echo nothing here currently..
 
-	
