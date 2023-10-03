@@ -3,33 +3,31 @@
 
 using namespace std;
 
+struct limit {
+    char hotkey;
+    char modkey;
+    bool state = FALSE;
+    bool hotkey_keydown = FALSE;
+    DWORD modkey_state = 0;
+};
+
+struct limit lim3074; 
+struct limit lim3074UL; 
+struct limit lim27k; 
+struct limit lim27kUL; 
+struct limit lim30k; 
+struct limit lim7k; 
+struct limit lim_game; 
+struct limit suspend; 
+
 void startFilter(){
     hThread = CreateThread( NULL, 0, block_traffic, handle, 0, NULL );
     can_trigger_any_hotkey = TRUE;
     printf( "hotkeys re-enabled\n" );
 }
 
-bool hotkey_3074_keydown = FALSE;
-bool hotkey_3074_UL_keydown = FALSE;
-bool hotkey_27k_keydown = FALSE;
-bool hotkey_27k_UL_keydown = FALSE;
-bool hotkey_30k_keydown = FALSE;
-bool hotkey_7k_keydown = FALSE;
-bool hotkey_game_keydown = FALSE;
-bool hotkey_suspend_keydown = FALSE;
-
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam )
 {
-    DWORD modkey_3074_state=0;
-    DWORD modkey_3074_UL_state=0;
-    DWORD modkey_27k_state=0;
-    DWORD modkey_27k_UL_state=0;
-    DWORD modkey_30k_state=0;
-    DWORD modkey_7k_state=0;
-    DWORD modkey_game =0;
-    DWORD modkey_suspend_state=0;
-    DWORD modkey_exitapp_state=0;
-
     if  ( ( nCode == HC_ACTION ) &&   ( ( wParam == WM_SYSKEYUP ) ||  ( wParam == WM_KEYUP ) ) )      
     {
         KBDLLHOOKSTRUCT hooked_key =    *( ( KBDLLHOOKSTRUCT* )lParam );
@@ -46,28 +44,28 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         if ( key != ( VK_SHIFT | VK_CONTROL | VK_MENU ) )   // this might be a bit broken
         {
             if ( key == hotkey_3074 ){
-                hotkey_3074_keydown = FALSE;
+                lim3074.hotkey_keydown = FALSE;
             }
             if ( key == hotkey_3074_UL ){
-                hotkey_3074_UL_keydown = FALSE;
+                lim3074UL.hotkey_keydown =  FALSE;
             }
             if ( key == hotkey_27k){
-                hotkey_27k_keydown = FALSE;
+                lim27k.hotkey_keydown = FALSE;
             }
             if ( key == hotkey_27k_UL){
-                hotkey_27k_UL_keydown = FALSE;
+                lim27kUL.hotkey_keydown = FALSE;
             }
             if ( key == hotkey_30k){
-                hotkey_30k_keydown = FALSE;
+                lim30k.hotkey_keydown = FALSE;
             }
             if ( key == hotkey_7k){
-                hotkey_7k_keydown = FALSE;
+                lim7k.hotkey_keydown = FALSE;
             }
             if ( key == hotkey_game){
-                hotkey_game_keydown = FALSE;
+                lim_game.hotkey_keydown = FALSE;
             }
             if ( key == hotkey_suspend){
-                hotkey_suspend_keydown = FALSE;
+                suspend.hotkey_keydown = FALSE;
             }
         }
     }
@@ -87,165 +85,156 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
         int key = hooked_key.vkCode;
 
-        DWORD modkey_3074_state = 0;
-        DWORD modkey_3074_UL_state = 0;
-        DWORD modkey_27k_state = 0;
-        DWORD modkey_27k_UL_state = 0;
-        DWORD modkey_30k_state = 0;
-        DWORD modkey_7k_state = 0;
-        DWORD modkey_game_state = 0;
-        DWORD modkey_suspend_state = 0;
-        DWORD modkey_exitapp_state = 0;
-
         //if (key >= 'A' && key <= 'Z')   
         //if ( key != ( modkey_3074 | modkey_3074_UL | modkey_27k | modkey_30k | modkey_7k | modkey_suspend | modkey_exitapp ) )   // this might be a bit broken or unneeded
         if ( TRUE )   // this might be a bit broken or unneeded
         {
             // TODO use the hotkey system properly instead of using GetAsyncState
-            modkey_3074_state = GetAsyncKeyState( modkey_3074 );
-            modkey_3074_UL_state = GetAsyncKeyState( modkey_3074_UL );
-            modkey_27k_state = GetAsyncKeyState( modkey_27k );
-            modkey_27k_UL_state = GetAsyncKeyState( modkey_27k_UL );
-            modkey_30k_state = GetAsyncKeyState( modkey_30k );
-            modkey_7k_state = GetAsyncKeyState( modkey_7k );
-            modkey_game_state = GetAsyncKeyState( modkey_suspend );
-            modkey_suspend_state = GetAsyncKeyState( modkey_suspend );
-            modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
+            lim3074.modkey_state = GetAsyncKeyState( modkey_3074 );
+            lim3074UL.modkey_state = GetAsyncKeyState( modkey_3074_UL );
+            lim27k.modkey_state = GetAsyncKeyState( modkey_27k );
+            lim27kUL.modkey_state = GetAsyncKeyState( modkey_27k_UL );
+            lim30k.modkey_state = GetAsyncKeyState( modkey_30k );
+            lim7k.modkey_state = GetAsyncKeyState( modkey_7k );
+            lim_game.modkey_state = GetAsyncKeyState( modkey_game );
+            suspend.modkey_state = GetAsyncKeyState( modkey_suspend );
+            DWORD modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
 
             // double cuz im lazy enough to not bitshift
-            modkey_3074_state = GetAsyncKeyState( modkey_3074 );
-            modkey_3074_UL_state = GetAsyncKeyState( modkey_3074_UL );
-            modkey_27k_UL_state = GetAsyncKeyState( modkey_27k_UL );
-            modkey_30k_state = GetAsyncKeyState( modkey_30k );
-            modkey_7k_state = GetAsyncKeyState( modkey_7k );
-            modkey_game_state = GetAsyncKeyState( modkey_suspend );
-            modkey_suspend_state = GetAsyncKeyState( modkey_suspend );
+            lim3074.modkey_state = GetAsyncKeyState( modkey_3074 );
+            lim3074UL.modkey_state = GetAsyncKeyState( modkey_3074_UL );
+            lim27k.modkey_state = GetAsyncKeyState( modkey_27k );
+            lim27kUL.modkey_state = GetAsyncKeyState( modkey_27k_UL );
+            lim30k.modkey_state = GetAsyncKeyState( modkey_30k );
+            lim7k.modkey_state = GetAsyncKeyState( modkey_7k );
+            lim_game.modkey_state = GetAsyncKeyState( modkey_game );
+            suspend.modkey_state = GetAsyncKeyState( modkey_suspend );
             modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
 
 
             
             // ============= 3074 ================
-            if ( modkey_3074_state !=0 && key == hotkey_3074 ) 
+            if ( lim3074.modkey_state !=0 && key == hotkey_3074 ) 
             {
                 wcout << L"hotkey_3074 detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !hotkey_3074_keydown ){ 
+                    if ( can_trigger_any_hotkey && !lim3074.hotkey_keydown ){ 
                         can_trigger_any_hotkey = FALSE;
-                        hotkey_3074_keydown = TRUE;
+                        lim3074.hotkey_keydown = TRUE;
                         toggle3074();
                         combinerules();
                         startFilter();
                     }
                 }
-                modkey_3074_state=0;
+                lim3074.modkey_state = 0;
             }
 
             // ============= 3074UL ================
-            if ( modkey_3074_UL_state !=0 && key == hotkey_3074_UL ) 
+            if ( lim3074UL.modkey_state !=0 && key == hotkey_3074_UL ) 
             {
                 wcout << L"hotkey_3074 detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !hotkey_3074_UL_keydown ){ 
+                    if ( can_trigger_any_hotkey && !lim3074UL.hotkey_keydown ){ 
                         can_trigger_any_hotkey = FALSE;
-                        hotkey_3074_UL_keydown = TRUE;
+                        lim3074UL.hotkey_keydown= TRUE;
                         toggle3074_UL();
                         combinerules();
                         startFilter();
                     }
                 }
-                modkey_3074_UL_state=0;
+                lim3074UL.modkey_state = 0;
             }
 
             // ============= 27k ================
-            if ( modkey_27k_state !=0 && key == hotkey_27k ) 
+            if ( lim27k.modkey_state !=0 && key == hotkey_27k ) 
             {
                 wcout << L"hotkey_27k detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !hotkey_27k_keydown ){ 
+                    if ( can_trigger_any_hotkey && !lim27k.hotkey_keydown ){ 
                         can_trigger_any_hotkey = FALSE;
-                        hotkey_27k_keydown = TRUE;
+                        lim27k.hotkey_keydown = TRUE;
                         toggle27k();
                         combinerules();
                         startFilter();
                     }
                 }
-                modkey_27k_state=0;
+                lim27k.modkey_state = 0;
             }
 
             // ============= 27k_UL ================
-            if ( modkey_27k_UL_state !=0 && key == hotkey_27k_UL ) 
+            if ( lim27kUL.modkey_state !=0 && key == hotkey_27k_UL ) 
             {
                 wcout << L"hotkey_27k detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !hotkey_27k_UL_keydown ){ 
+                    if ( can_trigger_any_hotkey && !lim27kUL.hotkey_keydown ){ 
                         can_trigger_any_hotkey = FALSE;
-                        hotkey_27k_UL_keydown = TRUE;
+                        lim27kUL.hotkey_keydown = TRUE;
                         toggle27k_UL();
                         combinerules();
                         startFilter();
                     }
                 }
-                modkey_27k_UL_state=0;
+                lim27kUL.modkey_state = 0;
             }
 
 
             // ============= 30k ================
-            if ( modkey_30k_state !=0 && key == hotkey_30k ) 
+            if ( lim3074.modkey_state !=0 && key == hotkey_30k ) 
             {
                 wcout << L"hotkey_30k detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !hotkey_30k_keydown ){ 
+                    if ( can_trigger_any_hotkey && !lim30k.hotkey_keydown ){ 
                         can_trigger_any_hotkey = FALSE;
-                        hotkey_30k_keydown = TRUE;
+                        lim30k.hotkey_keydown = TRUE;
                         toggle30k();
                         combinerules();
                         startFilter();
                     }
                 }
-                modkey_30k_state=0;
+                lim30k.modkey_state = 0;
             }
 
             // ============= 7k ================
-            if ( modkey_7k_state !=0 && key == hotkey_7k ) 
+            if ( lim7k.modkey_state !=0 && key == hotkey_7k ) 
             {
                 wcout << L"hotkey_7k detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !hotkey_7k_keydown ){ 
+                    if ( can_trigger_any_hotkey && !lim7k.hotkey_keydown ){ 
                         can_trigger_any_hotkey = FALSE;
-                        hotkey_7k_keydown = TRUE;
+                        lim7k.hotkey_keydown = TRUE;
                         toggle7k();
                         combinerules();
                         startFilter();
                     }
                 }
-                modkey_7k_state=0;
+                lim7k.modkey_state = 0;
             } 
             
             // ============= game ================
-            if ( modkey_game_state !=0 && key == hotkey_game ) 
+            if ( lim_game.modkey_state !=0 && key == hotkey_game ) 
             {
                 wcout << L"hotkey_game detected\n";
                 if ( isD2Active() | debug ){
-                    if ( !hotkey_game_keydown ){ 
-                        hotkey_game_keydown = TRUE;
+                    if ( !lim_game.hotkey_keydown ){ 
+                        lim_game.hotkey_keydown = TRUE;
                         toggleGame();
                     }
                 }
-                modkey_game_state=0;
+                lim_game.modkey_state = 0;
             }
 
 
             // ============= suspend ================
-            if ( modkey_suspend_state !=0 && key == hotkey_suspend ) 
+            if ( suspend.modkey_state !=0 && key == hotkey_suspend ) 
             {
                 wcout << L"hotkey_suspend detected\n";
                 if ( isD2Active() | debug ){
-                    if ( !hotkey_suspend_keydown ){
-                        hotkey_suspend_keydown = TRUE;
+                    if ( !suspend.hotkey_keydown ){
+                        suspend.hotkey_keydown = TRUE;
                         toggleSuspend();
                     }
                 }
-                modkey_suspend_state=0;
+                suspend.modkey_state = 0;
             }
 
 
