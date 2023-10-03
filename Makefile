@@ -1,4 +1,4 @@
-.PHONY: clean cleanup all fresh release test help
+.PHONY: clean cleanup all fresh release test help full
 CC=clang++.exe
 objects := klim.o helperFunctions.o
 BUILD_DIR := .\build
@@ -37,9 +37,13 @@ cleanup:
 	-del /F /Q ${BUILD_DIR}\*.exp
 	-del /F /Q ${BUILD_DIR}\*.lib
 	
-clean:
+clean: clean-release
 	-del /F /Q ${BUILD_DIR}\*
 	-rmdir ${BUILD_DIR}
+	
+clean-release:
+	-del /F /Q ${RELEASE_DIR}\*
+	-rmdir ${RELEASE_DIR}
 
 fresh: clean all cleanup
 
@@ -49,6 +53,8 @@ release: ${BUILD_DIR}\krekens_overlay.dll ${BUILD_DIR}\klim.exe
 	-copy ${BUILD_DIR}\klim.exe ${RELEASE_DIR}\ 
 	-copy .\WinDivert\WinDivert.dll ${RELEASE_DIR}\ 
 	-copy .\WinDivert\WinDivert64.sys ${RELEASE_DIR}\ 
+
+full: clean-release all release 
 	
 test:
 	@echo nothing here currently..

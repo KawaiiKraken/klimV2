@@ -31,7 +31,6 @@ void toggle7k();
 void toggleSuspend(); 
 void toggleGame(); 
 void combinerules();
-unsigned long block_traffic( LPVOID lpParam );
 char myNetRules[1000];
 const char *err_str;
 INT16 priority = 1000;
