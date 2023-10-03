@@ -34,8 +34,6 @@
 #include "main.h"
 
 
-typedef UINT ( CALLBACK* LPFNDLLSTARTOVERLAY )( bool, int );
-typedef UINT ( CALLBACK* LPFNDLLUPDATEOVERLAYLINE )( LPTSTR, int, COLORREF );
 
 using namespace std;
 

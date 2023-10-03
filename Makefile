@@ -7,15 +7,14 @@ RELEASE_DIR := .\release
 INC_DIRS := .\phnt,.\WinDivert,${SRC_DIR}
 INC_FLAGS := -I,$(INC_DIRS)
 
-all: ${BUILD_DIR}\klim.exe ${BUILD_DIR}\krekens_overlay.dll cleanup
+all: ${BUILD_DIR}\klim.exe ${BUILD_DIR}\krekens_overlay.dll 
 
 help:
 	@echo available targets:
 	@echo    release             - makes a release dir with a ready to use klim (hopefully).
 	@echo    fresh               - compile all from scratch.
-	@echo    klim.exe            - self explanatory.
-	@echo    krekens_overlay.dll - self explanatory.
 	@echo    clean               - deletes contents of ${BUILD_DIR}.
+	@echo    cleanup             - deletes build byproducts in ${BUILD_DIR}.
 	@echo    help                - prints this message.
 	@echo    ..there are other targets but they should not be used.
 
@@ -30,7 +29,7 @@ ${BUILD_DIR}\helperFunctions.o:
 ${BUILD_DIR}\klim.exe: ${BUILD_DIR}\klim.o ${BUILD_DIR}\helperFunctions.o
 	${CC} -o ${BUILD_DIR}\klim.exe -l ".\Windivert\Windivert.lib" ${BUILD_DIR}\main.o ${BUILD_DIR}\helperFunctions.o 
 
-${build}\krekens_overlay.dll: ${SRC_DIR}\krekens_overlay.cpp
+${BUILD_DIR}\krekens_overlay.dll:  ${SRC_DIR}\krekens_overlay.cpp
 	${CC} -o ${BUILD_DIR}\krekens_overlay.dll -D "_UNICODE" -D "UNICODE" -shared -Wall ${SRC_DIR}\krekens_overlay.cpp 
 
 cleanup:
