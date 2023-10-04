@@ -1,17 +1,13 @@
 // TODO comments
 #include "main.h"
+#include "helperFunctions.h"
+#include "krekens_overlay.h"
 
+wchar_t pathToIni[MAX_PATH];
 using namespace std;
 
 char myNetRules[1000];
 
-struct limit {
-    char hotkey;
-    char modkey;
-    bool state = FALSE;
-    bool hotkey_keydown = FALSE;
-    DWORD modkey_state = 0;
-};
 
 struct limit lim3074; 
 struct limit lim3074UL; 
@@ -21,6 +17,7 @@ struct limit lim30k;
 struct limit lim7k; 
 struct limit lim_game; 
 struct limit suspend; 
+struct limit exitapp; // not really a lim but still a hotkey
 
 
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam )
@@ -28,14 +25,6 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
     if  ( ( nCode == HC_ACTION ) &&   ( ( wParam == WM_SYSKEYUP ) ||  ( wParam == WM_KEYUP ) ) )      
     {
         KBDLLHOOKSTRUCT hooked_key =    *( ( KBDLLHOOKSTRUCT* )lParam );
-        DWORD dwMsg = 1;
-        dwMsg += hooked_key.scanCode << 16;
-        dwMsg += hooked_key.flags << 24;
-        wchar_t lpszKeyName[1024] = {0};
-        lpszKeyName[0] = L'[';
-
-        int i = GetKeyNameText( dwMsg,   ( lpszKeyName+1 ), 0xFF ) + 1;
-        lpszKeyName[i] = L']';
         int key = hooked_key.vkCode;
 
         if ( key != ( VK_SHIFT | VK_CONTROL | VK_MENU ) )   // this might be a bit broken
@@ -71,14 +60,6 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
     if  ( ( nCode == HC_ACTION ) &&   ( ( wParam == WM_SYSKEYDOWN ) ||  ( wParam == WM_KEYDOWN ) ) )      
     {
         KBDLLHOOKSTRUCT hooked_key =    *( ( KBDLLHOOKSTRUCT* ) lParam );
-        DWORD dwMsg = 1;
-        dwMsg += hooked_key.scanCode << 16;
-        dwMsg += hooked_key.flags << 24;
-        wchar_t lpszKeyName[1024] = {0};
-        lpszKeyName[0] = L'[';
-
-        int i = GetKeyNameText( dwMsg, ( lpszKeyName+1 ), 0xFF ) + 1;
-        lpszKeyName[i] = L']';
 
         int key = hooked_key.vkCode;
 
@@ -95,7 +76,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             lim7k.modkey_state = GetAsyncKeyState( lim7k.modkey );
             lim_game.modkey_state = GetAsyncKeyState( lim_game.modkey );
             suspend.modkey_state = GetAsyncKeyState( suspend.modkey );
-            DWORD modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
+            exitapp.modkey_state = GetAsyncKeyState( exitapp.modkey );
 
             // double cuz im lazy enough to not bitshift
             lim3074.modkey_state = GetAsyncKeyState( lim3074.modkey );
@@ -106,18 +87,18 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             lim7k.modkey_state = GetAsyncKeyState( lim7k.modkey );
             lim_game.modkey_state = GetAsyncKeyState( lim_game.modkey );
             suspend.modkey_state = GetAsyncKeyState( suspend.modkey );
-            modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
+            exitapp.modkey_state = GetAsyncKeyState( exitapp.modkey );
 
 
             
             // ============= 3074 ================
-            if ( lim3074.modkey_state !=0 && key == lim3074.hotkey ) 
+            if ( lim3074.modkey_state != 0 && key == lim3074.hotkey ) 
             {
-                wcout << L"hotkey_3074 detected\n";
-                if ( isD2Active() | debug ){
-                    if ( !lim3074.hotkey_keydown ){ 
+                if ( !lim3074.hotkey_keydown ){ 
+                    wcout << L"hotkey_3074 detected\n";
+                    if ( isD2Active() | debug ){
                         lim3074.hotkey_keydown = TRUE;
-                        toggle3074();
+                        toggle3074( &lim3074, colorOn, colorOff );
                         combinerules();
                         updateFilter( myNetRules );
                     }
@@ -126,11 +107,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             }
 
             // ============= 3074UL ================
-            if ( lim3074UL.modkey_state !=0 && key == lim3074UL.hotkey ) 
+            if ( lim3074UL.modkey_state != 0 && key == lim3074UL.hotkey ) 
             {
-                wcout << L"hotkey_3074 detected\n";
-                if ( isD2Active() | debug ){
-                    if ( !lim3074UL.hotkey_keydown ){ 
+                if ( !lim3074UL.hotkey_keydown ){ 
+                    wcout << L"hotkey_3074 detected\n";
+                    if ( isD2Active() | debug ){
                         lim3074UL.hotkey_keydown= TRUE;
                         toggle3074_UL();
                         combinerules();
@@ -141,11 +122,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             }
 
             // ============= 27k ================
-            if ( lim27k.modkey_state !=0 && key == lim27k.hotkey ) 
+            if ( lim27k.modkey_state != 0 && key == lim27k.hotkey ) 
             {
-                wcout << L"hotkey_27k detected\n";
-                if ( isD2Active() | debug ){
-                    if ( !lim27k.hotkey_keydown ){ 
+                if ( !lim27k.hotkey_keydown ){ 
+                    wcout << L"hotkey_27k detected\n";
+                    if ( isD2Active() | debug ){
                         lim27k.hotkey_keydown = TRUE;
                         toggle27k();
                         combinerules();
@@ -156,11 +137,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             }
 
             // ============= 27k_UL ================
-            if ( lim27kUL.modkey_state !=0 && key == lim27kUL.hotkey ) 
+            if ( lim27kUL.modkey_state != 0 && key == lim27kUL.hotkey ) 
             {
-                wcout << L"hotkey_27k detected\n";
-                if ( isD2Active() | debug ){
-                    if ( !lim27kUL.hotkey_keydown ){ 
+                if ( !lim27kUL.hotkey_keydown ){ 
+                    wcout << L"hotkey_27k detected\n";
+                    if ( isD2Active() | debug ){
                         lim27kUL.hotkey_keydown = TRUE;
                         toggle27k_UL();
                         combinerules();
@@ -172,11 +153,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
 
             // ============= 30k ================
-            if ( lim3074.modkey_state !=0 && key == lim30k.hotkey ) 
+            if ( lim3074.modkey_state != 0 && key == lim30k.hotkey ) 
             {
-                wcout << L"hotkey_30k detected\n";
-                if ( isD2Active() | debug ){
-                    if ( !lim30k.hotkey_keydown ){ 
+                if ( !lim30k.hotkey_keydown ){ 
+                    wcout << L"hotkey_30k detected\n";
+                    if ( isD2Active() | debug ){
                         lim30k.hotkey_keydown = TRUE;
                         toggle30k();
                         combinerules();
@@ -187,11 +168,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             }
 
             // ============= 7k ================
-            if ( lim7k.modkey_state !=0 && key == lim7k.hotkey ) 
+            if ( lim7k.modkey_state != 0 && key == lim7k.hotkey ) 
             {
-                wcout << L"hotkey_7k detected\n";
-                if ( isD2Active() | debug ){
-                    if ( !lim7k.hotkey_keydown ){ 
+                if ( !lim7k.hotkey_keydown ){ 
+                    wcout << L"hotkey_7k detected\n";
+                    if ( isD2Active() | debug ){
                         lim7k.hotkey_keydown = TRUE;
                         toggle7k();
                         combinerules();
@@ -202,11 +183,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             } 
             
             // ============= game ================
-            if ( lim_game.modkey_state !=0 && key == lim_game.hotkey ) 
+            if ( lim_game.modkey_state != 0 && key == lim_game.hotkey ) 
             {
-                wcout << L"hotkey_game detected\n";
-                if ( isD2Active() | debug ){
-                    if ( !lim_game.hotkey_keydown ){ 
+                if ( !lim_game.hotkey_keydown ){ 
+                    wcout << L"hotkey_game detected\n";
+                    if ( isD2Active() | debug ){
                         lim_game.hotkey_keydown = TRUE;
                         toggleGame();
                     }
@@ -216,11 +197,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
 
             // ============= suspend ================
-            if ( suspend.modkey_state !=0 && key == suspend.hotkey ) 
+            if ( suspend.modkey_state != 0 && key == suspend.hotkey ) 
             {
-                wcout << L"hotkey_suspend detected\n";
-                if ( isD2Active() | debug ){
-                    if ( !suspend.hotkey_keydown ){
+                if ( !suspend.hotkey_keydown ){
+                    wcout << L"hotkey_suspend detected\n";
+                    if ( isD2Active() | debug ){
                         suspend.hotkey_keydown = TRUE;
                         toggleSuspend();
                     }
@@ -230,7 +211,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
 
             // ============= exitapp ================
-            if ( modkey_exitapp_state !=0 && key == hotkey_exitapp )
+            if ( exitapp.modkey_state != 0 && key == exitapp.hotkey )
             {
                 wcout << "shutting down\n";
                 if ( !debug ){
@@ -266,12 +247,6 @@ DWORD WINAPI my_HotKey( LPVOID lpParm )
     return 0;
 }
 
-BOOL FileExists( LPCTSTR szPath )
-{
-  DWORD dwAttrib = GetFileAttributes( szPath );
-
-  return ( dwAttrib != INVALID_FILE_ATTRIBUTES && !( dwAttrib & FILE_ATTRIBUTE_DIRECTORY ) );
-}
 
 
 
@@ -283,38 +258,6 @@ void setGlobalPathToIni(){ // this function does a bit too much, should prob spl
     wcscpy_s( filename, MAX_PATH, L"config.ini" );
     wcscpy_s( filePath, MAX_PATH, szFolderPathSelf );
     wcscat_s( filePath, MAX_PATH, filename );
-    if ( !FileExists( filePath ) ){
-        printf( "creating config file\n" );
-        CreateFileW( (LPCTSTR)filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
-        printf( "setting config file to default settings\n" );
-        // TODO make the description thingy better
-        WritePrivateProfileString( L"", L"Modkey accepts any key that hotkey does or 'shift', 'alt', 'ctrl'. Capitilization matters.", L"", filePath );
-        WritePrivateProfileString( L"", L"game lim only works if you have windows pro edition", L"", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_exitapp", L"k", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_exitapp", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_3074", L"g", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_3074", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_3074_UL", L"c", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_3074_UL", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_27k", L"6", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_27k", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_27k_UL", L"7", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_27k_UL", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_30k", L"l", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_30k", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_7k", L"j", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_7k", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_game", L"o", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_game", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_suspend", L"p", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_suspend", L"ctrl", filePath );
-        WritePrivateProfileString( L"other", L"useOverlay", L"true", filePath );
-        WritePrivateProfileString( L"other", L"fontSize", L"30", filePath );
-        WritePrivateProfileString( L"other", L"colorDefault", L"0x00FFFFFF", filePath );
-        WritePrivateProfileString( L"other", L"colorOn", L"0x000000FF", filePath );
-        WritePrivateProfileString( L"other", L"colorOff", L"0x00FFFFFF", filePath );
-        
-    }
     wcsncpy_s( pathToIni, sizeof( pathToIni ), filePath, sizeof( pathToIni ) );
 }
 
@@ -349,8 +292,8 @@ void setVarFromIni(wchar_t* hotkey_name, char* hotkey_var){
 void setVarsFromIni(){ 
     wchar_t buffer[50];
     wchar_t* wcSingleChar = nullptr;
-    setVarFromIni( (wchar_t*)L"hotkey_exitapp", &hotkey_exitapp );
-    setVarFromIni( (wchar_t*)L"modkey_exitapp", &modkey_exitapp );
+    setVarFromIni( (wchar_t*)L"hotkey_exitapp", &exitapp.hotkey);
+    setVarFromIni( (wchar_t*)L"modkey_exitapp", &exitapp.modkey );
     setVarFromIni( (wchar_t*)L"hotkey_3074", &lim3074.hotkey );
     setVarFromIni( (wchar_t*)L"modkey_3074", &lim3074.modkey );
     setVarFromIni( (wchar_t*)L"hotkey_3074_UL", &lim3074UL.hotkey );
@@ -389,48 +332,24 @@ int __cdecl main( int argc, char** argv ){
     }
     
     // check if running with debug
-    char* arg1 = (char *)"nothing";
     if ( argv[1] != NULL ){
-        arg1 = argv[1];
-    }
-
-    if ( ( strcmp( arg1, "--debug" ) == 0 ) ){
-        printf( "debug: TRUE\n" );
-        debug = TRUE;
-    } else {
-        ShowWindow( GetConsoleWindow(), SW_HIDE );
-    }
-    
-    
-    
-    // load dll function
-
-    hDLL = LoadLibrary( L"krekens_overlay" );
-    if ( hDLL != NULL )
-    {
-        lpfnDllStartOverlay = (LPFNDLLSTARTOVERLAY)GetProcAddress( hDLL, "startOverlay" );
-        if ( !lpfnDllStartOverlay )
-        {
-            // handle the error
-            FreeLibrary( hDLL );
-            printf( "handle the error");
-            return -3;
-        }
-        lpfnDllUpdateOverlayLine = (LPFNDLLUPDATEOVERLAYLINE)GetProcAddress( hDLL, "updateOverlayLine" );
-        if ( !lpfnDllUpdateOverlayLine )
-        {
-            // handle the error
-            FreeLibrary( hDLL );
-            printf( "handle the error");
-            return -3;
+        if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){
+            printf( "debug: TRUE\n" );
+            debug = TRUE;
+        } else {
+            ShowWindow( GetConsoleWindow(), SW_HIDE );
         }
     }
-
+    
+    
 
     DWORD dwThread;
     
     // ini file stuff
     setGlobalPathToIni(); 
+    if ( !FileExists( pathToIni ) ){
+        writeIniContents( pathToIni );
+    }
     wchar_t wc_buffer[50];
     bool useOverlay;
     GetPrivateProfileStringW( L"other", L"useOverlay", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
@@ -457,35 +376,35 @@ int __cdecl main( int argc, char** argv ){
     setVarsFromIni();
     
 
-    lpfnDllStartOverlay( useOverlay, fontSize );
+    startOverlay( useOverlay, fontSize );
     // TODO make this into a function
     wchar_t* wcstring = new wchar_t[200];
     triggerHotkeyString( wcstring, 200, lim3074.hotkey, lim3074.modkey, (wchar_t *)L"3074", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 1, colorDefault);
+    updateOverlayLine( wcstring, 1, colorDefault);
 
     triggerHotkeyString( wcstring, 200, lim3074UL.hotkey, lim3074UL.modkey, (wchar_t *)L"3074UL", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 2, colorDefault);
+    updateOverlayLine( wcstring, 2, colorDefault);
 
     triggerHotkeyString( wcstring, 200, lim27k.hotkey, lim27k.modkey, (wchar_t *)L"27k", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 3, colorDefault);
+    updateOverlayLine( wcstring, 3, colorDefault);
 
     triggerHotkeyString( wcstring, 200, lim27kUL.hotkey, lim27kUL.modkey, (wchar_t *)L"27kUL", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 4, colorDefault);
+    updateOverlayLine( wcstring, 4, colorDefault);
 
     triggerHotkeyString( wcstring, 200, lim30k.hotkey, lim30k.modkey, (wchar_t *)L"30k", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 5, colorDefault);
+    updateOverlayLine( wcstring, 5, colorDefault);
 
     triggerHotkeyString( wcstring, 200, lim7k.hotkey, lim7k.modkey, (wchar_t *)L"7k", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 6, colorDefault);
+    updateOverlayLine( wcstring, 6, colorDefault);
 
     triggerHotkeyString( wcstring, 200, lim_game.hotkey, lim_game.modkey, (wchar_t *)L"game", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 7, colorDefault);
+    updateOverlayLine( wcstring, 7, colorDefault);
 
     triggerHotkeyString( wcstring, 200, suspend.hotkey, suspend.modkey, (wchar_t *)L"suspend", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 8, colorDefault);
+    updateOverlayLine( wcstring, 8, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, hotkey_exitapp, modkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"" );
-    lpfnDllUpdateOverlayLine( wcstring, 9, colorDefault);
+    triggerHotkeyString( wcstring, 200, exitapp.hotkey, exitapp.modkey, (wchar_t *)L"close", (wchar_t*)L"" );
+    updateOverlayLine( wcstring, 9, colorDefault);
     
     delete []wcstring;
 
@@ -524,21 +443,6 @@ void combinerules(){
     printf( "filter: %s\n", myNetRules );
 }
 
-void toggle3074(){
-    COLORREF color;
-    lim3074.state = !lim3074.state;
-    printf( "state3074 %s\n", lim3074.state ? "true" : "false" );
-    wchar_t* wcstring = new wchar_t[200];
-    if ( lim3074.state ){
-        triggerHotkeyString( wcstring, 200, lim3074.hotkey, lim3074.modkey, (wchar_t *)L"3074", (wchar_t*)L" on" );
-        color = colorOn;
-    } else {
-        triggerHotkeyString( wcstring, 200, lim3074.hotkey, lim3074.modkey, (wchar_t *)L"3074", (wchar_t*)L" off" );
-        color = colorOff;
-    }
-    lpfnDllUpdateOverlayLine( wcstring, 1, color);
-    delete []wcstring;
-}
 
 void toggle3074_UL(){
     COLORREF color;
@@ -552,7 +456,7 @@ void toggle3074_UL(){
         triggerHotkeyString( wcstring, 200, lim3074UL.hotkey, lim3074UL.modkey, (wchar_t *)L"3074UL", (wchar_t*)L" off" );
         color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 2, color);
+    updateOverlayLine( wcstring, 2, color);
     delete []wcstring;
 }
 
@@ -568,7 +472,7 @@ void toggle27k(){
         triggerHotkeyString( wcstring, 200, lim27k.hotkey, lim27k.modkey, (wchar_t *)L"27k", (wchar_t*)L" off" );
         color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 3, color);
+    updateOverlayLine( wcstring, 3, color);
     delete []wcstring;
 }
 
@@ -584,7 +488,7 @@ void toggle27k_UL(){
         triggerHotkeyString( wcstring, 200, lim27kUL.hotkey, lim27kUL.modkey, (wchar_t *)L"27kUL", (wchar_t*)L" off" );
         color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 4, color);
+    updateOverlayLine( wcstring, 4, color);
     delete []wcstring;
 }
 
@@ -601,7 +505,7 @@ void toggle30k(){
         triggerHotkeyString( wcstring, 200, lim30k.hotkey, lim30k.modkey, (wchar_t *)L"30k", (wchar_t*)L" off" );
         color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 5, color);
+    updateOverlayLine( wcstring, 5, color);
     delete []wcstring;
 }
 
@@ -617,7 +521,7 @@ void toggle7k(){
         triggerHotkeyString( wcstring, 200, lim7k.hotkey, lim7k.modkey, (wchar_t *)L"7k", (wchar_t*)L" off" );
         color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 6, color);
+    updateOverlayLine( wcstring, 6, color);
     delete []wcstring;
 }
 
@@ -635,7 +539,7 @@ void toggleGame(){
         triggerHotkeyString( wcstring, 200, lim_game.hotkey, lim_game.hotkey, (wchar_t *)L"game", (wchar_t*)L" off" );
         color = colorOff;
     }
-    lpfnDllUpdateOverlayLine( wcstring, 7, color);
+    updateOverlayLine( wcstring, 7, color);
     delete []wcstring;
 }
 
@@ -677,7 +581,7 @@ void toggleSuspend(){
         if ( procHandle != NULL ){
             CloseHandle( procHandle );
         }
-        lpfnDllUpdateOverlayLine( wcstring, 8, color);
+        updateOverlayLine( wcstring, 8, color);
         delete []wcstring;
     }
 }

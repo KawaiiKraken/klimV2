@@ -19,9 +19,18 @@ bool isD2Active();
 const wchar_t* GetFileName( const wchar_t *path );
 void triggerHotkeyString( wchar_t* wcstring, int szWcstring, char hotkey, char modkey, wchar_t* action, wchar_t* state );
 BOOL IsElevated();
-//unsigned long block_traffic( HANDLE handle );
 unsigned long block_traffic( LPVOID lpParam );
 void updateFilter( char* myNetRules );
+BOOL FileExists( LPCTSTR szPath );
+void writeIniContents( wchar_t* filepath );
+void toggle3074( struct limit* lim3074, COLORREF colorOn, COLORREF colorOff );
+struct limit {
+    char hotkey;
+    char modkey;
+    bool state = FALSE;
+    bool hotkey_keydown = FALSE;
+    DWORD modkey_state = 0;
+};
 
 /*
  * Pre-fabricated packets.

@@ -1,4 +1,4 @@
-.PHONY: clean cleanup all fresh release test help full 
+.PHONY: clean cleanup all release test help full 
 CC=clang++.exe
 objects := klim.o helperFunctions.o
 BUILD_DIR := .\build
@@ -7,7 +7,7 @@ RELEASE_DIR := .\release
 INC_DIRS := .\phnt,.\WinDivert,${SRC_DIR}
 INC_FLAGS := -I,$(INC_DIRS)
 
-all: ${BUILD_DIR}\klim.exe ${BUILD_DIR}\krekens_overlay.dll 
+all: ${BUILD_DIR}\krekens_overlay.dll ${BUILD_DIR}\klim.exe 
 
 help:
 	@echo available targets:
@@ -27,9 +27,10 @@ ${BUILD_DIR}\helperFunctions.o:
 	${CC} -o ${BUILD_DIR}\helperFunctions.o -D "_UNICODE" -D "UNICODE" -Wall -c ${INC_FLAGS} ${SRC_DIR}\helperFunctions.cpp 
 
 ${BUILD_DIR}\klim.exe: ${BUILD_DIR}\klim.o ${BUILD_DIR}\helperFunctions.o
-	${CC} -o ${BUILD_DIR}\klim.exe -l ".\Windivert\Windivert.lib" ${BUILD_DIR}\main.o ${BUILD_DIR}\helperFunctions.o 
+	${CC} -o ${BUILD_DIR}\klim.exe -l ".\Windivert\Windivert.lib" -l "${BUILD_DIR}\krekens_overlay.lib" ${BUILD_DIR}\main.o ${BUILD_DIR}\helperFunctions.o 
 
 ${BUILD_DIR}\krekens_overlay.dll:  ${SRC_DIR}\krekens_overlay.cpp
+	-mkdir ${BUILD_DIR} 
 	${CC} -o ${BUILD_DIR}\krekens_overlay.dll -D "_UNICODE" -D "UNICODE" -shared -Wall ${SRC_DIR}\krekens_overlay.cpp 
 
 cleanup:
@@ -44,8 +45,6 @@ clean: clean-release
 clean-release:
 	-del /F /Q ${RELEASE_DIR}\klim.exe
 	-del /F /Q ${RELEASE_DIR}\krekens_overlay.dll
-
-fresh: clean all cleanup
 
 release: ${BUILD_DIR}\krekens_overlay.dll ${BUILD_DIR}\klim.exe
 	-mkdir release
