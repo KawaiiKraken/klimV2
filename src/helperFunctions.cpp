@@ -204,7 +204,7 @@ void toggleGame( struct limit* lim_game, COLORREF colorOn, COLORREF colorOff )
     printf( "state_game %s\n", lim_game->state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
     if ( lim_game->state ){
-        ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 800KB", NULL, SW_HIDE );
+        ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 0.801KB", NULL, SW_HIDE );
         triggerHotkeyString( wcstring, 200, lim_game->hotkey, lim_game->modkey, (wchar_t *)L"game", (wchar_t*)L" on" );
         color = colorOn;
     } else {
