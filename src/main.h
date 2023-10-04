@@ -21,7 +21,6 @@
 #include <wchar.h>
 #include <shellapi.h>
 #include <psapi.h>
-#include "helperFunctions.h"
 #pragma comment( lib, "user32.lib" )
 #pragma comment( lib, "kernel32.lib" )
 #pragma comment( lib, "shell32.lib" )
@@ -30,18 +29,12 @@
 #pragma comment( lib, "ntdll.lib" )
 
 //#pragma clang diagnostic ignored "-Wwritable-strings"
-typedef UINT ( CALLBACK* LPFNDLLSTARTOVERLAY )( bool, int );
-typedef UINT ( CALLBACK* LPFNDLLUPDATEOVERLAYLINE )( LPTSTR, int, COLORREF );
 HINSTANCE hDLL, hDLL2;               
-LPFNDLLSTARTOVERLAY lpfnDllStartOverlay;    
-LPFNDLLUPDATEOVERLAYLINE lpfnDllUpdateOverlayLine;    
 HHOOK hKeyboardHook;
 HANDLE gDoneEvent;
 HANDLE hThread = NULL;
 HANDLE handle = NULL;
 bool can_trigger_any_hotkey = TRUE;
-wchar_t pathToIni[MAX_PATH];
-wchar_t szFilePathSelf[MAX_PATH];
 char hotkey_exitapp, modkey_exitapp;
 bool debug = FALSE;
 int __cdecl Overlay( LPTSTR );   

@@ -1,4 +1,5 @@
 #include "helperFunctions.h"
+#include "krekens_overlay.h"
 INT16 priority = 1000;
 const char *err_str;
 HANDLE handle2 = NULL;
@@ -411,4 +412,61 @@ unsigned long block_traffic( LPVOID lpParam )
         }
         putchar( '\n' );
     }
+}
+
+BOOL FileExists( LPCTSTR szPath )
+{
+  DWORD dwAttrib = GetFileAttributes( szPath );
+
+  return ( dwAttrib != INVALID_FILE_ATTRIBUTES && !( dwAttrib & FILE_ATTRIBUTE_DIRECTORY ) );
+}
+
+void writeIniContents( wchar_t* filePath ){
+    if ( !FileExists( filePath ) ){
+        printf( "creating config file\n" );
+        CreateFileW( (LPCTSTR)filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
+        printf( "setting config file to default settings\n" );
+        // TODO make the description thingy better
+        WritePrivateProfileString( L"", L"Modkey accepts any key that hotkey does or 'shift', 'alt', 'ctrl'. Capitilization matters.", L"", filePath );
+        WritePrivateProfileString( L"", L"game lim only works if you have windows pro edition", L"", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_exitapp", L"k", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_exitapp", L"ctrl", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_3074", L"g", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_3074", L"ctrl", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_3074_UL", L"c", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_3074_UL", L"ctrl", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_27k", L"6", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_27k", L"ctrl", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_27k_UL", L"7", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_27k_UL", L"ctrl", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_30k", L"l", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_30k", L"ctrl", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_7k", L"j", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_7k", L"ctrl", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_game", L"o", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_game", L"ctrl", filePath );
+        WritePrivateProfileString( L"hotkeys", L"hotkey_suspend", L"p", filePath );
+        WritePrivateProfileString( L"hotkeys", L"modkey_suspend", L"ctrl", filePath );
+        WritePrivateProfileString( L"other", L"useOverlay", L"true", filePath );
+        WritePrivateProfileString( L"other", L"fontSize", L"30", filePath );
+        WritePrivateProfileString( L"other", L"colorDefault", L"0x00FFFFFF", filePath );
+        WritePrivateProfileString( L"other", L"colorOn", L"0x000000FF", filePath );
+        WritePrivateProfileString( L"other", L"colorOff", L"0x00FFFFFF", filePath );
+    }
+}
+
+void toggle3074( struct limit* lim3074, COLORREF colorOn, COLORREF colorOff ){
+    COLORREF color;
+    lim3074->state = !lim3074->state;
+    printf( "state3074 %s\n", lim3074->state ? "true" : "false" );
+    wchar_t* wcstring = new wchar_t[200];
+    if ( lim3074->state ){
+        triggerHotkeyString( wcstring, 200, lim3074->hotkey, lim3074->modkey, (wchar_t *)L"3074", (wchar_t*)L" on" );
+        color = colorOn;
+    } else {
+        triggerHotkeyString( wcstring, 200, lim3074->hotkey, lim3074->modkey, (wchar_t *)L"3074", (wchar_t*)L" off" );
+        color = colorOff;
+    }
+    updateOverlayLine( wcstring, 1, color);
+    delete []wcstring;
 }
