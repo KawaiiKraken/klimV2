@@ -24,6 +24,13 @@ void updateFilter( char* myNetRules );
 BOOL FileExists( LPCTSTR szPath );
 void writeIniContents( wchar_t* filepath );
 void toggle3074( struct limit* lim3074, COLORREF colorOn, COLORREF colorOff );
+void toggleSuspend( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
+void toggleGame( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
+void toggle7k( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
+void toggle30k( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
+void toggle27k_UL( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
+void toggle27k( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
+void toggle3074_UL( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
 struct limit {
     char hotkey;
     char modkey;
