@@ -1,42 +1,14 @@
 #pragma once
 #include <windows.h>
 #include <tchar.h>
-#include <iostream>
 #include <psapi.h>
-#include "../WinDivert/windivert.h"
 // these 2 are for the phnt header files
 #pragma clang diagnostic ignored "-Wpragma-pack"
 #pragma clang diagnostic ignored "-Wmicrosoft-enum-forward-reference"
 #include "../phnt/phnt_windows.h"
 #include "../phnt/phnt.h"
+#include "windivertFunctions.h"
 
-#define ntohs(x)            WinDivertHelperNtohs(x)
-#define ntohl(x)            WinDivertHelperNtohl(x)
-#define htons(x)            WinDivertHelperHtons(x)
-#define htonl(x)            WinDivertHelperHtonl(x)
-
-#define MAXBUF              0xFFFF
-#define INET6_ADDRSTRLEN    45
-#define IPPROTO_ICMPV6      58
-
-
-bool isD2Active();
-const wchar_t* GetFileName( const wchar_t *path );
-void triggerHotkeyString( wchar_t* wcstring, int szWcstring, char hotkey, char modkey, wchar_t* action, wchar_t* state );
-BOOL IsElevated();
-unsigned long block_traffic( LPVOID lpParam );
-void updateFilter( char* myNetRules );
-BOOL FileExists( LPCTSTR szPath );
-void writeIniContents( wchar_t* filepath );
-void toggle3074( struct limit* lim3074, COLORREF colorOn, COLORREF colorOff );
-void toggleSuspend( struct limit* suspend, COLORREF colorOn, COLORREF colorOff );
-void toggleGame( struct limit* lim_game, COLORREF colorOn, COLORREF colorOff );
-void toggle7k( struct limit* lim7k, COLORREF colorOn, COLORREF colorOff );
-void toggle30k( struct limit* lim30k, COLORREF colorOn, COLORREF colorOff );
-void toggle27k_UL( struct limit* lim27kUL, COLORREF colorOn, COLORREF colorOff );
-void toggle27k( struct limit* lim27k, COLORREF colorOn, COLORREF colorOff );
-void toggle3074_UL( struct limit* lim3074UL, COLORREF colorOn, COLORREF colorOff );
-void setVarFromIni( wchar_t* hotkey_name, char* hotkey_var, wchar_t* pathToIni );
 struct limit {
     char hotkey;
     char modkey;
@@ -45,41 +17,20 @@ struct limit {
     DWORD modkey_state = 0;
 };
 
-/*
- * Pre-fabricated packets.
- */
-typedef struct
-{
-    WINDIVERT_IPHDR ip;
-    WINDIVERT_TCPHDR tcp;
-} TCPPACKET, *PTCPPACKET;
+void triggerHotkeyString( wchar_t* wcstring, int szWcstring, char hotkey, char modkey, wchar_t* action, wchar_t* state );
+bool isD2Active();
+BOOL IsElevated();
 
-typedef struct
-{
-    WINDIVERT_IPV6HDR ipv6;
-    WINDIVERT_TCPHDR tcp;
-} TCPV6PACKET, *PTCPV6PACKET;
+void setVarFromIni( wchar_t* hotkey_name, char* hotkey_var, wchar_t* pathToIni );
+void writeIniContents( wchar_t* filepath );
+BOOL FileExists( LPCTSTR szPath );
+const wchar_t* GetFileName( const wchar_t *path );
 
-typedef struct
-{
-    WINDIVERT_IPHDR ip;
-    WINDIVERT_ICMPHDR icmp;
-    UINT8 data[];
-} ICMPPACKET, *PICMPPACKET;
-
-typedef struct
-{
-    WINDIVERT_IPV6HDR ipv6;
-    WINDIVERT_ICMPV6HDR icmpv6;
-    UINT8 data[];
-} ICMPV6PACKET, *PICMPV6PACKET;
-
-/*
- * Prototypes.
- */
-void __cdecl PacketIpInit( PWINDIVERT_IPHDR packet );
-void __cdecl PacketIpTcpInit( PTCPPACKET packet );
-void __cdecl PacketIpIcmpInit( PICMPPACKET packet );
-void __cdecl PacketIpv6Init( PWINDIVERT_IPV6HDR packet );
-void __cdecl PacketIpv6TcpInit( PTCPV6PACKET packet );
-void __cdecl PacketIpv6Icmpv6Init( PICMPV6PACKET packet );
+void toggle3074( struct limit* lim3074, COLORREF colorOn, COLORREF colorOff );
+void toggleSuspend( struct limit* suspend, COLORREF colorOn, COLORREF colorOff );
+void toggleGame( struct limit* lim_game, COLORREF colorOn, COLORREF colorOff );
+void toggle7k( struct limit* lim7k, COLORREF colorOn, COLORREF colorOff );
+void toggle30k( struct limit* lim30k, COLORREF colorOn, COLORREF colorOff );
+void toggle27k_UL( struct limit* lim27kUL, COLORREF colorOn, COLORREF colorOff );
+void toggle27k( struct limit* lim27k, COLORREF colorOn, COLORREF colorOff );
+void toggle3074_UL( struct limit* lim3074UL, COLORREF colorOn, COLORREF colorOff );
