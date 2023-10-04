@@ -1,5 +1,5 @@
 # klimV2
-an oss destiny 2 netlimiter that doesn't rely on NL4/5 DLL/service
+krekens destiny 2 netlimiter 
 
 for support join our server at the [thrallway](https://thrallway.com)
 
@@ -9,6 +9,9 @@ for support join our server at the [thrallway](https://thrallway.com)
 - customizable hotkeys
 - undetected
 - limits without a delay 
+
+# screenshot of overlay
+![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/example_screenshot.png "My Config")
  
 # installation
 - download [lastest release](https://github.com/KawaiiKraken/klimV2/releases/latest)
@@ -57,7 +60,6 @@ git clone https://github.com/KawaiiKraken/klimV2
 cd klimV2
 git submodule update --init --recursive
 make release
-make clean
 ```
 notes: 
 - you will have to change some <> to "" in phnt
