@@ -4,6 +4,11 @@
 #include <iostream>
 #include <psapi.h>
 #include "../WinDivert/windivert.h"
+// these 2 are for the phnt header files
+#pragma clang diagnostic ignored "-Wpragma-pack"
+#pragma clang diagnostic ignored "-Wmicrosoft-enum-forward-reference"
+#include "../phnt/phnt_windows.h"
+#include "../phnt/phnt.h"
 
 #define ntohs(x)            WinDivertHelperNtohs(x)
 #define ntohl(x)            WinDivertHelperNtohl(x)
@@ -24,13 +29,13 @@ void updateFilter( char* myNetRules );
 BOOL FileExists( LPCTSTR szPath );
 void writeIniContents( wchar_t* filepath );
 void toggle3074( struct limit* lim3074, COLORREF colorOn, COLORREF colorOff );
-void toggleSuspend( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
-void toggleGame( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
-void toggle7k( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
-void toggle30k( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
-void toggle27k_UL( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
-void toggle27k( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
-void toggle3074_UL( struct limit suspend, COLORREF colorOn, COLORREF colorOff );
+void toggleSuspend( struct limit* suspend, COLORREF colorOn, COLORREF colorOff );
+void toggleGame( struct limit* lim_game, COLORREF colorOn, COLORREF colorOff );
+void toggle7k( struct limit* lim7k, COLORREF colorOn, COLORREF colorOff );
+void toggle30k( struct limit* lim30k, COLORREF colorOn, COLORREF colorOff );
+void toggle27k_UL( struct limit* lim27kUL, COLORREF colorOn, COLORREF colorOff );
+void toggle27k( struct limit* lim27k, COLORREF colorOn, COLORREF colorOff );
+void toggle3074_UL( struct limit* lim3074UL, COLORREF colorOn, COLORREF colorOff );
 struct limit {
     char hotkey;
     char modkey;

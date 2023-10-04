@@ -8,8 +8,6 @@
 
 #pragma clang diagnostic ignored "-Wunused-variable"
 
-#include "../phnt/phnt_windows.h"
-#include "../phnt/phnt.h"
 #include "../WinDivert/windivert.h"
 #include <windows.h>
 #include <stdio.h>
