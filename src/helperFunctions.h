@@ -19,7 +19,9 @@ bool isD2Active();
 const wchar_t* GetFileName( const wchar_t *path );
 void triggerHotkeyString( wchar_t* wcstring, int szWcstring, char hotkey, char modkey, wchar_t* action, wchar_t* state );
 BOOL IsElevated();
-unsigned long block_traffic( HANDLE handle );
+//unsigned long block_traffic( HANDLE handle );
+unsigned long block_traffic( LPVOID lpParam );
+void updateFilter( char* myNetRules );
 
 /*
  * Pre-fabricated packets.
