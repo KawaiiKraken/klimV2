@@ -36,6 +36,7 @@ void toggle30k( struct limit* lim30k, COLORREF colorOn, COLORREF colorOff );
 void toggle27k_UL( struct limit* lim27kUL, COLORREF colorOn, COLORREF colorOff );
 void toggle27k( struct limit* lim27k, COLORREF colorOn, COLORREF colorOff );
 void toggle3074_UL( struct limit* lim3074UL, COLORREF colorOn, COLORREF colorOff );
+void setVarFromIni( wchar_t* hotkey_name, char* hotkey_var, wchar_t* pathToIni );
 struct limit {
     char hotkey;
     char modkey;

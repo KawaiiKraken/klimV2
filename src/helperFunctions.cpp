@@ -620,3 +620,32 @@ void toggle3074_UL( struct limit* lim3074UL, COLORREF colorOn, COLORREF colorOff
     updateOverlayLine( wcstring, 2, color);
     delete []wcstring;
 }
+
+void setVarFromIni( wchar_t* hotkey_name, char* hotkey_var, wchar_t* pathToIni )
+{
+    wchar_t buffer[50];
+    wchar_t* wcSingleChar = nullptr;
+
+    GetPrivateProfileStringW( L"hotkeys", hotkey_name, NULL, buffer, sizeof(buffer), pathToIni );
+    if ( GetLastError() == 0x2 ){
+        printf( "GetPrivateProfileString failed (%lu)\n", GetLastError() );
+    } else {
+        if ( wcscmp( buffer, L"alt" ) == 0 ){
+            *hotkey_var = VK_MENU;
+            printf( "set %ls to: alt\n", hotkey_name );
+        } 
+        else if ( wcscmp( buffer, L"shift" ) == 0 ){
+            *hotkey_var = VK_SHIFT;
+            printf( "set %ls to: shift\n", hotkey_name );
+        } 
+        else if ( wcscmp( buffer, L"ctrl" ) == 0 ){
+            *hotkey_var = VK_CONTROL;
+            printf( "set %ls to: ctrl\n", hotkey_name );
+        } else {
+            wcSingleChar = &buffer[0];
+            *hotkey_var = VkKeyScanW( *wcSingleChar );
+            // TODO fix weird printf memory leak from hotkey_var
+            printf( "set %ls to: %s\n", hotkey_name, hotkey_var);
+        }
+    } 
+}

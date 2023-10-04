@@ -2,9 +2,6 @@
 #define _WIN32_WINNT_WIN10 0x0A00 // Windows 10
 #define PHNT_VERSION PHNT_THRESHOLD // Windows 10
 
-// these 2 are for the phnt header files
-#pragma clang diagnostic ignored "-Wpragma-pack"
-#pragma clang diagnostic ignored "-Wmicrosoft-enum-forward-reference"
 
 #pragma clang diagnostic ignored "-Wunused-variable"
 
@@ -33,16 +30,11 @@ HANDLE gDoneEvent;
 HANDLE hThread = NULL;
 HANDLE handle = NULL;
 bool can_trigger_any_hotkey = TRUE;
-char hotkey_exitapp, modkey_exitapp;
 bool debug = FALSE;
 int __cdecl Overlay( LPTSTR );   
-void toggle3074();
-void toggle3074_UL();
-void toggle27k(); 
-void toggle27k_UL(); 
-void toggle30k(); 
-void toggle7k(); 
-void toggleSuspend(); 
-void toggleGame(); 
-void combinerules();
 COLORREF colorDefault, colorOff, colorOn;
+__declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam );
+void MessageLoop();
+DWORD WINAPI my_HotKey( LPVOID lpParm );
+void setPathToIni();
+void combinerules();
