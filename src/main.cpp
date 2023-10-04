@@ -33,9 +33,9 @@ int __cdecl main( int argc, char** argv ){
         if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){
             printf( "debug: TRUE\n" );
             debug = TRUE;
-        } else {
-            ShowWindow( GetConsoleWindow(), SW_HIDE );
-        }
+        } 
+    } else {
+        ShowWindow( GetConsoleWindow(), SW_HIDE );
     }
 
     // check if running as admin
