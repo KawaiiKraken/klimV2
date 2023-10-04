@@ -3,6 +3,8 @@
 
 using namespace std;
 
+char myNetRules[1000];
+
 struct limit {
     char hotkey;
     char modkey;
@@ -20,11 +22,6 @@ struct limit lim7k;
 struct limit lim_game; 
 struct limit suspend; 
 
-void startFilter(){
-    hThread = CreateThread( NULL, 0, block_traffic, handle, 0, NULL );
-    can_trigger_any_hotkey = TRUE;
-    printf( "hotkeys re-enabled\n" );
-}
 
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam )
 {
@@ -43,28 +40,28 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
         if ( key != ( VK_SHIFT | VK_CONTROL | VK_MENU ) )   // this might be a bit broken
         {
-            if ( key == hotkey_3074 ){
+            if ( key == lim3074.hotkey ){
                 lim3074.hotkey_keydown = FALSE;
             }
-            if ( key == hotkey_3074_UL ){
+            if ( key == lim3074UL.hotkey ){
                 lim3074UL.hotkey_keydown =  FALSE;
             }
-            if ( key == hotkey_27k){
+            if ( key == lim27k.hotkey ){
                 lim27k.hotkey_keydown = FALSE;
             }
-            if ( key == hotkey_27k_UL){
+            if ( key == lim27kUL.hotkey ){
                 lim27kUL.hotkey_keydown = FALSE;
             }
-            if ( key == hotkey_30k){
+            if ( key == lim30k.hotkey ){
                 lim30k.hotkey_keydown = FALSE;
             }
-            if ( key == hotkey_7k){
+            if ( key == lim7k.hotkey ){
                 lim7k.hotkey_keydown = FALSE;
             }
-            if ( key == hotkey_game){
+            if ( key == lim_game.hotkey ){
                 lim_game.hotkey_keydown = FALSE;
             }
-            if ( key == hotkey_suspend){
+            if ( key == suspend.hotkey ){
                 suspend.hotkey_keydown = FALSE;
             }
         }
@@ -90,88 +87,84 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         if ( TRUE )   // this might be a bit broken or unneeded
         {
             // TODO use the hotkey system properly instead of using GetAsyncState
-            lim3074.modkey_state = GetAsyncKeyState( modkey_3074 );
-            lim3074UL.modkey_state = GetAsyncKeyState( modkey_3074_UL );
-            lim27k.modkey_state = GetAsyncKeyState( modkey_27k );
-            lim27kUL.modkey_state = GetAsyncKeyState( modkey_27k_UL );
-            lim30k.modkey_state = GetAsyncKeyState( modkey_30k );
-            lim7k.modkey_state = GetAsyncKeyState( modkey_7k );
-            lim_game.modkey_state = GetAsyncKeyState( modkey_game );
-            suspend.modkey_state = GetAsyncKeyState( modkey_suspend );
+            lim3074.modkey_state = GetAsyncKeyState( lim3074.modkey );
+            lim3074UL.modkey_state = GetAsyncKeyState( lim3074UL.modkey );
+            lim27k.modkey_state = GetAsyncKeyState( lim27k.modkey );
+            lim27kUL.modkey_state = GetAsyncKeyState( lim27kUL.modkey );
+            lim30k.modkey_state = GetAsyncKeyState( lim30k.modkey );
+            lim7k.modkey_state = GetAsyncKeyState( lim7k.modkey );
+            lim_game.modkey_state = GetAsyncKeyState( lim_game.modkey );
+            suspend.modkey_state = GetAsyncKeyState( suspend.modkey );
             DWORD modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
 
             // double cuz im lazy enough to not bitshift
-            lim3074.modkey_state = GetAsyncKeyState( modkey_3074 );
-            lim3074UL.modkey_state = GetAsyncKeyState( modkey_3074_UL );
-            lim27k.modkey_state = GetAsyncKeyState( modkey_27k );
-            lim27kUL.modkey_state = GetAsyncKeyState( modkey_27k_UL );
-            lim30k.modkey_state = GetAsyncKeyState( modkey_30k );
-            lim7k.modkey_state = GetAsyncKeyState( modkey_7k );
-            lim_game.modkey_state = GetAsyncKeyState( modkey_game );
-            suspend.modkey_state = GetAsyncKeyState( modkey_suspend );
+            lim3074.modkey_state = GetAsyncKeyState( lim3074.modkey );
+            lim3074UL.modkey_state = GetAsyncKeyState( lim3074UL.modkey );
+            lim27k.modkey_state = GetAsyncKeyState( lim27k.modkey );
+            lim27kUL.modkey_state = GetAsyncKeyState( lim27kUL.modkey );
+            lim30k.modkey_state = GetAsyncKeyState( lim30k.modkey );
+            lim7k.modkey_state = GetAsyncKeyState( lim7k.modkey );
+            lim_game.modkey_state = GetAsyncKeyState( lim_game.modkey );
+            suspend.modkey_state = GetAsyncKeyState( suspend.modkey );
             modkey_exitapp_state = GetAsyncKeyState( modkey_exitapp );
 
 
             
             // ============= 3074 ================
-            if ( lim3074.modkey_state !=0 && key == hotkey_3074 ) 
+            if ( lim3074.modkey_state !=0 && key == lim3074.hotkey ) 
             {
                 wcout << L"hotkey_3074 detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !lim3074.hotkey_keydown ){ 
-                        can_trigger_any_hotkey = FALSE;
+                    if ( !lim3074.hotkey_keydown ){ 
                         lim3074.hotkey_keydown = TRUE;
                         toggle3074();
                         combinerules();
-                        startFilter();
+                        updateFilter( myNetRules );
                     }
                 }
                 lim3074.modkey_state = 0;
             }
 
             // ============= 3074UL ================
-            if ( lim3074UL.modkey_state !=0 && key == hotkey_3074_UL ) 
+            if ( lim3074UL.modkey_state !=0 && key == lim3074UL.hotkey ) 
             {
                 wcout << L"hotkey_3074 detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !lim3074UL.hotkey_keydown ){ 
-                        can_trigger_any_hotkey = FALSE;
+                    if ( !lim3074UL.hotkey_keydown ){ 
                         lim3074UL.hotkey_keydown= TRUE;
                         toggle3074_UL();
                         combinerules();
-                        startFilter();
+                        updateFilter( myNetRules );
                     }
                 }
                 lim3074UL.modkey_state = 0;
             }
 
             // ============= 27k ================
-            if ( lim27k.modkey_state !=0 && key == hotkey_27k ) 
+            if ( lim27k.modkey_state !=0 && key == lim27k.hotkey ) 
             {
                 wcout << L"hotkey_27k detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !lim27k.hotkey_keydown ){ 
-                        can_trigger_any_hotkey = FALSE;
+                    if ( !lim27k.hotkey_keydown ){ 
                         lim27k.hotkey_keydown = TRUE;
                         toggle27k();
                         combinerules();
-                        startFilter();
+                        updateFilter( myNetRules );
                     }
                 }
                 lim27k.modkey_state = 0;
             }
 
             // ============= 27k_UL ================
-            if ( lim27kUL.modkey_state !=0 && key == hotkey_27k_UL ) 
+            if ( lim27kUL.modkey_state !=0 && key == lim27kUL.hotkey ) 
             {
                 wcout << L"hotkey_27k detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !lim27kUL.hotkey_keydown ){ 
-                        can_trigger_any_hotkey = FALSE;
+                    if ( !lim27kUL.hotkey_keydown ){ 
                         lim27kUL.hotkey_keydown = TRUE;
                         toggle27k_UL();
                         combinerules();
-                        startFilter();
+                        updateFilter( myNetRules );
                     }
                 }
                 lim27kUL.modkey_state = 0;
@@ -179,39 +172,37 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
 
             // ============= 30k ================
-            if ( lim3074.modkey_state !=0 && key == hotkey_30k ) 
+            if ( lim3074.modkey_state !=0 && key == lim30k.hotkey ) 
             {
                 wcout << L"hotkey_30k detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !lim30k.hotkey_keydown ){ 
-                        can_trigger_any_hotkey = FALSE;
+                    if ( !lim30k.hotkey_keydown ){ 
                         lim30k.hotkey_keydown = TRUE;
                         toggle30k();
                         combinerules();
-                        startFilter();
+                        updateFilter( myNetRules );
                     }
                 }
                 lim30k.modkey_state = 0;
             }
 
             // ============= 7k ================
-            if ( lim7k.modkey_state !=0 && key == hotkey_7k ) 
+            if ( lim7k.modkey_state !=0 && key == lim7k.hotkey ) 
             {
                 wcout << L"hotkey_7k detected\n";
                 if ( isD2Active() | debug ){
-                    if ( can_trigger_any_hotkey && !lim7k.hotkey_keydown ){ 
-                        can_trigger_any_hotkey = FALSE;
+                    if ( !lim7k.hotkey_keydown ){ 
                         lim7k.hotkey_keydown = TRUE;
                         toggle7k();
                         combinerules();
-                        startFilter();
+                        updateFilter( myNetRules );
                     }
                 }
                 lim7k.modkey_state = 0;
             } 
             
             // ============= game ================
-            if ( lim_game.modkey_state !=0 && key == hotkey_game ) 
+            if ( lim_game.modkey_state !=0 && key == lim_game.hotkey ) 
             {
                 wcout << L"hotkey_game detected\n";
                 if ( isD2Active() | debug ){
@@ -225,7 +216,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
 
             // ============= suspend ================
-            if ( suspend.modkey_state !=0 && key == hotkey_suspend ) 
+            if ( suspend.modkey_state !=0 && key == suspend.hotkey ) 
             {
                 wcout << L"hotkey_suspend detected\n";
                 if ( isD2Active() | debug ){
@@ -360,22 +351,22 @@ void setVarsFromIni(){
     wchar_t* wcSingleChar = nullptr;
     setVarFromIni( (wchar_t*)L"hotkey_exitapp", &hotkey_exitapp );
     setVarFromIni( (wchar_t*)L"modkey_exitapp", &modkey_exitapp );
-    setVarFromIni( (wchar_t*)L"hotkey_3074", &hotkey_3074 );
-    setVarFromIni( (wchar_t*)L"modkey_3074", &modkey_3074 );
-    setVarFromIni( (wchar_t*)L"hotkey_3074_UL", &hotkey_3074_UL );
-    setVarFromIni( (wchar_t*)L"modkey_3074_UL", &modkey_3074_UL );
-    setVarFromIni( (wchar_t*)L"hotkey_27k", &hotkey_27k );
-    setVarFromIni( (wchar_t*)L"modkey_27k", &modkey_27k );
-    setVarFromIni( (wchar_t*)L"hotkey_27k_UL", &hotkey_27k_UL );
-    setVarFromIni( (wchar_t*)L"modkey_27k_UL", &modkey_27k_UL );
-    setVarFromIni( (wchar_t*)L"hotkey_30k", &hotkey_30k );
-    setVarFromIni( (wchar_t*)L"modkey_30k", &modkey_30k );
-    setVarFromIni( (wchar_t*)L"hotkey_7k", &hotkey_7k );
-    setVarFromIni( (wchar_t*)L"modkey_7k", &modkey_7k );
-    setVarFromIni( (wchar_t*)L"hotkey_game", &hotkey_game );
-    setVarFromIni( (wchar_t*)L"modkey_game", &modkey_game );
-    setVarFromIni( (wchar_t*)L"hotkey_suspend", &hotkey_suspend );
-    setVarFromIni( (wchar_t*)L"modkey_suspend", &modkey_suspend );
+    setVarFromIni( (wchar_t*)L"hotkey_3074", &lim3074.hotkey );
+    setVarFromIni( (wchar_t*)L"modkey_3074", &lim3074.modkey );
+    setVarFromIni( (wchar_t*)L"hotkey_3074_UL", &lim3074UL.hotkey );
+    setVarFromIni( (wchar_t*)L"modkey_3074_UL", &lim3074UL.modkey );
+    setVarFromIni( (wchar_t*)L"hotkey_27k", &lim27k.hotkey );
+    setVarFromIni( (wchar_t*)L"modkey_27k", &lim27k.modkey );
+    setVarFromIni( (wchar_t*)L"hotkey_27k_UL", &lim27kUL.hotkey );
+    setVarFromIni( (wchar_t*)L"modkey_27k_UL", &lim27kUL.modkey );
+    setVarFromIni( (wchar_t*)L"hotkey_30k", &lim30k.hotkey );
+    setVarFromIni( (wchar_t*)L"modkey_30k", &lim30k.modkey );
+    setVarFromIni( (wchar_t*)L"hotkey_7k", &lim7k.hotkey );
+    setVarFromIni( (wchar_t*)L"modkey_7k", &lim7k.modkey );
+    setVarFromIni( (wchar_t*)L"hotkey_game", &lim_game.hotkey );
+    setVarFromIni( (wchar_t*)L"modkey_game", &lim_game.modkey );
+    setVarFromIni( (wchar_t*)L"hotkey_suspend", &suspend.hotkey );
+    setVarFromIni( (wchar_t*)L"modkey_suspend", &suspend.modkey );
 }
 
 
@@ -469,28 +460,28 @@ int __cdecl main( int argc, char** argv ){
     lpfnDllStartOverlay( useOverlay, fontSize );
     // TODO make this into a function
     wchar_t* wcstring = new wchar_t[200];
-    triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, lim3074.hotkey, lim3074.modkey, (wchar_t *)L"3074", (wchar_t*)L"" );
     lpfnDllUpdateOverlayLine( wcstring, 1, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, hotkey_3074_UL, modkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, lim3074UL.hotkey, lim3074UL.modkey, (wchar_t *)L"3074UL", (wchar_t*)L"" );
     lpfnDllUpdateOverlayLine( wcstring, 2, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, lim27k.hotkey, lim27k.modkey, (wchar_t *)L"27k", (wchar_t*)L"" );
     lpfnDllUpdateOverlayLine( wcstring, 3, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, hotkey_27k_UL, modkey_27k_UL, (wchar_t *)L"27kUL", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, lim27kUL.hotkey, lim27kUL.modkey, (wchar_t *)L"27kUL", (wchar_t*)L"" );
     lpfnDllUpdateOverlayLine( wcstring, 4, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, lim30k.hotkey, lim30k.modkey, (wchar_t *)L"30k", (wchar_t*)L"" );
     lpfnDllUpdateOverlayLine( wcstring, 5, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, lim7k.hotkey, lim7k.modkey, (wchar_t *)L"7k", (wchar_t*)L"" );
     lpfnDllUpdateOverlayLine( wcstring, 6, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, lim_game.hotkey, lim_game.modkey, (wchar_t *)L"game", (wchar_t*)L"" );
     lpfnDllUpdateOverlayLine( wcstring, 7, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, suspend.hotkey, suspend.modkey, (wchar_t *)L"suspend", (wchar_t*)L"" );
     lpfnDllUpdateOverlayLine( wcstring, 8, colorDefault);
 
     triggerHotkeyString( wcstring, 200, hotkey_exitapp, modkey_exitapp, (wchar_t *)L"close", (wchar_t*)L"" );
@@ -512,57 +503,37 @@ int __cdecl main( int argc, char** argv ){
 
 void combinerules(){
     strcpy_s( myNetRules, sizeof( myNetRules ), "(udp.DstPort < 1 and udp.DstPort > 1)" ); // set to rule that wont match anything
-    if (state3074){
+    if ( lim3074.state ){
         strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)" );
     }
-    if (state3074_UL){
-        strcat_s( myNetRules, sizeof( myNetRules ), "or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
+    if ( lim3074UL.state ){
+        strcat_s( myNetRules, sizeof( myNetRules ), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
     }
-    if (state27k){
+    if ( lim27k.state ){
         strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)" );
     }
-    if (state27k_UL){
+    if ( lim27kUL.state ){
         strcat_s( myNetRules, sizeof( myNetRules ), " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)" );
     }
-    if (state30k){
+    if ( lim30k.state ){
         strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)" );
     }
-    if (state7k){
+    if ( lim7k.state ){
         strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)" );
     }
     printf( "filter: %s\n", myNetRules );
-    if ( handle != NULL ){
-        printf( "deleting old filter\n" );
-        if( !WinDivertClose( handle ) ){
-            fprintf( stderr, "error: failed to open the WinDivert device (%lu)\n", GetLastError() );
-        }
-    }
-
-
-    printf( "creating new filter\n" );
-    handle = WinDivertOpen( myNetRules, WINDIVERT_LAYER_NETWORK, priority, 0 );
-    if ( handle == INVALID_HANDLE_VALUE )
-    {
-        if ( GetLastError() == ERROR_INVALID_PARAMETER && !WinDivertHelperCompileFilter( myNetRules, WINDIVERT_LAYER_NETWORK, NULL, 0, &err_str, NULL ) )
-        {
-            fprintf( stderr, "error: invalid filter \"%s\"\n", err_str );
-            exit( EXIT_FAILURE );
-        }
-        fprintf( stderr, "error: failed to open the WinDivert device (%lu)\n", GetLastError() );
-        exit( EXIT_FAILURE );
-    }
 }
 
 void toggle3074(){
     COLORREF color;
-    state3074 = !state3074;
-    printf( "state3074 %s\n", state3074 ? "true" : "false" );
+    lim3074.state = !lim3074.state;
+    printf( "state3074 %s\n", lim3074.state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( state3074 ){
-        triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L" on" );
+    if ( lim3074.state ){
+        triggerHotkeyString( wcstring, 200, lim3074.hotkey, lim3074.modkey, (wchar_t *)L"3074", (wchar_t*)L" on" );
         color = colorOn;
     } else {
-        triggerHotkeyString( wcstring, 200, hotkey_3074, modkey_3074, (wchar_t *)L"3074", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, lim3074.hotkey, lim3074.modkey, (wchar_t *)L"3074", (wchar_t*)L" off" );
         color = colorOff;
     }
     lpfnDllUpdateOverlayLine( wcstring, 1, color);
@@ -571,14 +542,14 @@ void toggle3074(){
 
 void toggle3074_UL(){
     COLORREF color;
-    state3074_UL = !state3074_UL;
-    printf( "state3074UL %s\n", state3074_UL ? "true" : "false" );
+    lim3074UL.state = !lim3074UL.state;
+    printf( "state3074UL %s\n", lim3074UL.state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( state3074_UL ){
-        triggerHotkeyString( wcstring, 200, hotkey_3074_UL, modkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L" on" );
+    if ( lim3074UL.state ){
+        triggerHotkeyString( wcstring, 200, lim3074UL.modkey, lim3074UL.modkey, (wchar_t *)L"3074UL", (wchar_t*)L" on" );
         color = colorOn;
     } else {
-        triggerHotkeyString( wcstring, 200, hotkey_3074_UL, modkey_3074_UL, (wchar_t *)L"3074UL", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, lim3074UL.hotkey, lim3074UL.modkey, (wchar_t *)L"3074UL", (wchar_t*)L" off" );
         color = colorOff;
     }
     lpfnDllUpdateOverlayLine( wcstring, 2, color);
@@ -587,14 +558,14 @@ void toggle3074_UL(){
 
 void toggle27k(){
     COLORREF color;
-    state27k = !state27k;
-    printf( "state3074UL %s\n", state27k ? "true" : "false" );
+    lim27k.state = !lim27k.state;
+    printf( "state3074UL %s\n", lim27k.state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( state27k ){
-        triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L" on" );
+    if ( lim27k.state ){
+        triggerHotkeyString( wcstring, 200, lim27k.hotkey, lim27k.modkey, (wchar_t *)L"27k", (wchar_t*)L" on" );
         color = colorOn;
     } else {
-        triggerHotkeyString( wcstring, 200, hotkey_27k, modkey_27k, (wchar_t *)L"27k", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, lim27k.hotkey, lim27k.modkey, (wchar_t *)L"27k", (wchar_t*)L" off" );
         color = colorOff;
     }
     lpfnDllUpdateOverlayLine( wcstring, 3, color);
@@ -603,14 +574,14 @@ void toggle27k(){
 
 void toggle27k_UL(){
     COLORREF color;
-    state27k_UL = !state27k_UL;
-    printf( "state3074UL %s\n", state27k_UL ? "true" : "false" );
+    lim27kUL.state = !lim27kUL.state;
+    printf( "state3074UL %s\n", lim27kUL.state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( state27k_UL ){
-        triggerHotkeyString( wcstring, 200, hotkey_27k_UL, modkey_27k_UL, (wchar_t *)L"27kUL", (wchar_t*)L" on" );
+    if ( lim27kUL.state ){
+        triggerHotkeyString( wcstring, 200, lim27kUL.hotkey, lim27kUL.modkey, (wchar_t *)L"27kUL", (wchar_t*)L" on" );
         color = colorOn;
     } else {
-        triggerHotkeyString( wcstring, 200, hotkey_27k_UL, modkey_27k_UL, (wchar_t *)L"27kUL", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, lim27kUL.hotkey, lim27kUL.modkey, (wchar_t *)L"27kUL", (wchar_t*)L" off" );
         color = colorOff;
     }
     lpfnDllUpdateOverlayLine( wcstring, 4, color);
@@ -620,14 +591,14 @@ void toggle27k_UL(){
 
 void toggle30k(){
     COLORREF color;
-    state30k = !state30k;
-    printf( "state30k %s\n", state30k ? "true" : "false" );
+    lim30k.state = !lim30k.state;
+    printf( "state30k %s\n", lim30k.state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( state30k ){
-        triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L" on" );
+    if ( lim30k.state ){
+        triggerHotkeyString( wcstring, 200, lim30k.hotkey, lim30k.modkey, (wchar_t *)L"30k", (wchar_t*)L" on" );
         color = colorOn;
     } else {
-        triggerHotkeyString( wcstring, 200, hotkey_30k, modkey_30k, (wchar_t *)L"30k", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, lim30k.hotkey, lim30k.modkey, (wchar_t *)L"30k", (wchar_t*)L" off" );
         color = colorOff;
     }
     lpfnDllUpdateOverlayLine( wcstring, 5, color);
@@ -636,14 +607,14 @@ void toggle30k(){
 
 void toggle7k(){
     COLORREF color;
-    state7k = !state7k;
-    printf( "state7k %s\n", state7k ? "true" : "false" );
+    lim7k.state = !lim7k.state;
+    printf( "state7k %s\n", lim7k.state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( state7k ){
-        triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L" on" );
+    if ( lim7k.state ){
+        triggerHotkeyString( wcstring, 200, lim7k.hotkey, lim7k.modkey, (wchar_t *)L"7k", (wchar_t*)L" on" );
         color = colorOn;
     } else {
-        triggerHotkeyString( wcstring, 200, hotkey_7k, modkey_7k, (wchar_t *)L"7k", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, lim7k.hotkey, lim7k.modkey, (wchar_t *)L"7k", (wchar_t*)L" off" );
         color = colorOff;
     }
     lpfnDllUpdateOverlayLine( wcstring, 6, color);
@@ -652,16 +623,16 @@ void toggle7k(){
 
 void toggleGame(){
     COLORREF color;
-    state_game = !state_game;
-    printf( "state_game %s\n", state_game ? "true" : "false" );
+    lim_game.state = !lim_game.state;
+    printf( "state_game %s\n", lim_game.state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( state_game ){
+    if ( lim_game.state ){
         ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 800KB", NULL, SW_HIDE );
-        triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L" on" );
+        triggerHotkeyString( wcstring, 200, lim_game.hotkey, lim_game.modkey, (wchar_t *)L"game", (wchar_t*)L" on" );
         color = colorOn;
     } else {
         ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE );
-        triggerHotkeyString( wcstring, 200, hotkey_game, modkey_game, (wchar_t *)L"game", (wchar_t*)L" off" );
+        triggerHotkeyString( wcstring, 200, lim_game.hotkey, lim_game.hotkey, (wchar_t *)L"game", (wchar_t*)L" off" );
         color = colorOff;
     }
     lpfnDllUpdateOverlayLine( wcstring, 7, color);
@@ -675,13 +646,13 @@ void toggleSuspend(){
         DWORD pid = 0;
         // shitty way to get pid but eh
         GetWindowThreadProcessId( GetForegroundWindow(), &pid );
-        state_suspend = !state_suspend;
+        suspend.state = !suspend.state;
         HANDLE procHandle = NULL;
-        printf( "suspend %s\n", state_suspend ? "true" : "false" );
+        printf( "suspend %s\n", suspend.state ? "true" : "false" );
         wchar_t* wcstring = new wchar_t[200];
 
-        if ( state_suspend ){
-            triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" on" );
+        if ( suspend.state ){
+            triggerHotkeyString( wcstring, 200, suspend.hotkey, suspend.modkey, (wchar_t *)L"suspend", (wchar_t*)L" on" );
             color = colorOn;
             if ( pid != 0 ){
                 printf( "pid: %lu\n", pid );
@@ -693,7 +664,7 @@ void toggleSuspend(){
             }
         
         } else {
-            triggerHotkeyString( wcstring, 200, hotkey_suspend, modkey_suspend, (wchar_t *)L"suspend", (wchar_t*)L" off" );
+            triggerHotkeyString( wcstring, 200, suspend.hotkey, suspend.modkey, (wchar_t *)L"suspend", (wchar_t*)L" off" );
             color = colorOff;
             if ( pid != 0 ){
                 procHandle = OpenProcess( 0x1F0FFF, 0, pid ); // TODO remove magic numbers

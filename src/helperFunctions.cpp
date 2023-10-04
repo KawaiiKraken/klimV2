@@ -1,4 +1,8 @@
 #include "helperFunctions.h"
+INT16 priority = 1000;
+const char *err_str;
+HANDLE handle2 = NULL;
+HANDLE hThread2 = NULL;
 
 const wchar_t* GetFileName( const wchar_t *path )
 {
@@ -79,6 +83,33 @@ BOOL IsElevated(){
     return fRet;
 }
 
+void updateFilter( char* myNetRules ){
+    char netRules[1000];
+    strcpy_s( netRules, sizeof( netRules ), myNetRules);
+    printf( "filter: %s\n", netRules );
+    if ( handle2 != NULL ){
+        printf( "deleting old filter\n" );
+        if( !WinDivertClose( handle2 ) ){
+            fprintf( stderr, "error: failed to open the WinDivert device (%lu)\n", GetLastError() );
+        }
+    }
+    printf( "creating new filter\n" );
+    handle2 = WinDivertOpen( netRules, WINDIVERT_LAYER_NETWORK, priority, 0 );
+    if ( handle2 == INVALID_HANDLE_VALUE )
+    {
+        if ( GetLastError() == ERROR_INVALID_PARAMETER && !WinDivertHelperCompileFilter( myNetRules, WINDIVERT_LAYER_NETWORK, NULL, 0, &err_str, NULL ) )
+        {
+            fprintf( stderr, "error: invalid filter \"%s\"\n", err_str );
+            exit( EXIT_FAILURE );
+        }
+        fprintf( stderr, "error: failed to open the WinDivert device (%lu)\n", GetLastError() );
+        exit( EXIT_FAILURE );
+    }
+    if (hThread2 == NULL){
+        hThread2 = CreateThread( NULL, 0, block_traffic, NULL, 0, NULL );
+    }
+}
+
 
 /*
  * Initialize a PACKET.
@@ -146,7 +177,8 @@ void __cdecl PacketIpv6Icmpv6Init( PICMPV6PACKET packet )
     packet->ipv6.NextHdr = IPPROTO_ICMPV6;
 }
 
-unsigned long block_traffic( HANDLE handle )
+//unsigned long block_traffic( HANDLE handle2 )
+unsigned long block_traffic( LPVOID lpParam )
 {
     HANDLE console;
     unsigned char packet[MAXBUF];
@@ -197,7 +229,7 @@ unsigned long block_traffic( HANDLE handle )
     // Main loop:
     while ( TRUE ){ 
     // Read a matching packet.
-        if ( !WinDivertRecv( handle, packet, sizeof( packet ), &packet_len, &recv_addr ) )
+        if ( !WinDivertRecv( handle2, packet, sizeof( packet ), &packet_len, &recv_addr ) )
         {
             fprintf( stderr, "warning: failed to read packet (if you just switched filters its fine)\n" );
             continue;
@@ -295,7 +327,7 @@ unsigned long block_traffic( HANDLE handle )
                 //send_addr.Outbound = !recv_addr.Outbound;
                 //WinDivertHelperCalcChecksums((PVOID)reset, sizeof(TCPPACKET),
                     //&send_addr, 0);
-                //if (!WinDivertSend(handle, (PVOID)reset, sizeof(TCPPACKET),
+                //if (!WinDivertSend(handle2, (PVOID)reset, sizeof(TCPPACKET),
                         //NULL, &send_addr))
                 //{
                     //fprintf(stderr, "warning: failed to send TCP reset (%lu)\n",
@@ -321,7 +353,7 @@ unsigned long block_traffic( HANDLE handle )
                 send_addr.Outbound = !recv_addr.Outbound;
                 WinDivertHelperCalcChecksums( (PVOID)resetv6,
                     sizeof( TCPV6PACKET ), &send_addr, 0 );
-                if ( !WinDivertSend(handle, (PVOID)resetv6, sizeof(TCPV6PACKET),
+                if ( !WinDivertSend(handle2, (PVOID)resetv6, sizeof(TCPV6PACKET),
                         NULL, &send_addr ) )
                 {
                     fprintf( stderr, "warning: failed to send TCP (IPV6) "
@@ -347,7 +379,7 @@ unsigned long block_traffic( HANDLE handle )
                 send_addr.Outbound = !recv_addr.Outbound;
                 WinDivertHelperCalcChecksums( (PVOID)dnr, icmp_length,
                     &send_addr, 0 );
-                if ( !WinDivertSend( handle, (PVOID)dnr, icmp_length, NULL,
+                if ( !WinDivertSend( handle2, (PVOID)dnr, icmp_length, NULL,
                         &send_addr ) )
                 {
                     fprintf( stderr, "warning: failed to send ICMP message "
@@ -370,7 +402,7 @@ unsigned long block_traffic( HANDLE handle )
                 send_addr.Outbound = !recv_addr.Outbound;
                 WinDivertHelperCalcChecksums( (PVOID)dnrv6, icmpv6_length,
                     &send_addr, 0 );
-                if ( !WinDivertSend( handle, (PVOID)dnrv6, icmpv6_length, NULL, &send_addr ) )
+                if ( !WinDivertSend( handle2, (PVOID)dnrv6, icmpv6_length, NULL, &send_addr ) )
                 {
                     fprintf( stderr, "warning: failed to send ICMPv6 message "
                         "(%lu)\n", GetLastError() );
