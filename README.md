@@ -47,7 +47,7 @@ this could be potentially be considered piracy and i don't endorse it
 - chose hwid (unless youre using a spoofer)
 - reboot
 
-# how to contributing
+# how to contribute
 - give this repo a star on github
 - give feature ideas/requests at the [thrallway](https://thrallway.com)
 - report bugs via a github issue or at the [thrallway](https://thrallway.com)
