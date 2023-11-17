@@ -9,15 +9,15 @@ char myNetRules[1000];
 int onTriggerHotkey(limit* limit);
 wchar_t pathToIni[MAX_PATH];
 
-limit lim3074((wchar_t*)L"3074"); 
-limit lim3074UL((wchar_t*)L"3074UL");
-limit lim27k((wchar_t*)L"27k"); 
-limit lim27kUL((wchar_t*)L"27kUL"); 
-limit lim30k((wchar_t*)L"30k"); 
-limit lim7k((wchar_t*)L"7k"); 
-limit lim_game((wchar_t*)L"game"); 
-limit suspend((wchar_t*)L"suspend"); 
-limit exitapp((wchar_t*)L"exitapp"); 
+limit lim3074(  (wchar_t*)L"3074",    1); 
+limit lim3074UL((wchar_t*)L"3074UL",  2);
+limit lim27k(   (wchar_t*)L"27k",     3); 
+limit lim27kUL( (wchar_t*)L"27kUL",   4); 
+limit lim30k(   (wchar_t*)L"30k",     5); 
+limit lim7k(    (wchar_t*)L"7k",      6); 
+limit lim_game( (wchar_t*)L"game",    7); 
+limit suspend(  (wchar_t*)L"suspend", 8); 
+limit exitapp(  (wchar_t*)L"exitapp", 9); 
 
 int __cdecl main( int argc, char** argv ){
     if ( argv[1] != NULL ){
@@ -61,13 +61,13 @@ int __cdecl main( int argc, char** argv ){
     printf( "pathToIni %ls\n", pathToIni );
 
     int fontSize;
-    GetPrivateProfileStringW( L"other", L"fontSize", NULL, wc_buffer, sizeof(wc_buffer-4), pathToIni );
+    GetPrivateProfileStringW( L"other", L"fontSize", NULL, wc_buffer, sizeof(wc_buffer)-1, pathToIni );
     fontSize = wcstol(wc_buffer, NULL, 10);
-    GetPrivateProfileStringW( L"other", L"colorDefault", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
+    GetPrivateProfileStringW( L"other", L"colorDefault", NULL, wc_buffer, sizeof(wc_buffer)-1, pathToIni );
     colorDefault = wcstol(wc_buffer, NULL, 16);
-    GetPrivateProfileStringW( L"other", L"colorOn", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
+    GetPrivateProfileStringW( L"other", L"colorOn", NULL, wc_buffer, sizeof(wc_buffer)-1, pathToIni );
     colorOn = wcstol(wc_buffer, NULL, 16);
-    GetPrivateProfileStringW( L"other", L"colorOff", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
+    GetPrivateProfileStringW( L"other", L"colorOff", NULL, wc_buffer, sizeof(wc_buffer)-1, pathToIni );
     colorOff = wcstol(wc_buffer, NULL, 16);
 
     setVarFromIni( (wchar_t*)L"hotkey_exitapp", &exitapp.hotkey, pathToIni );
@@ -95,31 +95,31 @@ int __cdecl main( int argc, char** argv ){
     // set overlay to default state
     wchar_t* wcstring = new wchar_t[200];
     formatHotkeyStatusWcString( wcstring, 200, &lim3074);
-    updateOverlayLine( wcstring, 1, colorDefault);
+    updateOverlayLine( wcstring, lim3074.overlayLineNumber, colorDefault);
 
     formatHotkeyStatusWcString( wcstring, 200, &lim3074UL);
-    updateOverlayLine( wcstring, 2, colorDefault);
+    updateOverlayLine( wcstring, lim3074UL.overlayLineNumber, colorDefault);
 
     formatHotkeyStatusWcString( wcstring, 200, &lim27k);
-    updateOverlayLine( wcstring, 3, colorDefault);
+    updateOverlayLine( wcstring, lim27k.overlayLineNumber, colorDefault);
 
     formatHotkeyStatusWcString( wcstring, 200, &lim27kUL);
-    updateOverlayLine( wcstring, 4, colorDefault);
+    updateOverlayLine( wcstring, lim27kUL.overlayLineNumber, colorDefault);
 
     formatHotkeyStatusWcString( wcstring, 200, &lim30k);
-    updateOverlayLine( wcstring, 5, colorDefault);
+    updateOverlayLine( wcstring, lim30k.overlayLineNumber, colorDefault);
 
     formatHotkeyStatusWcString( wcstring, 200, &lim7k);
-    updateOverlayLine( wcstring, 6, colorDefault);
+    updateOverlayLine( wcstring, lim7k.overlayLineNumber, colorDefault);
 
     formatHotkeyStatusWcString( wcstring, 200, &lim_game);
-    updateOverlayLine( wcstring, 7, colorDefault);
+    updateOverlayLine( wcstring, lim_game.overlayLineNumber, colorDefault);
 
     formatHotkeyStatusWcString( wcstring, 200, &suspend);
-    updateOverlayLine( wcstring, 8, colorDefault);
+    updateOverlayLine( wcstring, suspend.overlayLineNumber, colorDefault);
 
     formatHotkeyStatusWcString( wcstring, 200, &exitapp);
-    updateOverlayLine( wcstring, 9, colorDefault);
+    updateOverlayLine( wcstring, exitapp.overlayLineNumber, colorDefault);
     
     delete []wcstring;
 
@@ -276,34 +276,17 @@ int onTriggerHotkey(limit* limit)
         return 1;
     }
     printf("limit.name: %ws\n", limit->name);
+    // TODO make hotkey down tracking work again
     limit->hotkey_down = true;
-    if (wcscmp(limit->name, L"3074"  )  == 0){
-        toggle3074(limit, colorOn, colorOff);
-    } else 
-    if (wcscmp(limit->name, L"3074UL")  == 0){
-        toggle3074_UL(limit, colorOn, colorOff);
-    } else 
-    if (wcscmp(limit->name, L"3074UL")  == 0){
-        toggle3074_UL(limit, colorOn, colorOff);
-    } else 
-    if (wcscmp(limit->name, L"27k"   )  == 0){
-        toggle27k(limit, colorOn, colorOff);
-    } else 
-    if (wcscmp(limit->name, L"27kUL" )  == 0){
-        toggle27k_UL(limit, colorOn, colorOff);
-    } else 
-    if (wcscmp(limit->name, L"30k"   )  == 0){
-        toggle30k(limit, colorOn, colorOff);
-    } else 
-    if (wcscmp(limit->name, L"7k"    )  == 0){
-        toggle7k(limit, colorOn, colorOff);
-    } else 
     if (wcscmp(limit->name, L"game"   ) == 0){
-        toggleGame(limit, colorOn, colorOff);
+        toggleWholeGameLimit(limit, colorOn, colorOff);
     } else 
     if (wcscmp(limit->name, L"suspend") == 0){
         toggleSuspend(limit, colorOn, colorOff);
-    } 
+    }
+    else {
+        toggleBlockingLimit(limit, colorOn, colorOff);
+    }
     return 0;
 }
 

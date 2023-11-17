@@ -16,12 +16,13 @@ struct limit {
     bool state = false;
     wchar_t state_name[20] = {'\0'};
     bool hotkey_down = false;
+    int overlayLineNumber = -1;
     DWORD modkey_state = 0;
     void toggleState() {
         state = !state;
         wcscpy_s(state_name, state ? (wchar_t*)L"(on)" : (wchar_t*)L"(off)");
     }
-    limit(wchar_t* n) : name(n) {}
+    limit(wchar_t* n, int i) : name(n), overlayLineNumber(i) {}
 };
 
 void formatHotkeyStatusWcString( wchar_t* wcstring, int szWcstring, limit* limit);
@@ -33,11 +34,6 @@ void writeIniContents( wchar_t* filepath );
 bool FileExists( LPCTSTR szPath );
 const wchar_t* GetFileName( const wchar_t *path );
 
-void toggle3074(    limit* lim3074,   COLORREF colorOn, COLORREF colorOff );
-void toggleSuspend( limit* suspend,   COLORREF colorOn, COLORREF colorOff );
-void toggleGame(    limit* lim_game,  COLORREF colorOn, COLORREF colorOff );
-void toggle7k(      limit* lim7k,     COLORREF colorOn, COLORREF colorOff );
-void toggle30k(     limit* lim30k,    COLORREF colorOn, COLORREF colorOff );
-void toggle27k_UL(  limit* lim27kUL,  COLORREF colorOn, COLORREF colorOff );
-void toggle27k(     limit* lim27k,    COLORREF colorOn, COLORREF colorOff );
-void toggle3074_UL( limit* lim3074UL, COLORREF colorOn, COLORREF colorOff );
+void toggleBlockingLimit( limit* limit,     COLORREF colorOn, COLORREF colorOff);
+void toggleSuspend(       limit* suspend,   COLORREF colorOn, COLORREF colorOff );
+void toggleWholeGameLimit(limit* lim_game,  COLORREF colorOn, COLORREF colorOff );
