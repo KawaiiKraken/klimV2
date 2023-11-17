@@ -95,31 +95,31 @@ int __cdecl main( int argc, char** argv ){
 
     // set overlay to default state
     wchar_t* wcstring = new wchar_t[200];
-    triggerHotkeyString( wcstring, 200, &lim3074, (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim3074);
     updateOverlayLine( wcstring, 1, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, &lim3074UL, (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim3074UL);
     updateOverlayLine( wcstring, 2, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, &lim27k, (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim27k);
     updateOverlayLine( wcstring, 3, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, &lim27kUL, (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim27kUL);
     updateOverlayLine( wcstring, 4, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, &lim30k, (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim30k);
     updateOverlayLine( wcstring, 5, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, &lim7k, (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim7k);
     updateOverlayLine( wcstring, 6, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, &lim_game, (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim_game);
     updateOverlayLine( wcstring, 7, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, &suspend, (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &suspend);
     updateOverlayLine( wcstring, 8, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, &exitapp, (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &exitapp);
     updateOverlayLine( wcstring, 9, colorDefault);
     
     delete []wcstring;
