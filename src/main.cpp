@@ -9,6 +9,7 @@ using namespace std;
 char myNetRules[1000];
 int onTriggerHotkey(limit* limit);
 wchar_t pathToConfigFile[MAX_PATH];
+void loadConfig(bool* useOverlay, int* fontSize, limit* exitapp, limit* lim3074, limit* lim3074UL, limit* lim27k, limit* lim27kUL, limit* lim30k, limit* lim7k, limit* lim_game, limit* suspend);
 
 limit lim3074(  (wchar_t*)L"3074",    1); 
 limit lim3074UL((wchar_t*)L"3074UL",  2);
@@ -20,8 +21,6 @@ limit lim_game( (wchar_t*)L"game",    7);
 limit suspend(  (wchar_t*)L"suspend", 8); 
 limit exitapp(  (wchar_t*)L"exitapp", 9); 
 
-bool useOverlay;
-int fontSize;
 
 
 int __cdecl main( int argc, char** argv ){
@@ -45,7 +44,6 @@ int __cdecl main( int argc, char** argv ){
         return 0;
     }
 
-    DWORD dwThread;
     
     // config file stuff
     setPathToConfigFile(); 
@@ -53,10 +51,15 @@ int __cdecl main( int argc, char** argv ){
         writeDefaultJsonConfig( pathToConfigFile );
     }
 
+    bool useOverlay;
+	int fontSize;
+    loadConfig(&useOverlay, &fontSize, &exitapp, &lim3074, &lim3074UL, &lim27k, &lim27kUL, &lim30k, &lim7k, &lim_game, &suspend);
     initializeOverlay(useOverlay, fontSize);
 
 
     printf( "starting hotkey thread\n" );
+
+    DWORD dwThread;
     hThread = CreateThread( NULL, NULL, (LPTHREAD_START_ROUTINE)my_HotKey, (LPVOID)NULL, NULL, &dwThread );
 
     if ( hThread ) return WaitForSingleObject( hThread, INFINITE );
@@ -68,26 +71,25 @@ int __cdecl main( int argc, char** argv ){
 
 
 
-void loadConfig() {
+void loadConfig(bool* useOverlay, int* fontSize, limit* exitapp, limit* lim3074, limit* lim3074UL, limit* lim27k, limit* lim27kUL, limit* lim30k, limit* lim7k, limit* lim_game, limit* suspend){
     // Load the config from the JSON file
     Json::Value loadedConfig = loadConfigFileFromJson(pathToConfigFile);
-    setVarFromJson(&exitapp,   loadedConfig["hotkey_exitapp"].asString(),   loadedConfig["modkey_exitapp"].asString());
-    setVarFromJson(&lim3074,   loadedConfig["hotkey_3074"].asString(),      loadedConfig["modkey_3074"].asString());
-    setVarFromJson(&lim3074UL, loadedConfig["hotkey_3074UL"].asString(),    loadedConfig["modkey_3074UL"].asString());
-    setVarFromJson(&lim27k,    loadedConfig["hotkey_27k"].asString(),       loadedConfig["modkey_27k"].asString());
-    setVarFromJson(&lim27kUL,  loadedConfig["hotkey_27kUL"].asString(),     loadedConfig["modkey_27kUL"].asString());
-    setVarFromJson(&lim30k,    loadedConfig["hotkey_30k"].asString(),       loadedConfig["modkey_30k"].asString());
-    setVarFromJson(&lim7k,     loadedConfig["hotkey_7k"].asString(),        loadedConfig["modkey_7k"].asString());
-    setVarFromJson(&lim_game,  loadedConfig["hotkey_game"].asString(),      loadedConfig["modkey_game"].asString());
-
-    setVarFromJson(&suspend,   loadedConfig["hotkey_suspend"].asString(),   loadedConfig["modkey_suspend"].asString());
+    setVarFromJson(exitapp,   loadedConfig["hotkey_exitapp"].asString(),   loadedConfig["modkey_exitapp"].asString());
+    setVarFromJson(lim3074,   loadedConfig["hotkey_3074"].asString(),      loadedConfig["modkey_3074"].asString());
+    setVarFromJson(lim3074UL, loadedConfig["hotkey_3074UL"].asString(),    loadedConfig["modkey_3074UL"].asString());
+    setVarFromJson(lim27k,    loadedConfig["hotkey_27k"].asString(),       loadedConfig["modkey_27k"].asString());
+    setVarFromJson(lim27kUL,  loadedConfig["hotkey_27kUL"].asString(),     loadedConfig["modkey_27kUL"].asString());
+    setVarFromJson(lim30k,    loadedConfig["hotkey_30k"].asString(),       loadedConfig["modkey_30k"].asString());
+    setVarFromJson(lim7k,     loadedConfig["hotkey_7k"].asString(),        loadedConfig["modkey_7k"].asString());
+    setVarFromJson(lim_game,  loadedConfig["hotkey_game"].asString(),      loadedConfig["modkey_game"].asString());
+    setVarFromJson(suspend,   loadedConfig["hotkey_suspend"].asString(),   loadedConfig["modkey_suspend"].asString());
 
     colorDefault = stol(loadedConfig["colorDefault"].asString(), NULL, 16);
     colorOn      = stol(loadedConfig["colorOn"].asString(), NULL, 16);
     colorOff     = stol(loadedConfig["colorOff"].asString(), NULL, 16);
 
-    useOverlay = loadedConfig["useOverlay"].asBool();
-    fontSize = loadedConfig["fontSize"].asInt();
+    *useOverlay = loadedConfig["useOverlay"].asBool();
+    *fontSize = loadedConfig["fontSize"].asInt();
 }
 
 
@@ -195,6 +197,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         exitapp.modkey_state = GetAsyncKeyState( exitapp.modkey );
 
 
+        // TODO make this section into a separate function
             
         if ( lim3074.modkey_state != 0 && key == lim3074.hotkey ) 
         {
@@ -267,7 +270,6 @@ int onTriggerHotkey(limit* limit)
         return 1;
     }
     printf("limit.name: %ws\n", limit->name);
-    // TODO make hotkey down tracking work again
     if (!limit->hotkey_down) {
 		limit->hotkey_down = true;
 		if (wcscmp(limit->name, L"game"   ) == 0){
