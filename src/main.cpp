@@ -129,7 +129,7 @@ void initializeOverlay(bool useOverlay, int fontSize){
 }
 
 
-void setKeyDownStateOfHotkeys(int key) {
+void setKeyDownStateOfHotkeys(int key){
     if ( key == lim3074.hotkey ){
 		lim3074.hotkey_down = false;
 	}
@@ -156,49 +156,7 @@ void setKeyDownStateOfHotkeys(int key) {
 	}
 }
 
-
-
-__declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam )
-{
-    if  ( ( nCode == HC_ACTION ) && ( ( wParam == WM_SYSKEYUP ) || ( wParam == WM_KEYUP ) ) )      
-    {
-        KBDLLHOOKSTRUCT hooked_key =  *( ( KBDLLHOOKSTRUCT* )lParam );
-        int key = hooked_key.vkCode;
-        setKeyDownStateOfHotkeys(key);
-    }
-
-
-    if  ( ( nCode == HC_ACTION ) && ( ( wParam == WM_SYSKEYDOWN ) || ( wParam == WM_KEYDOWN ) ) )      
-    {
-        KBDLLHOOKSTRUCT hooked_key = *( ( KBDLLHOOKSTRUCT* ) lParam );
-
-        int key = hooked_key.vkCode;
-
-        // TODO use the hotkey system properly instead of using GetAsyncState
-        lim3074.modkey_state = GetAsyncKeyState( lim3074.modkey );
-        lim3074UL.modkey_state = GetAsyncKeyState( lim3074UL.modkey );
-        lim27k.modkey_state = GetAsyncKeyState( lim27k.modkey );
-        lim27kUL.modkey_state = GetAsyncKeyState( lim27kUL.modkey );
-        lim30k.modkey_state = GetAsyncKeyState( lim30k.modkey );
-        lim7k.modkey_state = GetAsyncKeyState( lim7k.modkey );
-        lim_game.modkey_state = GetAsyncKeyState( lim_game.modkey );
-        suspend.modkey_state = GetAsyncKeyState( suspend.modkey );
-        exitapp.modkey_state = GetAsyncKeyState( exitapp.modkey );
-
-        // double cuz im lazy enough to not bitshift
-        lim3074.modkey_state = GetAsyncKeyState( lim3074.modkey );
-        lim3074UL.modkey_state = GetAsyncKeyState( lim3074UL.modkey );
-        lim27k.modkey_state = GetAsyncKeyState( lim27k.modkey );
-        lim27kUL.modkey_state = GetAsyncKeyState( lim27kUL.modkey );
-        lim30k.modkey_state = GetAsyncKeyState( lim30k.modkey );
-        lim7k.modkey_state = GetAsyncKeyState( lim7k.modkey );
-        lim_game.modkey_state = GetAsyncKeyState( lim_game.modkey );
-        suspend.modkey_state = GetAsyncKeyState( suspend.modkey );
-        exitapp.modkey_state = GetAsyncKeyState( exitapp.modkey );
-
-
-        // TODO make this section into a separate function
-            
+void triggerHotkeys(int key){
         if ( lim3074.modkey_state != 0 && key == lim3074.hotkey ) 
         {
             onTriggerHotkey(&lim3074);
@@ -256,6 +214,40 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             }
             PostQuitMessage(0);
         }
+}
+
+
+__declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam )
+{
+    if  ( ( nCode == HC_ACTION ) && ( ( wParam == WM_SYSKEYUP ) || ( wParam == WM_KEYUP ) ) )      
+    {
+        KBDLLHOOKSTRUCT hooked_key =  *( ( KBDLLHOOKSTRUCT* )lParam );
+        int key = hooked_key.vkCode;
+        setKeyDownStateOfHotkeys(key);
+    }
+
+
+    if  ( ( nCode == HC_ACTION ) && ( ( wParam == WM_SYSKEYDOWN ) || ( wParam == WM_KEYDOWN ) ) )      
+    {
+        KBDLLHOOKSTRUCT hooked_key = *( ( KBDLLHOOKSTRUCT* ) lParam );
+
+        int key = hooked_key.vkCode;
+
+        // TODO use the hotkey system properly instead of using GetAsyncState
+        // 2x cuz i dont want to bitshift and this gets state of key at the moment its called too
+        for (int i = 0; i < 2; i++) {
+            lim3074.modkey_state = GetAsyncKeyState( lim3074.modkey );
+			lim3074UL.modkey_state = GetAsyncKeyState( lim3074UL.modkey );
+			lim27k.modkey_state = GetAsyncKeyState( lim27k.modkey );
+			lim27kUL.modkey_state = GetAsyncKeyState( lim27kUL.modkey );
+			lim30k.modkey_state = GetAsyncKeyState( lim30k.modkey );
+			lim7k.modkey_state = GetAsyncKeyState( lim7k.modkey );
+			lim_game.modkey_state = GetAsyncKeyState( lim_game.modkey );
+			suspend.modkey_state = GetAsyncKeyState( suspend.modkey );
+			exitapp.modkey_state = GetAsyncKeyState( exitapp.modkey );
+        }
+
+        triggerHotkeys(key);
     }
     return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
 }
