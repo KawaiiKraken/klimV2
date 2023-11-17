@@ -59,11 +59,11 @@ void triggerHotkeyString( wchar_t* wcstring, int szWcstring, limit* limit){ // T
     if ( limit->modkey == VK_MENU ){
         wcscpy_s( wcstring, sizeof(L"alt"), L"alt" );
     }
-    wcscat_s( wcstring, szWcstring, L"+");
-    wcscat_s( wcstring, szWcstring, wcstringbuf );
-    wcscat_s( wcstring, szWcstring, L" to " );
-    wcscat_s( wcstring, szWcstring, limit->name);
-    wcscat_s( wcstring, szWcstring, limit->state_name);
+    wcscat_s(wcstring, szWcstring, L"+");
+    wcscat_s(wcstring, szWcstring, wcstringbuf);
+    wcscat_s(wcstring, szWcstring, L" to ");
+    wcscat_s(wcstring, szWcstring, limit->name);
+    wcscat_s(wcstring, szWcstring, limit->state_name);
 
     delete []wcstringbuf;
 }
@@ -296,10 +296,10 @@ void toggle3074_UL( limit* lim3074UL, COLORREF colorOn, COLORREF colorOff )
 
 void setVarFromIni( wchar_t* hotkey_name, char* hotkey_var, wchar_t* pathToIni )
 {
-    wchar_t buffer[50];
+    wchar_t buffer[200];
     wchar_t* wcSingleChar = nullptr;
 
-    GetPrivateProfileStringW( L"hotkeys", hotkey_name, NULL, buffer, sizeof(buffer), pathToIni );
+    GetPrivateProfileStringW( L"hotkeys", hotkey_name, NULL, buffer, sizeof(buffer-4), pathToIni );
     if ( GetLastError() == 0x2 ){
         printf( "GetPrivateProfileString failed (%lu)\n", GetLastError() );
     } else {
