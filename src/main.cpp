@@ -49,8 +49,7 @@ int __cdecl main( int argc, char** argv ){
     }
     wchar_t wc_buffer[50];
     bool useOverlay;
-    // TODO fix memory leak
-    GetPrivateProfileStringW( L"other", L"useOverlay", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
+    GetPrivateProfileStringW( L"other", L"useOverlay", NULL, wc_buffer, sizeof(wc_buffer-4), pathToIni );
     if ( wcscmp(wc_buffer, L"true") == 0 ){
         useOverlay = true;
     } else if ( wcscmp(wc_buffer, L"false") == 0 ){
@@ -137,37 +136,42 @@ int __cdecl main( int argc, char** argv ){
 
 
 
+void setKeyDownStateOfHotkeys(int key) {
+    if ( key == lim3074.hotkey ){
+		lim3074.hotkey_down = false;
+	}
+	if ( key == lim3074UL.hotkey ){
+		lim3074UL.hotkey_down =  false;
+	}
+	if ( key == lim27k.hotkey ){
+		lim27k.hotkey_down = false;
+	}
+	if ( key == lim27kUL.hotkey ){
+		lim27kUL.hotkey_down = false;
+	}
+	if ( key == lim30k.hotkey ){
+		lim30k.hotkey_down = false;
+	}
+	if ( key == lim7k.hotkey ){
+		lim7k.hotkey_down = false;
+	}
+	if ( key == lim_game.hotkey ){
+		lim_game.hotkey_down = false;
+	}
+	if ( key == suspend.hotkey ){
+		suspend.hotkey_down = false;
+	}
+}
+
+
+
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam )
 {
     if  ( ( nCode == HC_ACTION ) && ( ( wParam == WM_SYSKEYUP ) || ( wParam == WM_KEYUP ) ) )      
     {
         KBDLLHOOKSTRUCT hooked_key =  *( ( KBDLLHOOKSTRUCT* )lParam );
         int key = hooked_key.vkCode;
-
-        if ( key == lim3074.hotkey ){
-            lim3074.hotkey_down = false;
-        }
-        if ( key == lim3074UL.hotkey ){
-            lim3074UL.hotkey_down =  false;
-        }
-        if ( key == lim27k.hotkey ){
-            lim27k.hotkey_down = false;
-        }
-        if ( key == lim27kUL.hotkey ){
-            lim27kUL.hotkey_down = false;
-        }
-        if ( key == lim30k.hotkey ){
-            lim30k.hotkey_down = false;
-        }
-        if ( key == lim7k.hotkey ){
-            lim7k.hotkey_down = false;
-        }
-        if ( key == lim_game.hotkey ){
-            lim_game.hotkey_down = false;
-        }
-        if ( key == suspend.hotkey ){
-            suspend.hotkey_down = false;
-        }
+        setKeyDownStateOfHotkeys(key);
     }
 
 
@@ -273,29 +277,28 @@ int onTriggerHotkey(limit* limit)
     }
     printf("limit.name: %ws\n", limit->name);
     limit->hotkey_down = true;
-    // TODO, make it use std::unordered_map
-    if (wcscmp(limit->name, L"3074") == 0){
+    if (wcscmp(limit->name, L"3074"  )  == 0){
         toggle3074(limit, colorOn, colorOff);
     } else 
-    if (wcscmp(limit->name, L"3074UL") == 0){
+    if (wcscmp(limit->name, L"3074UL")  == 0){
         toggle3074_UL(limit, colorOn, colorOff);
     } else 
-    if (wcscmp(limit->name, L"3074UL") == 0){
+    if (wcscmp(limit->name, L"3074UL")  == 0){
         toggle3074_UL(limit, colorOn, colorOff);
     } else 
-    if (wcscmp(limit->name, L"27k") == 0){
+    if (wcscmp(limit->name, L"27k"   )  == 0){
         toggle27k(limit, colorOn, colorOff);
     } else 
-    if (wcscmp(limit->name, L"27kUL") == 0){
+    if (wcscmp(limit->name, L"27kUL" )  == 0){
         toggle27k_UL(limit, colorOn, colorOff);
     } else 
-    if (wcscmp(limit->name, L"30k") == 0){
+    if (wcscmp(limit->name, L"30k"   )  == 0){
         toggle30k(limit, colorOn, colorOff);
     } else 
-    if (wcscmp(limit->name, L"7k") == 0){
+    if (wcscmp(limit->name, L"7k"    )  == 0){
         toggle7k(limit, colorOn, colorOff);
     } else 
-    if (wcscmp(limit->name, L"game") == 0){
+    if (wcscmp(limit->name, L"game"   ) == 0){
         toggleGame(limit, colorOn, colorOff);
     } else 
     if (wcscmp(limit->name, L"suspend") == 0){
