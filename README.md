@@ -30,12 +30,15 @@ for support join our server at the [thrallway](https://thrallway.com)
 # upcoming 
 - better code
 - auto buffer
+- better config file
+- better overlay/gui
 - other ways to mess with packets?
 - better how to? maybe even a vid
 
 # known issues
 - the mod seasonal monochromatic maestro can cause desync to be permanent 
 - whole game limit requires windows pro
+- config file cannot be seen without having 'show hidden files' enabled
 
 # switch windows version to pro 
 this could be potentially be considered piracy and i don't endorse it
