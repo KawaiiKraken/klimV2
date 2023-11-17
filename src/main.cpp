@@ -277,15 +277,17 @@ int onTriggerHotkey(limit* limit)
     }
     printf("limit.name: %ws\n", limit->name);
     // TODO make hotkey down tracking work again
-    limit->hotkey_down = true;
-    if (wcscmp(limit->name, L"game"   ) == 0){
-        toggleWholeGameLimit(limit, colorOn, colorOff);
-    } else 
-    if (wcscmp(limit->name, L"suspend") == 0){
-        toggleSuspend(limit, colorOn, colorOff);
-    }
-    else {
-        toggleBlockingLimit(limit, colorOn, colorOff);
+    if (!limit->hotkey_down) {
+		limit->hotkey_down = true;
+		if (wcscmp(limit->name, L"game"   ) == 0){
+			toggleWholeGameLimit(limit, colorOn, colorOff);
+		} else 
+		if (wcscmp(limit->name, L"suspend") == 0){
+			toggleSuspend(limit, colorOn, colorOff);
+		}
+		else {
+			toggleBlockingLimit(limit, colorOn, colorOff);
+        }
     }
     return 0;
 }
