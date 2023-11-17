@@ -11,15 +11,20 @@
 
 struct limit {
     wchar_t* name;
-    char hotkey = 0x3A; // this vkcode is undefined
+    char hotkey = 0x3A; // this vkcode is undefined so it won't trigger anything, its only here to please the compiler 
     char modkey = 0x3A;
     bool state = false;
+    wchar_t state_name[20] = {'\0'};
     bool hotkey_down = false;
     DWORD modkey_state = 0;
+    void toggleState() {
+        state = !state;
+        wcscpy_s(state_name, state ? (wchar_t*)L"(on)" : (wchar_t*)L"(off)");
+    }
     limit(wchar_t* n) : name(n) {}
 };
 
-void triggerHotkeyString( wchar_t* wcstring, int szWcstring, limit* limit, wchar_t* state );
+void triggerHotkeyString( wchar_t* wcstring, int szWcstring, limit* limit);
 bool isD2Active();
 bool IsElevated();
 
