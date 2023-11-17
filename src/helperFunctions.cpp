@@ -137,17 +137,41 @@ void toggle3074( limit* lim3074, COLORREF colorOn, COLORREF colorOff )
 {
     COLORREF color;
     lim3074->toggleState();
-    printf( "state3074 %s\n", lim3074->state ? "true" : "false" );
+    printf("3074 state: %ws\n", lim3074->state_name);
     wchar_t* wcstring = new wchar_t[200];
-    if ( lim3074->state ){
-        triggerHotkeyString(wcstring, 200, lim3074);
-        color = colorOn;
-    } else {
-        triggerHotkeyString(wcstring, 200, lim3074);
-        color = colorOff;
-    }
+    color = lim3074->state ? colorOn : colorOff;
+    triggerHotkeyString(wcstring, 200, lim3074);
     updateOverlayLine( wcstring, 1, color);
     delete []wcstring;
+}
+
+
+
+void suspendProcess(HANDLE procHandle) {
+    DWORD pid = 0;
+    GetWindowThreadProcessId( GetForegroundWindow(), &pid );
+    if ( pid != 0 ){
+        printf( "pid: %lu\n", pid );
+        procHandle = OpenProcess( 0x1F0FFF, 0, pid ); // TODO remove magic numbers
+        if ( procHandle != NULL ){
+            printf( "suspending match\n" );
+            NtSuspendProcess( procHandle );
+        }
+    }
+}
+
+
+
+void resumeProcess(HANDLE procHandle){
+    DWORD pid = 0;
+    GetWindowThreadProcessId( GetForegroundWindow(), &pid );
+    if ( pid != 0 ){
+        procHandle = OpenProcess( 0x1F0FFF, 0, pid ); // TODO remove magic numbers
+        if ( procHandle != NULL ){
+            printf( "resuming match\n" );
+            NtResumeProcess( procHandle );
+        }
+    }
 }
 
 
@@ -156,36 +180,20 @@ void toggleSuspend( limit* suspend, COLORREF colorOn, COLORREF colorOff )
 {
     COLORREF color;
     if ( isD2Active() ){
-        DWORD pid = 0;
-        // shitty way to get pid but eh
-        GetWindowThreadProcessId( GetForegroundWindow(), &pid );
         suspend->toggleState();
         HANDLE procHandle = NULL;
         printf( "suspend %s\n", suspend->state ? "true" : "false" );
         wchar_t* wcstring = new wchar_t[200];
 
+        color = suspend->state ? colorOn : colorOff;
+        triggerHotkeyString(wcstring, 200, suspend);
+
+        // shitty way to get pid but eh
+        // TODO make these into separate functions
         if ( suspend->state ){
-            triggerHotkeyString(wcstring, 200, suspend);
-            color = colorOn;
-            if ( pid != 0 ){
-                printf( "pid: %lu\n", pid );
-                procHandle = OpenProcess( 0x1F0FFF, 0, pid ); // TODO remove magic numbers
-                if ( procHandle != NULL ){
-                    printf( "suspending match\n" );
-                    NtSuspendProcess( procHandle );
-                }
-            }
-        
+            suspendProcess(procHandle);
         } else {
-            triggerHotkeyString(wcstring, 200, suspend);
-            color = colorOff;
-            if ( pid != 0 ){
-                procHandle = OpenProcess( 0x1F0FFF, 0, pid ); // TODO remove magic numbers
-                if ( procHandle != NULL ){
-                    printf( "resuming match\n" );
-                    NtResumeProcess( procHandle );
-                }
-            }
+            resumeProcess(procHandle);
         }
         if ( procHandle != NULL ){
             CloseHandle( procHandle );
@@ -203,15 +211,13 @@ void toggleGame( limit* lim_game, COLORREF colorOn, COLORREF colorOff )
     lim_game->toggleState();
     printf( "state_game %s\n", lim_game->state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
+    color = lim_game->state ? colorOn : colorOff;
     if ( lim_game->state ){
         ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 0.801KB", NULL, SW_HIDE );
-        triggerHotkeyString(wcstring, 200, lim_game);
-        color = colorOn;
     } else {
         ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE );
-        triggerHotkeyString(wcstring, 200, lim_game);
-        color = colorOff;
     }
+    triggerHotkeyString(wcstring, 200, lim_game);
     updateOverlayLine( wcstring, 7, color);
     delete []wcstring;
 }
@@ -224,13 +230,8 @@ void toggle7k( limit* lim7k, COLORREF colorOn, COLORREF colorOff )
     lim7k->toggleState();
     printf( "state7k %s\n", lim7k->state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( lim7k->state ){
-        triggerHotkeyString( wcstring, 200, lim7k);
-        color = colorOn;
-    } else {
-        triggerHotkeyString( wcstring, 200, lim7k);
-        color = colorOff;
-    }
+    triggerHotkeyString( wcstring, 200, lim7k);
+    color = lim7k->state ? colorOn : colorOff;
     updateOverlayLine( wcstring, 6, color);
     delete []wcstring;
 }
@@ -243,13 +244,8 @@ void toggle30k( limit* lim30k, COLORREF colorOn, COLORREF colorOff )
     lim30k->toggleState();
     printf( "state30k %s\n", lim30k->state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( lim30k->state ){
-        triggerHotkeyString( wcstring, 200, lim30k);
-        color = colorOn;
-    } else {
-        triggerHotkeyString( wcstring, 200, lim30k);
-        color = colorOff;
-    }
+    color = lim30k->state ? colorOn : colorOff;
+    triggerHotkeyString( wcstring, 200, lim30k);
     updateOverlayLine( wcstring, 5, color);
     delete []wcstring;
 }
@@ -262,13 +258,8 @@ void toggle27k_UL( limit* lim27kUL, COLORREF colorOn, COLORREF colorOff )
     lim27kUL->toggleState();
     printf( "state3074UL %s\n", lim27kUL->state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( lim27kUL->state ){
-        triggerHotkeyString( wcstring, 200, lim27kUL);
-        color = colorOn;
-    } else {
-        triggerHotkeyString( wcstring, 200, lim27kUL);
-        color = colorOff;
-    }
+    color = lim27kUL->state ? colorOn : colorOff;
+    triggerHotkeyString( wcstring, 200, lim27kUL);
     updateOverlayLine( wcstring, 4, color);
     delete []wcstring;
 }
@@ -281,13 +272,8 @@ void toggle27k( limit* lim27k, COLORREF colorOn, COLORREF colorOff )
     lim27k->toggleState();
     printf( "state3074UL %s\n", lim27k->state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( lim27k->state ){
-        triggerHotkeyString( wcstring, 200, lim27k);
-        color = colorOn;
-    } else {
-        triggerHotkeyString( wcstring, 200, lim27k);
-        color = colorOff;
-    }
+    color = lim27k->state ? colorOn : colorOff;
+    triggerHotkeyString( wcstring, 200, lim27k);
     updateOverlayLine( wcstring, 3, color);
     delete []wcstring;
 }
@@ -300,13 +286,8 @@ void toggle3074_UL( limit* lim3074UL, COLORREF colorOn, COLORREF colorOff )
     lim3074UL->toggleState();
     printf( "state3074UL %s\n", lim3074UL->state ? "true" : "false" );
     wchar_t* wcstring = new wchar_t[200];
-    if ( lim3074UL->state ){
-        triggerHotkeyString( wcstring, 200, lim3074UL);
-        color = colorOn;
-    } else {
-        triggerHotkeyString( wcstring, 200, lim3074UL);
-        color = colorOff;
-    }
+    color = lim3074UL->state ? colorOn : colorOff;
+    triggerHotkeyString( wcstring, 200, lim3074UL);
     updateOverlayLine( wcstring, 2, color);
     delete []wcstring;
 }
