@@ -24,7 +24,7 @@ struct limit {
     limit(wchar_t* n) : name(n) {}
 };
 
-void triggerHotkeyString( wchar_t* wcstring, int szWcstring, limit* limit);
+void formatHotkeyStatusWcString( wchar_t* wcstring, int szWcstring, limit* limit);
 bool isD2Active();
 bool IsElevated();
 
