@@ -102,8 +102,8 @@ void writeIniContents( wchar_t* filePath ){
         printf( "creating config file\n" );
         CreateFileW( (LPCTSTR)filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
         printf( "setting config file to default settings\n" );
-        // TODO switch to json
-        WritePrivateProfileString( L"", L"Modkey accepts any key that hotkey does or 'shift', 'alt', 'ctrl'. Capitilization matters.", L"", filePath );
+        // TODO switch to json https://github.com/open-source-parsers/jsoncpp
+        WritePrivateProfileString( L"", L"Modkey accepts any key that hotkey does or 'shift', 'alt', 'ctrl'. Capitalization matters.", L"", filePath );
         WritePrivateProfileString( L"", L"game lim only works if you have windows pro edition", L"", filePath );
         WritePrivateProfileString( L"hotkeys", L"hotkey_exitapp", L"k", filePath );
         WritePrivateProfileString( L"hotkeys", L"modkey_exitapp", L"ctrl", filePath );

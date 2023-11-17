@@ -61,7 +61,7 @@ int __cdecl main( int argc, char** argv ){
     printf( "pathToIni %ls\n", pathToIni );
 
     int fontSize;
-    GetPrivateProfileStringW( L"other", L"fontSize", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
+    GetPrivateProfileStringW( L"other", L"fontSize", NULL, wc_buffer, sizeof(wc_buffer-4), pathToIni );
     fontSize = wcstol(wc_buffer, NULL, 10);
     GetPrivateProfileStringW( L"other", L"colorDefault", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
     colorDefault = wcstol(wc_buffer, NULL, 16);
