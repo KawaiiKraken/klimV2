@@ -30,8 +30,8 @@ void formatHotkeyStatusWcString( wchar_t* wcstring, int szWcstring, limit* limit
 bool isD2Active();
 bool IsElevated();
 
-void setVarFromJson(wchar_t* hotkey_name, char* hotkey_var, std::string jsonContent);
 Json::Value loadConfigFileFromJson(wchar_t* filePath);
+void setVarFromJson(limit* limit, std::string hotkey, std::string modkey);
 void writeDefaultJsonConfig(wchar_t* filePath);
 bool FileExists( LPCTSTR szPath );
 const wchar_t* GetFileName( const wchar_t *path );

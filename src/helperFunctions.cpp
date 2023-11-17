@@ -267,30 +267,36 @@ void toggleBlockingLimit(limit* limit, COLORREF colorOn, COLORREF colorOff)
     delete []wcstring;
 }
 
-
-
-void setVarFromJson( wchar_t* hotkey_name, char* hotkey_var, std::string jsonContent)
-{
-    const char* charPointer = jsonContent.c_str();
-    wchar_t buffer[200];
-    MultiByteToWideChar(CP_UTF8, 0, charPointer, -1, buffer, 200);
+void setVarByKeyName(limit* limit, wchar_t key, wchar_t* buffer) {
     wchar_t* wcSingleChar = nullptr;
-
     // convert from key name to virtual keycode
     if ( wcscmp( buffer, L"alt" ) == 0 ){
-        *hotkey_var = VK_MENU;
-        printf( "set %ls to: alt\n", hotkey_name );
-    } 
-    else if ( wcscmp( buffer, L"shift" ) == 0 ){
-        *hotkey_var = VK_SHIFT;
-        printf( "set %ls to: shift\n", hotkey_name );
-    } 
-    else if ( wcscmp( buffer, L"ctrl" ) == 0 ){
-        *hotkey_var = VK_CONTROL;
-        printf( "set %ls to: ctrl\n", hotkey_name );
+        key = VK_MENU;
+        printf( "set %ls to: alt\n", limit->name);
+    } else 
+    if ( wcscmp( buffer, L"shift" ) == 0 ){
+        key = VK_SHIFT;
+        printf( "set %ls to: shift\n", limit->name);
+    } else 
+    if ( wcscmp( buffer, L"ctrl" ) == 0 ){
+        key = VK_CONTROL;
+        printf( "set %ls to: ctrl\n", limit->name);
     } else {
         wcSingleChar = &buffer[0];
-        *hotkey_var = VkKeyScanW( *wcSingleChar );
-        printf( "set %ls to: %s\n", hotkey_name, hotkey_var);
+        key = VkKeyScanW( *wcSingleChar );
+        printf( "set %ls to: %wc+%wc\n", limit->name, limit->hotkey, limit->modkey);
     }
+}
+
+
+void setVarFromJson(limit* limit, std::string hotkey, std::string modkey)
+{
+    const char* charPointer = hotkey.c_str();
+    const char* charPointer2 = modkey.c_str();
+    wchar_t buffer[200];
+    wchar_t buffer2[200];
+    MultiByteToWideChar(CP_UTF8, 0, charPointer, -1, buffer, 200);
+    MultiByteToWideChar(CP_UTF8, 0, charPointer2, -1, buffer2, 200);
+    setVarByKeyName(limit, limit->hotkey, buffer);
+    setVarByKeyName(limit, limit->modkey, buffer2);
 }
