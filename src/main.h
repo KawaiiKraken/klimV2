@@ -5,7 +5,6 @@
 
 #pragma clang diagnostic ignored "-Wunused-variable"
 
-#include "../WinDivert/windivert.h"
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,7 +36,7 @@ bool debug = FALSE;
 
 void MessageLoop();
 void setPathToIni();
-void combinerules();
+void setFilterRuleString();
 int __cdecl Overlay( LPTSTR );   
 DWORD WINAPI my_HotKey( LPVOID lpParm );
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam );

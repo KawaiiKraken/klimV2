@@ -6,34 +6,30 @@
 using namespace std;
 
 char myNetRules[1000];
+int onTriggerHotkey(limit* limit);
 wchar_t pathToIni[MAX_PATH];
 
-struct limit lim3074; 
-struct limit lim3074UL; 
-struct limit lim27k; 
-struct limit lim27kUL; 
-struct limit lim30k; 
-struct limit lim7k; 
-struct limit lim_game; 
-struct limit suspend; 
-struct limit exitapp; // not really a lim but still a hotkey
+limit lim3074((wchar_t*)L"3074"); 
+limit lim3074UL((wchar_t*)L"3074UL");
+limit lim27k((wchar_t*)L"27k"); 
+limit lim27kUL((wchar_t*)L"27kUL"); 
+limit lim30k((wchar_t*)L"30k"); 
+limit lim7k((wchar_t*)L"7k"); 
+limit lim_game((wchar_t*)L"game"); 
+limit suspend((wchar_t*)L"suspend"); 
+limit exitapp((wchar_t*)L"exitapp"); 
 
 int __cdecl main( int argc, char** argv ){
     if ( argv[1] != NULL ){
-        if ( strcmp( argv[1], "--help" ) == 0 ){
+        if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){
+            printf( "debug: true\n" );
+            debug = true;
+        } else {
+            printf( "error: invalid argument...\n" );
             printf( "options:\n" );
-            printf( "    --help      prints this message.\n" );
             printf( "    --debug     prevents console hiding and enables hotkey trigger outside of destiny 2.\n" );
             return 0;
         }
-    }
-
-    // check for debug mode
-    if ( argv[1] != NULL ){
-        if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){
-            printf( "debug: TRUE\n" );
-            debug = TRUE;
-        } 
     } else {
         ShowWindow( GetConsoleWindow(), SW_HIDE );
     }
@@ -53,6 +49,7 @@ int __cdecl main( int argc, char** argv ){
     }
     wchar_t wc_buffer[50];
     bool useOverlay;
+    // TODO fix memory leak
     GetPrivateProfileStringW( L"other", L"useOverlay", NULL, wc_buffer, sizeof(wc_buffer), pathToIni );
     if ( wcscmp(wc_buffer, L"true") == 0 ){
         useOverlay = true;
@@ -98,31 +95,31 @@ int __cdecl main( int argc, char** argv ){
 
     // set overlay to default state
     wchar_t* wcstring = new wchar_t[200];
-    triggerHotkeyString( wcstring, 200, lim3074.hotkey, lim3074.modkey, (wchar_t *)L"3074", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim3074, (wchar_t*)L"" );
     updateOverlayLine( wcstring, 1, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, lim3074UL.hotkey, lim3074UL.modkey, (wchar_t *)L"3074UL", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim3074UL, (wchar_t*)L"" );
     updateOverlayLine( wcstring, 2, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, lim27k.hotkey, lim27k.modkey, (wchar_t *)L"27k", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim27k, (wchar_t*)L"" );
     updateOverlayLine( wcstring, 3, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, lim27kUL.hotkey, lim27kUL.modkey, (wchar_t *)L"27kUL", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim27kUL, (wchar_t*)L"" );
     updateOverlayLine( wcstring, 4, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, lim30k.hotkey, lim30k.modkey, (wchar_t *)L"30k", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim30k, (wchar_t*)L"" );
     updateOverlayLine( wcstring, 5, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, lim7k.hotkey, lim7k.modkey, (wchar_t *)L"7k", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim7k, (wchar_t*)L"" );
     updateOverlayLine( wcstring, 6, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, lim_game.hotkey, lim_game.modkey, (wchar_t *)L"game", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &lim_game, (wchar_t*)L"" );
     updateOverlayLine( wcstring, 7, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, suspend.hotkey, suspend.modkey, (wchar_t *)L"suspend", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &suspend, (wchar_t*)L"" );
     updateOverlayLine( wcstring, 8, colorDefault);
 
-    triggerHotkeyString( wcstring, 200, exitapp.hotkey, exitapp.modkey, (wchar_t *)L"close", (wchar_t*)L"" );
+    triggerHotkeyString( wcstring, 200, &exitapp, (wchar_t*)L"" );
     updateOverlayLine( wcstring, 9, colorDefault);
     
     delete []wcstring;
@@ -148,28 +145,28 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         int key = hooked_key.vkCode;
 
         if ( key == lim3074.hotkey ){
-            lim3074.hotkey_keydown = FALSE;
+            lim3074.hotkey_down = false;
         }
         if ( key == lim3074UL.hotkey ){
-            lim3074UL.hotkey_keydown =  FALSE;
+            lim3074UL.hotkey_down =  false;
         }
         if ( key == lim27k.hotkey ){
-            lim27k.hotkey_keydown = FALSE;
+            lim27k.hotkey_down = false;
         }
         if ( key == lim27kUL.hotkey ){
-            lim27kUL.hotkey_keydown = FALSE;
+            lim27kUL.hotkey_down = false;
         }
         if ( key == lim30k.hotkey ){
-            lim30k.hotkey_keydown = FALSE;
+            lim30k.hotkey_down = false;
         }
         if ( key == lim7k.hotkey ){
-            lim7k.hotkey_keydown = FALSE;
+            lim7k.hotkey_down = false;
         }
         if ( key == lim_game.hotkey ){
-            lim_game.hotkey_keydown = FALSE;
+            lim_game.hotkey_down = false;
         }
         if ( key == suspend.hotkey ){
-            suspend.hotkey_keydown = FALSE;
+            suspend.hotkey_down = false;
         }
     }
 
@@ -204,123 +201,54 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
 
             
-            //============= 3074 ================
         if ( lim3074.modkey_state != 0 && key == lim3074.hotkey ) 
         {
-            if ( !lim3074.hotkey_keydown ){ 
-                wcout << L"hotkey_3074 detected\n";
-                if ( isD2Active() | debug ){
-                    lim3074.hotkey_keydown = TRUE;
-                    toggle3074( &lim3074, colorOn, colorOff );
-                    combinerules();
-                    updateFilter( myNetRules );
-                }
-            }
+            onTriggerHotkey(&lim3074);
             lim3074.modkey_state = 0;
         }
 
-        // ============= 3074UL ================
         if ( lim3074UL.modkey_state != 0 && key == lim3074UL.hotkey ) 
         {
-            if ( !lim3074UL.hotkey_keydown ){ 
-                wcout << L"hotkey_3074 detected\n";
-                if ( isD2Active() | debug ){
-                    lim3074UL.hotkey_keydown= TRUE;
-                    toggle3074_UL( &lim3074UL, colorOn, colorOff );
-                    combinerules();
-                    updateFilter( myNetRules );
-                }
-            }
+            onTriggerHotkey(&lim3074UL);
             lim3074UL.modkey_state = 0;
         }
 
-        // ============= 27k ================
         if ( lim27k.modkey_state != 0 && key == lim27k.hotkey ) 
         {
-            if ( !lim27k.hotkey_keydown ){ 
-                wcout << L"hotkey_27k detected\n";
-                if ( isD2Active() | debug ){
-                    lim27k.hotkey_keydown = TRUE;
-                    toggle27k( &lim27k, colorOn, colorOff );
-                    combinerules();
-                    updateFilter( myNetRules );
-                }
-            }
+            onTriggerHotkey(&lim27k);
             lim27k.modkey_state = 0;
         }
 
-        // ============= 27k_UL ================
         if ( lim27kUL.modkey_state != 0 && key == lim27kUL.hotkey ) 
         {
-            if ( !lim27kUL.hotkey_keydown ){ 
-                wcout << L"hotkey_27k detected\n";
-                if ( isD2Active() | debug ){
-                    lim27kUL.hotkey_keydown = TRUE;
-                    toggle27k_UL( &lim27kUL, colorOn, colorOff );
-                    combinerules();
-                    updateFilter( myNetRules );
-                }
-            }
+            onTriggerHotkey(&lim27kUL);
             lim27kUL.modkey_state = 0;
         }
 
-        // ============= 30k ================
         if ( lim3074.modkey_state != 0 && key == lim30k.hotkey ) 
         {
-            if ( !lim30k.hotkey_keydown ){ 
-                wcout << L"hotkey_30k detected\n";
-                if ( isD2Active() | debug ){
-                    lim30k.hotkey_keydown = TRUE;
-                    toggle30k( &lim30k, colorOn, colorOff );
-                    combinerules();
-                    updateFilter( myNetRules );
-                }
-            }
+            onTriggerHotkey(&lim30k);
             lim30k.modkey_state = 0;
         }
 
-        // ============= 7k ================
         if ( lim7k.modkey_state != 0 && key == lim7k.hotkey ) 
         {
-            if ( !lim7k.hotkey_keydown ){ 
-                wcout << L"hotkey_7k detected\n";
-                if ( isD2Active() | debug ){
-                    lim7k.hotkey_keydown = TRUE;
-                    toggle7k( &lim7k, colorOn, colorOff );
-                    combinerules();
-                    updateFilter( myNetRules );
-                }
-            }
+            onTriggerHotkey(&lim7k);
             lim7k.modkey_state = 0;
         } 
             
-        // ============= game ================
         if ( lim_game.modkey_state != 0 && key == lim_game.hotkey ) 
         {
-            if ( !lim_game.hotkey_keydown ){ 
-                wcout << L"hotkey_game detected\n";
-                if ( isD2Active() | debug ){
-                    lim_game.hotkey_keydown = TRUE;
-                    toggleGame( &lim_game, colorOn, colorOff );
-                }
-            }
+            onTriggerHotkey(&lim_game);
             lim_game.modkey_state = 0;
         }
 
-        // ============= suspend ================
         if ( suspend.modkey_state != 0 && key == suspend.hotkey ) 
         {
-            if ( !suspend.hotkey_keydown ){
-                wcout << L"hotkey_suspend detected\n";
-                if ( isD2Active() | debug ){
-                    suspend.hotkey_keydown = TRUE;
-                    toggleSuspend( &suspend, colorOn, colorOff );
-                }
-            }
+            onTriggerHotkey(&suspend);
             suspend.modkey_state = 0;
         }
 
-        // ============= exitapp ================
         if ( exitapp.modkey_state != 0 && key == exitapp.hotkey )
         {
             wcout << "shutting down\n";
@@ -334,6 +262,47 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
     return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
 }
 
+
+
+int onTriggerHotkey(limit* limit)
+{
+    if (!(isD2Active() || debug))
+    {
+        printf("d2 not active and debug not on");
+        return 1;
+    }
+    printf("limit.name: %ws\n", limit->name);
+    limit->hotkey_down = true;
+    // TODO, make it use std::unordered_map
+    if (wcscmp(limit->name, L"3074") == 0){
+        toggle3074(limit, colorOn, colorOff);
+    } else 
+    if (wcscmp(limit->name, L"3074UL") == 0){
+        toggle3074_UL(limit, colorOn, colorOff);
+    } else 
+    if (wcscmp(limit->name, L"3074UL") == 0){
+        toggle3074_UL(limit, colorOn, colorOff);
+    } else 
+    if (wcscmp(limit->name, L"27k") == 0){
+        toggle27k(limit, colorOn, colorOff);
+    } else 
+    if (wcscmp(limit->name, L"27kUL") == 0){
+        toggle27k_UL(limit, colorOn, colorOff);
+    } else 
+    if (wcscmp(limit->name, L"30k") == 0){
+        toggle30k(limit, colorOn, colorOff);
+    } else 
+    if (wcscmp(limit->name, L"7k") == 0){
+        toggle7k(limit, colorOn, colorOff);
+    } else 
+    if (wcscmp(limit->name, L"game") == 0){
+        toggleGame(limit, colorOn, colorOff);
+    } else 
+    if (wcscmp(limit->name, L"suspend") == 0){
+        toggleSuspend(limit, colorOn, colorOff);
+    } 
+    return 0;
+}
 
 
 void MessageLoop()
@@ -363,20 +332,20 @@ DWORD WINAPI my_HotKey( LPVOID lpParm )
 
 
 void setPathToIni()
-{ // this function does a bit too much, should prob split it up
+{ 
     wchar_t szFilePathSelf[MAX_PATH], szFolderPathSelf[MAX_PATH];
     GetModuleFileName(NULL, szFilePathSelf, MAX_PATH);
-    wcsncpy_s( szFolderPathSelf, sizeof( szFolderPathSelf ), szFilePathSelf, ( wcslen( szFilePathSelf ) - wcslen( GetFileName( szFilePathSelf ) ) ) );
+    wcsncpy_s( szFolderPathSelf, MAX_PATH, szFilePathSelf, (wcslen(szFilePathSelf) - wcslen(GetFileName(szFilePathSelf))));
     wchar_t filename[MAX_PATH], filePath[MAX_PATH];
     wcscpy_s( filename, MAX_PATH, L"config.ini" );
     wcscpy_s( filePath, MAX_PATH, szFolderPathSelf );
     wcscat_s( filePath, MAX_PATH, filename );
-    wcsncpy_s( pathToIni, sizeof( pathToIni ), filePath, sizeof( pathToIni ) );
+    wcsncpy_s(pathToIni, MAX_PATH, filePath, MAX_PATH);
 }
 
 
 
-void combinerules()
+void setFilterRuleString()
 {
     strcpy_s( myNetRules, sizeof( myNetRules ), "(udp.DstPort < 1 and udp.DstPort > 1)" ); // set to rule that wont match anything
     if ( lim3074.state ){
