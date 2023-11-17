@@ -50,5 +50,5 @@ void __cdecl PacketIpv6TcpInit( PTCPV6PACKET packet );
 void __cdecl PacketIpv6Icmpv6Init( PICMPV6PACKET packet );
 
 // actual functions
-unsigned long block_traffic( LPVOID lpParam );
+unsigned long windivert_filter_thread( LPVOID lpParam );
 void updateFilter( char* myNetRules );

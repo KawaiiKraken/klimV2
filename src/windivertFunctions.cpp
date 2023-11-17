@@ -98,13 +98,13 @@ void updateFilter( char* myNetRules )
         exit( EXIT_FAILURE );
     }
     if (hThread2 == NULL){
-        hThread2 = CreateThread( NULL, 0, block_traffic, NULL, 0, NULL );
+        hThread2 = CreateThread( NULL, 0, windivert_filter_thread, NULL, 0, NULL );
     }
 }
 
 
 
-unsigned long block_traffic( LPVOID lpParam )
+unsigned long windivert_filter_thread( LPVOID lpParam )
 {
     HANDLE console;
     unsigned char packet[MAXBUF];
@@ -276,7 +276,7 @@ unsigned long block_traffic( LPVOID lpParam )
                         htonl( ntohl( tcp_header->SeqNum ) + payload_len ) );
 
                 memcpy( &send_addr, &recv_addr, sizeof( send_addr ) );
-                send_addr.Outbound = !recv_addr.Outbound;
+                send_addr.Outbound = ~recv_addr.Outbound;
                 WinDivertHelperCalcChecksums( (PVOID)resetv6,
                     sizeof( TCPV6PACKET ), &send_addr, 0 );
                 if ( !WinDivertSend(handle2, (PVOID)resetv6, sizeof(TCPV6PACKET),
@@ -302,7 +302,7 @@ unsigned long block_traffic( LPVOID lpParam )
                 dnr->ip.DstAddr = ip_header->SrcAddr;
                 
                 memcpy( &send_addr, &recv_addr, sizeof( send_addr ) );
-                send_addr.Outbound = !recv_addr.Outbound;
+                send_addr.Outbound = ~recv_addr.Outbound;
                 WinDivertHelperCalcChecksums( (PVOID)dnr, icmp_length,
                     &send_addr, 0 );
                 if ( !WinDivertSend( handle2, (PVOID)dnr, icmp_length, NULL,
@@ -325,7 +325,7 @@ unsigned long block_traffic( LPVOID lpParam )
                     sizeof( dnrv6->ipv6.DstAddr ) );
                 
                 memcpy( &send_addr, &recv_addr, sizeof( send_addr ) );
-                send_addr.Outbound = !recv_addr.Outbound;
+                send_addr.Outbound = ~recv_addr.Outbound;
                 WinDivertHelperCalcChecksums( (PVOID)dnrv6, icmpv6_length,
                     &send_addr, 0 );
                 if ( !WinDivertSend( handle2, (PVOID)dnrv6, icmpv6_length, NULL, &send_addr ) )
