@@ -35,7 +35,7 @@ bool can_trigger_any_hotkey = TRUE;
 bool debug = FALSE;
 
 void MessageLoop();
-void setPathToIni();
+void setPathToConfigFile();
 void setFilterRuleString();
 int __cdecl Overlay( LPTSTR );   
 DWORD WINAPI my_HotKey( LPVOID lpParm );

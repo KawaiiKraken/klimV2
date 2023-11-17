@@ -2,12 +2,13 @@
 #include "main.h"
 #include "helperFunctions.h"
 #include "krekens_overlay.h"
+#include "..\jsoncpp_x64-windows\include\json\json.h"
 
 using namespace std;
 
 char myNetRules[1000];
 int onTriggerHotkey(limit* limit);
-wchar_t pathToIni[MAX_PATH];
+wchar_t pathToConfigFile[MAX_PATH];
 
 limit lim3074(  (wchar_t*)L"3074",    1); 
 limit lim3074UL((wchar_t*)L"3074UL",  2);
@@ -18,6 +19,7 @@ limit lim7k(    (wchar_t*)L"7k",      6);
 limit lim_game( (wchar_t*)L"game",    7); 
 limit suspend(  (wchar_t*)L"suspend", 8); 
 limit exitapp(  (wchar_t*)L"exitapp", 9); 
+
 
 int __cdecl main( int argc, char** argv ){
     if ( argv[1] != NULL ){
@@ -43,53 +45,37 @@ int __cdecl main( int argc, char** argv ){
     DWORD dwThread;
     
     // config file stuff
-    setPathToIni(); 
-    if ( !FileExists( pathToIni ) ){
-        writeIniContents( pathToIni );
+    setPathToConfigFile(); 
+    if ( !FileExists( pathToConfigFile ) ){
+        writeDefaultJsonConfig( pathToConfigFile );
     }
-    wchar_t wc_buffer[50];
-    bool useOverlay;
-    GetPrivateProfileStringW( L"other", L"useOverlay", NULL, wc_buffer, sizeof(wc_buffer-4), pathToIni );
-    if ( wcscmp(wc_buffer, L"true") == 0 ){
-        useOverlay = true;
-    } else if ( wcscmp(wc_buffer, L"false") == 0 ){
-        useOverlay = false;
-    } else {
-        MessageBox(NULL, L"useOverlay config option is set to an incorrect value.. exiting.", NULL, MB_OK);
-        return 0;
-    }
-    printf( "pathToIni %ls\n", pathToIni );
+    // Load the config from the JSON file
+    Json::Value loadedConfig = loadConfigFileFromJson(pathToConfigFile);
+    setVarFromJson(exitapp.name,    &exitapp.hotkey,    loadedConfig["hotkey_exitapp"].asString());
+    setVarFromJson(exitapp.name,    &exitapp.modkey,    loadedConfig["modkey_exitapp"].asString());
+    setVarFromJson(lim3074.name,    &lim3074.hotkey,    loadedConfig["hotkey_3074"].asString());
+    setVarFromJson(lim3074.name,    &lim3074.modkey,    loadedConfig["modkey_3074"].asString());
+    setVarFromJson(lim3074UL.name,  &lim3074UL.hotkey,  loadedConfig["hotkey_3074UL"].asString());
+    setVarFromJson(lim3074UL.name,  &lim3074UL.modkey,  loadedConfig["modkey_3074UL"].asString());
+    setVarFromJson(lim27k.name,     &lim27k.hotkey,     loadedConfig["hotkey_27k"].asString());
+    setVarFromJson(lim27k.name,     &lim27k.modkey,     loadedConfig["modkey_27k"].asString());
+    setVarFromJson(lim27kUL.name,   &lim27kUL.hotkey,   loadedConfig["hotkey_27kUL"].asString());
+    setVarFromJson(lim27kUL.name,   &lim27kUL.modkey,   loadedConfig["modkey_27kUL"].asString());
+    setVarFromJson(lim30k.name,     &lim30k.hotkey,     loadedConfig["hotkey_30k"].asString());
+    setVarFromJson(lim30k.name,     &lim30k.modkey,     loadedConfig["modkey_30k"].asString());
+    setVarFromJson(lim7k.name,      &lim7k.hotkey,      loadedConfig["hotkey_7k"].asString());
+    setVarFromJson(lim7k.name,      &lim7k.modkey,      loadedConfig["modkey_7k"].asString());
+    setVarFromJson(lim_game.name,   &lim_game.hotkey,   loadedConfig["hotkey_game"].asString());
+    setVarFromJson(lim_game.name,   &lim_game.modkey,   loadedConfig["modkey_game"].asString());
+    setVarFromJson(suspend.name,    &suspend.hotkey,    loadedConfig["hotkey_suspend"].asString());
+    setVarFromJson(suspend.name,    &suspend.modkey,    loadedConfig["modkey_suspend"].asString());
 
-    int fontSize;
-    GetPrivateProfileStringW( L"other", L"fontSize", NULL, wc_buffer, sizeof(wc_buffer)-1, pathToIni );
-    fontSize = wcstol(wc_buffer, NULL, 10);
-    GetPrivateProfileStringW( L"other", L"colorDefault", NULL, wc_buffer, sizeof(wc_buffer)-1, pathToIni );
-    colorDefault = wcstol(wc_buffer, NULL, 16);
-    GetPrivateProfileStringW( L"other", L"colorOn", NULL, wc_buffer, sizeof(wc_buffer)-1, pathToIni );
-    colorOn = wcstol(wc_buffer, NULL, 16);
-    GetPrivateProfileStringW( L"other", L"colorOff", NULL, wc_buffer, sizeof(wc_buffer)-1, pathToIni );
-    colorOff = wcstol(wc_buffer, NULL, 16);
+    colorDefault = stol(loadedConfig["colorDefault"].asString(), NULL, 16);
+    colorOn      = stol(loadedConfig["colorOn"].asString(), NULL, 16);
+    colorOff     = stol(loadedConfig["colorOff"].asString(), NULL, 16);
 
-    setVarFromIni( (wchar_t*)L"hotkey_exitapp", &exitapp.hotkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"modkey_exitapp", &exitapp.modkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"hotkey_3074", &lim3074.hotkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"modkey_3074", &lim3074.modkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"hotkey_3074_UL", &lim3074UL.hotkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"modkey_3074_UL", &lim3074UL.modkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"hotkey_27k", &lim27k.hotkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"modkey_27k", &lim27k.modkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"hotkey_27k_UL", &lim27kUL.hotkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"modkey_27k_UL", &lim27kUL.modkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"hotkey_30k", &lim30k.hotkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"modkey_30k", &lim30k.modkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"hotkey_7k", &lim7k.hotkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"modkey_7k", &lim7k.modkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"hotkey_game", &lim_game.hotkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"modkey_game", &lim_game.modkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"hotkey_suspend", &suspend.hotkey, pathToIni );
-    setVarFromIni( (wchar_t*)L"modkey_suspend", &suspend.modkey, pathToIni );
-
-
+    bool useOverlay = loadedConfig["useOverlay"].asBool();
+    int fontSize = loadedConfig["fontSize"].asInt();
     startOverlay( useOverlay, fontSize );
 
     // set overlay to default state
@@ -319,16 +305,16 @@ DWORD WINAPI my_HotKey( LPVOID lpParm )
 
 
 
-void setPathToIni()
+void setPathToConfigFile()
 { 
     wchar_t szFilePathSelf[MAX_PATH], szFolderPathSelf[MAX_PATH];
     GetModuleFileName(NULL, szFilePathSelf, MAX_PATH);
     wcsncpy_s( szFolderPathSelf, MAX_PATH, szFilePathSelf, (wcslen(szFilePathSelf) - wcslen(GetFileName(szFilePathSelf))));
     wchar_t filename[MAX_PATH], filePath[MAX_PATH];
-    wcscpy_s( filename, MAX_PATH, L"config.ini" );
+    wcscpy_s( filename, MAX_PATH, L"config.txt" );
     wcscpy_s( filePath, MAX_PATH, szFolderPathSelf );
     wcscat_s( filePath, MAX_PATH, filename );
-    wcsncpy_s(pathToIni, MAX_PATH, filePath, MAX_PATH);
+    wcsncpy_s(pathToConfigFile, MAX_PATH, filePath, MAX_PATH);
 }
 
 

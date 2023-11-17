@@ -1,5 +1,8 @@
 #include "helperFunctions.h"
 #include "krekens_overlay.h"
+#include <iostream>
+#include <fstream>
+#include "..\jsoncpp_x64-windows\include\json\json.h"
 
 const wchar_t* GetFileName( const wchar_t *path )
 {
@@ -11,6 +14,31 @@ const wchar_t* GetFileName( const wchar_t *path )
     return filename;
 }
 
+void StoreConfigToJson(wchar_t* filePath, const Json::Value& configData) {
+    // Open the file for writing
+    if (FileExists(filePath)) {
+        return;
+    }
+    printf("creating new config file\n");
+    HANDLE hFile = CreateFileW( (LPCTSTR)filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
+
+    if (hFile == INVALID_HANDLE_VALUE) {
+        // Handle error (you may want to add proper error handling)
+        printf("Error opening file for writing");
+        return;
+    }
+
+    // Convert Json::Value to string
+    std::string jsonData = configData.toStyledString();
+
+    // Write the JSON data to the file
+    printf("settings config to default\n");
+    DWORD bytesWritten;
+    WriteFile(hFile, jsonData.c_str(), static_cast<DWORD>(jsonData.length()), &bytesWritten, NULL);
+
+    // Close the file handle
+    CloseHandle(hFile);
+}
 
 
 bool isD2Active()
@@ -35,7 +63,6 @@ bool isD2Active()
 }
 
 
-// TODO better name for this function
 void formatHotkeyStatusWcString( wchar_t* wcString, int szWcString, limit* limit){ 
     char hotkeyBuffer[1] = { limit->hotkey };
     char modkeyBuffer[1] = { limit->modkey };
@@ -95,38 +122,63 @@ bool FileExists( LPCTSTR szPath )
 
 
 
-void writeIniContents( wchar_t* filePath ){
-    if ( !FileExists( filePath ) ){
-        printf( "creating config file\n" );
-        CreateFileW( (LPCTSTR)filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
-        printf( "setting config file to default settings\n" );
-        // TODO switch to json https://github.com/open-source-parsers/jsoncpp
-        WritePrivateProfileString( L"", L"Modkey accepts any key that hotkey does or 'shift', 'alt', 'ctrl'. Capitalization matters.", L"", filePath );
-        WritePrivateProfileString( L"", L"game lim only works if you have windows pro edition", L"", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_exitapp", L"k", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_exitapp", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_3074", L"g", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_3074", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_3074_UL", L"c", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_3074_UL", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_27k", L"6", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_27k", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_27k_UL", L"7", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_27k_UL", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_30k", L"l", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_30k", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_7k", L"j", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_7k", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_game", L"o", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_game", L"ctrl", filePath );
-        WritePrivateProfileString( L"hotkeys", L"hotkey_suspend", L"p", filePath );
-        WritePrivateProfileString( L"hotkeys", L"modkey_suspend", L"ctrl", filePath );
-        WritePrivateProfileString( L"other", L"useOverlay", L"true", filePath );
-        WritePrivateProfileString( L"other", L"fontSize", L"30", filePath );
-        WritePrivateProfileString( L"other", L"colorDefault", L"0x00FFFFFF", filePath );
-        WritePrivateProfileString( L"other", L"colorOn", L"0x000000FF", filePath );
-        WritePrivateProfileString( L"other", L"colorOff", L"0x00FFFFFF", filePath );
+void writeDefaultJsonConfig(wchar_t* filePath) {
+    Json::Value configData;
+    configData["hotkey_exitapp"] = "k";
+    configData["modkey_exitapp"] = "ctrl";
+    configData["hotkey_3074"] = "g";
+    configData["modkey_3074"] = "ctrl";
+    configData["hotkey_3074UL"] = "c";
+    configData["modkey_3074UL"] = "ctrl";
+    configData["hotkey_27k"] = "6";
+    configData["modkey_27k"] = "ctrl";
+    configData["hotkey_27kUL"] = "7";
+    configData["modkey_27kUL"] = "ctrl";
+    configData["hotkey_30k"] = "l";
+    configData["modkey_30k"] = "ctrl";
+    configData["hotkey_7k"] = "j";
+    configData["modkey_7k"] = "ctrl";
+    configData["hotkey_game"] = "o";
+    configData["modkey_game"] = "ctrl";
+    configData["hotkey_suspend"] = "p";
+    configData["modkey_suspend"] = "ctrl";
+    configData["useOverlay"] = true;
+    configData["fontSize"] = 30;
+    configData["colorDefault"] = "0x00FFFFFF";
+    configData["colorOn"] = "0x000000FF";
+    configData["colorOff"] = "0x00FFFFFF";
+
+    StoreConfigToJson(filePath, configData);
+}
+
+
+
+// Function to load configuration data from a JSON file
+Json::Value loadConfigFileFromJson(wchar_t* filePath) {
+    Json::Value jsonData;
+
+    // Open the file for reading
+    std::ifstream configFile(filePath, std::ifstream::binary);
+
+    if (configFile.is_open()) {
+        Json::Reader reader;
+
+        // Read the JSON data from the file
+        bool parsingSuccessful = reader.parse(configFile, jsonData);
+
+        // Check if parsing was successful
+        if (!parsingSuccessful) {
+            // Handle error (you may want to add proper error handling)
+            std::cerr << "Error parsing JSON: " << reader.getFormattedErrorMessages() << std::endl;
+        }
+
+        configFile.close();
+    } else {
+        // Handle error (you may want to add proper error handling)
+        std::cerr << "Error opening file for reading" << std::endl;
     }
+
+    return jsonData;
 }
 
 
@@ -217,31 +269,28 @@ void toggleBlockingLimit(limit* limit, COLORREF colorOn, COLORREF colorOff)
 
 
 
-void setVarFromIni( wchar_t* hotkey_name, char* hotkey_var, wchar_t* pathToIni )
+void setVarFromJson( wchar_t* hotkey_name, char* hotkey_var, std::string jsonContent)
 {
+    const char* charPointer = jsonContent.c_str();
     wchar_t buffer[200];
+    MultiByteToWideChar(CP_UTF8, 0, charPointer, -1, buffer, 200);
     wchar_t* wcSingleChar = nullptr;
 
-    GetPrivateProfileStringW( L"hotkeys", hotkey_name, NULL, buffer, sizeof(buffer-4), pathToIni );
-    if ( GetLastError() == 0x2 ){
-        printf( "GetPrivateProfileString failed (%lu)\n", GetLastError() );
-    } else {
-        // convert from key nane to virtual keycode
-        if ( wcscmp( buffer, L"alt" ) == 0 ){
-            *hotkey_var = VK_MENU;
-            printf( "set %ls to: alt\n", hotkey_name );
-        } 
-        else if ( wcscmp( buffer, L"shift" ) == 0 ){
-            *hotkey_var = VK_SHIFT;
-            printf( "set %ls to: shift\n", hotkey_name );
-        } 
-        else if ( wcscmp( buffer, L"ctrl" ) == 0 ){
-            *hotkey_var = VK_CONTROL;
-            printf( "set %ls to: ctrl\n", hotkey_name );
-        } else {
-            wcSingleChar = &buffer[0];
-            *hotkey_var = VkKeyScanW( *wcSingleChar );
-            printf( "set %ls to: %s\n", hotkey_name, hotkey_var);
-        }
+    // convert from key name to virtual keycode
+    if ( wcscmp( buffer, L"alt" ) == 0 ){
+        *hotkey_var = VK_MENU;
+        printf( "set %ls to: alt\n", hotkey_name );
     } 
+    else if ( wcscmp( buffer, L"shift" ) == 0 ){
+        *hotkey_var = VK_SHIFT;
+        printf( "set %ls to: shift\n", hotkey_name );
+    } 
+    else if ( wcscmp( buffer, L"ctrl" ) == 0 ){
+        *hotkey_var = VK_CONTROL;
+        printf( "set %ls to: ctrl\n", hotkey_name );
+    } else {
+        wcSingleChar = &buffer[0];
+        *hotkey_var = VkKeyScanW( *wcSingleChar );
+        printf( "set %ls to: %s\n", hotkey_name, hotkey_var);
+    }
 }

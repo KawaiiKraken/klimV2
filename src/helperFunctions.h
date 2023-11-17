@@ -8,6 +8,7 @@
 #include "../phnt/phnt_windows.h"
 #include "../phnt/phnt.h"
 #include "windivertFunctions.h"
+#include "..\jsoncpp_x64-windows\include\json\json.h"
 
 struct limit {
     wchar_t* name;
@@ -29,8 +30,9 @@ void formatHotkeyStatusWcString( wchar_t* wcstring, int szWcstring, limit* limit
 bool isD2Active();
 bool IsElevated();
 
-void setVarFromIni( wchar_t* hotkey_name, char* hotkey_var, wchar_t* pathToIni );
-void writeIniContents( wchar_t* filepath );
+void setVarFromJson(wchar_t* hotkey_name, char* hotkey_var, std::string jsonContent);
+Json::Value loadConfigFileFromJson(wchar_t* filePath);
+void writeDefaultJsonConfig(wchar_t* filePath);
 bool FileExists( LPCTSTR szPath );
 const wchar_t* GetFileName( const wchar_t *path );
 
