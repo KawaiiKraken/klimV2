@@ -10,8 +10,6 @@ for support join our server at the [thrallway](https://thrallway.com)
 - undetected
 - limits without a delay 
 - overlay (with toggle to switch to a separate window which you can even close)
-
-# screenshot of overlay
 ![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/example_screenshot.png "My Config")
  
 # installation
