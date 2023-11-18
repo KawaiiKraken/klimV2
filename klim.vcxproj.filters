@@ -176,4 +176,9 @@
       <Filter>Resource Files</Filter>
     </Library>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\Desktop\kraken pfp img\klimit.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>
