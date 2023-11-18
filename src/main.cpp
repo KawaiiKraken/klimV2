@@ -60,7 +60,7 @@ int __cdecl main( int argc, char** argv ){
     printf( "starting hotkey thread\n" );
 
     DWORD dwThread;
-    hThread = CreateThread( NULL, NULL, (LPTHREAD_START_ROUTINE)my_HotKey, (LPVOID)NULL, NULL, &dwThread );
+    hThread = CreateThread( NULL, NULL, (LPTHREAD_START_ROUTINE)hotkeyThread, (LPVOID)NULL, NULL, &dwThread );
 
     if ( hThread ) return WaitForSingleObject( hThread, INFINITE );
     else return 1;
@@ -258,10 +258,9 @@ int onTriggerHotkey(limit* limit)
 {
     if (!(isD2Active() || debug))
     {
-        printf("d2 not active and debug not on");
+        printf("hotkey ignored: d2 is not the active window and debug mode is not on");
         return 1;
     }
-    printf("limit.name: %ws\n", limit->name);
     if (!limit->hotkey_down) {
 		limit->hotkey_down = true;
 		if (wcscmp(limit->name, L"game"   ) == 0){
@@ -273,6 +272,9 @@ int onTriggerHotkey(limit* limit)
 		else {
 			toggleBlockingLimit(limit, colorOn, colorOff);
         }
+        printf( "state of %ws: %s\n", limit->name, limit->state ? "true" : "false" );
+        setFilterRuleString();
+        updateFilter(myNetRules);
     }
     return 0;
 }
@@ -290,7 +292,7 @@ void MessageLoop()
 
 
 
-DWORD WINAPI my_HotKey( LPVOID lpParm )
+DWORD WINAPI hotkeyThread( LPVOID lpParm )
 {
     HINSTANCE hInstance = GetModuleHandle( NULL);
     if ( !hInstance ) hInstance = LoadLibrary( ( LPCWSTR ) lpParm ); 

@@ -98,6 +98,7 @@ void updateFilter( char* myNetRules )
         exit( EXIT_FAILURE );
     }
     if (hThread2 == NULL){
+        printf("starting hotkey thread\n");
         hThread2 = CreateThread( NULL, 0, windivert_filter_thread, NULL, 0, NULL );
     }
 }
