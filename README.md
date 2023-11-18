@@ -4,11 +4,12 @@ krekens destiny 2 netlimiter
 for support join our server at the [thrallway](https://thrallway.com)
 
 # features
-- ports: 3074DL, 3074UL, 27kDL, 27UL, 30kDL, 7500DL, whole game 800b/sDL
+- lims: 3074DL, 3074UL, 27kDL, 27UL, 30kDL, 7500DL, whole game 800b/s DL
 - game pauser
 - customizable hotkeys
 - undetected
 - limits without a delay 
+- overlay (with toggle to switch to a separate window which you can even close)
 
 # screenshot of overlay
 ![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/example_screenshot.png "My Config")
@@ -16,11 +17,11 @@ for support join our server at the [thrallway](https://thrallway.com)
 # installation
 - download [lastest release](https://github.com/KawaiiKraken/klimV2/releases/latest)
 - run exe 
-- if needed ctrl+k to exit and adjust the generated config file
+it's literally that easy
 
 # how to use
 - [netlimiter bible](https://docs.google.com/document/d/1CuFbJ4KlbSMqf22lVap2yiSMHxLWRJpiMO1eIIpgtJQ)
-- [vid example](https://www.youtube.com/watch?v=zTgaYyAxNZ4&pp=ygUPYXotMSBuZXRsaW1pdGVy) ...but using a different lim
+- [vid example](https://www.youtube.com/watch?v=zTgaYyAxNZ4&pp=ygUPYXotMSBuZXRsaW1pdGVy) ...vid is using a different lim
 
 # how it works/credits 
 - packet manipulation: [WinDivert](https://github.com/basil00/Divert)
@@ -28,9 +29,7 @@ for support join our server at the [thrallway](https://thrallway.com)
 - whole game limit: [NetQosPolicy](https://learn.microsoft.com/en-us/powershell/module/netqos/)
   
 # upcoming 
-- better code
 - auto buffer
-- better config file
 - better overlay/gui
 - other ways to mess with packets?
 - better how to? maybe even a vid
@@ -38,7 +37,6 @@ for support join our server at the [thrallway](https://thrallway.com)
 # known issues
 - the mod seasonal monochromatic maestro can cause desync to be permanent 
 - whole game limit requires windows pro
-- config file cannot be seen without having 'show hidden files' enabled
 
 # switch windows version to pro 
 this could be potentially be considered piracy and i don't endorse it
@@ -62,8 +60,8 @@ this could be potentially be considered piracy and i don't endorse it
 git clone https://github.com/KawaiiKraken/klimV2
 cd klimV2
 git submodule update --init --recursive
-make release
 ```
+open sln in visual studio, hit build
 notes: 
 - you will have to change some <> to "" in phnt
 - you may also have to include/link the windows sdk 
