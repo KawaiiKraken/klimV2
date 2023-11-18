@@ -39,5 +39,5 @@ void setPathToConfigFile();
 void setFilterRuleString();
 void initializeOverlay(bool useOverlay, int fontSize);
 int __cdecl Overlay( LPTSTR );   
-DWORD WINAPI my_HotKey( LPVOID lpParm );
+DWORD WINAPI hotkeyThread( LPVOID lpParm );
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam );

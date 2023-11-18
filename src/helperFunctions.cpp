@@ -217,7 +217,6 @@ void toggleSuspend( limit* suspend, COLORREF colorOn, COLORREF colorOff )
     GetWindowThreadProcessId( GetForegroundWindow(), &pid );
     if ( isD2Active() ){ // prevents from pausing random stuff if running with debug
         suspend->toggleState();
-        printf( "suspend %s\n", suspend->state ? "true" : "false" );
 
         if ( suspend->state ){
             suspendProcess(pid);
@@ -238,7 +237,6 @@ void toggleSuspend( limit* suspend, COLORREF colorOn, COLORREF colorOff )
 void toggleWholeGameLimit( limit* lim_game, COLORREF colorOn, COLORREF colorOff )
 {
     lim_game->toggleState();
-    printf( "state_game %s\n", lim_game->state ? "true" : "false" );
 
     if ( lim_game->state ){
         ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 0.801KB", NULL, SW_HIDE );
@@ -258,7 +256,6 @@ void toggleWholeGameLimit( limit* lim_game, COLORREF colorOn, COLORREF colorOff 
 void toggleBlockingLimit(limit* limit, COLORREF colorOn, COLORREF colorOff)
 {
     limit->toggleState();
-    printf( "state of %ws: %s\n", limit->name, limit->state ? "true" : "false" );
 
     COLORREF color = limit->state ? colorOn : colorOff;
     wchar_t* wcstring = new wchar_t[200];
@@ -293,10 +290,10 @@ void setVarFromJson(limit* limit, std::string hotkey, std::string modkey)
 {
     const char* charPointer = hotkey.c_str();
     const char* charPointer2 = modkey.c_str();
-    wchar_t buffer[200];
-    wchar_t buffer2[200];
-    MultiByteToWideChar(CP_UTF8, 0, charPointer, -1, buffer, 200);
-    MultiByteToWideChar(CP_UTF8, 0, charPointer2, -1, buffer2, 200);
+    wchar_t buffer[20];
+    wchar_t buffer2[20];
+    MultiByteToWideChar(CP_UTF8, 0, charPointer, -1, buffer, 20);
+    MultiByteToWideChar(CP_UTF8, 0, charPointer2, -1, buffer2, 20);
     setVarByKeyName(limit, &limit->hotkey, buffer);
     setVarByKeyName(limit, &limit->modkey, buffer2);
 }
