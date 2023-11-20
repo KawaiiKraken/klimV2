@@ -11,6 +11,7 @@ int onTriggerHotkey(limit* limit);
 wchar_t pathToConfigFile[MAX_PATH];
 void loadConfig(bool* useOverlay, int* fontSize, limit* exitapp, limit* lim3074, limit* lim3074UL, limit* lim27k, limit* lim27kUL, limit* lim30k, limit* lim7k, limit* lim_game, limit* suspend);
 static void setOverlayLineNumberOfHotkeys(limit* limit_array[], int array_size);
+void setFilterRuleString(limit* limit_array[], int array_size);
 void initializeOverlay(bool useOverlay, int fontSize, limit* limit_array[], int array_size);
 
 limit lim3074(  (wchar_t*)L"3074"); 
@@ -25,9 +26,17 @@ limit exitapp(  (wchar_t*)L"exitapp");
 limit* limit_ptr_array[] = { &lim3074, &lim3074UL, &lim27k, &lim27kUL, &lim30k, &lim7k, &lim_game, &suspend, &exitapp };
 int size_of_limit_ptr_array = sizeof(limit_ptr_array) / sizeof(limit_ptr_array[0]);
 
+// TODO make exitapp work when d2 is not the active window
 
 
 int __cdecl main( int argc, char** argv ){
+strcpy_s( lim3074.windivert_rule,   sizeof( lim3074.windivert_rule ),   " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)" ); 
+strcpy_s( lim3074UL.windivert_rule, sizeof( lim3074UL.windivert_rule ), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
+strcpy_s( lim27k.windivert_rule,    sizeof( lim27k.windivert_rule ),    " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)" ); 
+strcpy_s( lim27kUL.windivert_rule,  sizeof( lim27kUL.windivert_rule ),  " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)" ); 
+strcpy_s( lim30k.windivert_rule,    sizeof( lim30k.windivert_rule ),    " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)" ); 
+strcpy_s( lim7k.windivert_rule,     sizeof( lim7k.windivert_rule ),     " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)" ); 
+
     if ( argv[1] != NULL ){
         if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){
             printf( "debug: true\n" );
@@ -50,7 +59,7 @@ int __cdecl main( int argc, char** argv ){
 
     
     // config file stuff
-    setPathToConfigFile(); 
+    setPathToConfigFile((wchar_t*)L"config.txt");
     if ( !FileExists( pathToConfigFile ) ){
         writeDefaultJsonConfig( pathToConfigFile );
     }
@@ -74,6 +83,8 @@ int __cdecl main( int argc, char** argv ){
     return 0;
 }
 
+
+
 static void setOverlayLineNumberOfHotkeys(limit* limit_array[], int array_size) {
     int currentOverlayLine = 1;
     for (int i = 0; i < array_size; i++) {
@@ -87,9 +98,11 @@ static void setOverlayLineNumberOfHotkeys(limit* limit_array[], int array_size) 
 }
 
 
+
 void loadConfig(bool* useOverlay, int* fontSize, limit* exitapp, limit* lim3074, limit* lim3074UL, limit* lim27k, limit* lim27kUL, limit* lim30k, limit* lim7k, limit* lim_game, limit* suspend){
     // Load the config from the JSON file
     Json::Value loadedConfig = loadConfigFileFromJson(pathToConfigFile);
+    // this could definitely be done programmatically but i think that would be more effort than its worth
     setVarFromJson(exitapp,   loadedConfig["hotkey_exitapp"].asString(),   loadedConfig["modkey_exitapp"].asString());
     setVarFromJson(lim3074,   loadedConfig["hotkey_3074"].asString(),      loadedConfig["modkey_3074"].asString());
     setVarFromJson(lim3074UL, loadedConfig["hotkey_3074UL"].asString(),    loadedConfig["modkey_3074UL"].asString());
@@ -109,6 +122,7 @@ void loadConfig(bool* useOverlay, int* fontSize, limit* exitapp, limit* lim3074,
 }
 
 
+
 void initializeOverlay(bool useOverlay, int fontSize, limit* limit_array[], int array_size) {
     startOverlay( useOverlay, fontSize );
 
@@ -122,6 +136,7 @@ void initializeOverlay(bool useOverlay, int fontSize, limit* limit_array[], int 
 }
 
 
+
 void hotkeyResetKeyDownState(int key){
     for (int i = 0; i < size_of_limit_ptr_array; i++) {
         if (key == (int)limit_ptr_array[i]->hotkey) {
@@ -129,6 +144,8 @@ void hotkeyResetKeyDownState(int key){
         }
     }
 }
+
+
 
 void modkeyResetKeyDownState(int key) {
     for (int i = 0; i < size_of_limit_ptr_array; i++) {
@@ -159,6 +176,7 @@ void triggerHotkeys(int key){
 }
 
 
+
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam )
 {
     if  ( ( nCode == HC_ACTION ) && ( ( wParam == WM_SYSKEYUP ) || ( wParam == WM_KEYUP ) ) )      
@@ -186,6 +204,17 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
 
 
+void on_exitapp() {
+    wcout << "shutting down\n";
+    if ( !debug ){
+		ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
+		ShowWindow( GetConsoleWindow(), SW_RESTORE );
+		}
+	PostQuitMessage(0);
+}
+
+
+
 int onTriggerHotkey(limit* limit)
 {
     if (!(isD2Active() || debug))
@@ -195,28 +224,25 @@ int onTriggerHotkey(limit* limit)
     }
     if (!limit->hotkey_down) {
 		limit->hotkey_down = true;
-		if (wcscmp(limit->name, L"exitapp"   ) == 0){
-            wcout << "shutting down\n";
-			if ( !debug ){
-				ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
-				ShowWindow( GetConsoleWindow(), SW_RESTORE );
-			}
-			PostQuitMessage(0);
-		} else 
-		if (wcscmp(limit->name, L"game"   ) == 0){
+		if (wcscmp(limit->name, L"exitapp") == 0){
+            on_exitapp();
+		} 
+        else if (wcscmp(limit->name, L"game") == 0){
 			toggleWholeGameLimit(limit, colorOn, colorOff);
-		} else 
-		if (wcscmp(limit->name, L"suspend") == 0){
+		} 
+        else if (wcscmp(limit->name, L"suspend") == 0){
 			toggleSuspend(limit, colorOn, colorOff);
-		} else {
+		} 
+        else {
 			toggleBlockingLimit(limit, colorOn, colorOff);
         }
         printf( "state of %ws: %s\n", limit->name, limit->state ? "true" : "false" );
-        setFilterRuleString();
+        setFilterRuleString(limit_ptr_array, size_of_limit_ptr_array);
         updateFilter(myNetRules);
     }
     return 0;
 }
+
 
 
 void MessageLoop()
@@ -245,13 +271,13 @@ DWORD WINAPI hotkeyThread( LPVOID lpParm )
 
 
 
-void setPathToConfigFile()
+void setPathToConfigFile(wchar_t* configFileName)
 { 
     wchar_t szFilePathSelf[MAX_PATH], szFolderPathSelf[MAX_PATH];
     GetModuleFileName(NULL, szFilePathSelf, MAX_PATH);
     wcsncpy_s( szFolderPathSelf, MAX_PATH, szFilePathSelf, (wcslen(szFilePathSelf) - wcslen(GetFileName(szFilePathSelf))));
     wchar_t filename[MAX_PATH], filePath[MAX_PATH];
-    wcscpy_s( filename, MAX_PATH, L"config.txt" );
+    wcscpy_s( filename, MAX_PATH, configFileName );
     wcscpy_s( filePath, MAX_PATH, szFolderPathSelf );
     wcscat_s( filePath, MAX_PATH, filename );
     wcsncpy_s(pathToConfigFile, MAX_PATH, filePath, MAX_PATH);
@@ -259,27 +285,16 @@ void setPathToConfigFile()
 
 
 
-// TODO reword this entire function to use new system
-void setFilterRuleString()
+void setFilterRuleString(limit* limit_array[], int array_size)
 {
-    strcpy_s( myNetRules, sizeof( myNetRules ), "(udp.DstPort < 1 and udp.DstPort > 1)" ); // set to rule that wont match anything
-    if ( lim3074.state ){
-        strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)" );
-    }
-    if ( lim3074UL.state ){
-        strcat_s( myNetRules, sizeof( myNetRules ), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
-    }
-    if ( lim27k.state ){
-        strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)" );
-    }
-    if ( lim27kUL.state ){
-        strcat_s( myNetRules, sizeof( myNetRules ), " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)" );
-    }
-    if ( lim30k.state ){
-        strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)" );
-    }
-    if ( lim7k.state ){
-        strcat_s( myNetRules, sizeof( myNetRules ), " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)" );
+    strcpy_s(myNetRules, sizeof( myNetRules ), "(udp.DstPort < 1 and udp.DstPort > 1)" ); // set to rule that wont match anything
+
+    for (int i = 0; i < array_size; i++) {
+        if (strcmp(limit_array[i]->windivert_rule, "") != 0) {
+            if (limit_array[i]->state) {
+                strcat_s(myNetRules, sizeof(myNetRules), limit_array[i]->windivert_rule);
+            }
+        }
     }
     printf( "filter: %s\n", myNetRules );
 }

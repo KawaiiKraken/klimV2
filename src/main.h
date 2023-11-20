@@ -35,8 +35,7 @@ bool can_trigger_any_hotkey = TRUE;
 bool debug = FALSE;
 
 void MessageLoop();
-void setPathToConfigFile();
-void setFilterRuleString();
+void setPathToConfigFile(wchar_t* configFileName);
 int __cdecl Overlay( LPTSTR );   
 DWORD WINAPI hotkeyThread( LPVOID lpParm );
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam );
