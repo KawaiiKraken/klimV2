@@ -22,8 +22,8 @@ limit lim7k(    (wchar_t*)L"7k");
 limit lim_game( (wchar_t*)L"game"); 
 limit suspend(  (wchar_t*)L"suspend"); 
 limit exitapp(  (wchar_t*)L"exitapp"); 
-limit* limit_ptr_array[10] = { &lim3074, &lim3074UL, &lim27k, &lim27kUL, &lim30k, &lim7k, &lim_game, &suspend, &exitapp };
-int size_of_limit_ptr_array = sizeof(limit_ptr_array) / sizeof(nullptr);
+limit* limit_ptr_array[] = { &lim3074, &lim3074UL, &lim27k, &lim27kUL, &lim30k, &lim7k, &lim_game, &suspend, &exitapp };
+int size_of_limit_ptr_array = sizeof(limit_ptr_array) / sizeof(limit_ptr_array[0]);
 
 
 
@@ -76,7 +76,7 @@ int __cdecl main( int argc, char** argv ){
 
 static void setOverlayLineNumberOfHotkeys(limit* limit_array[], int array_size) {
     int currentOverlayLine = 1;
-    for (int i = 0; i < (array_size-1); i++) {
+    for (int i = 0; i < array_size; i++) {
         bool valid_hotkey = (limit_array[i]->hotkey != 0x0);
         bool valid_modkey = (limit_array[i]->modkey != 0x0);
         if (valid_hotkey && valid_modkey) {
@@ -114,7 +114,7 @@ void initializeOverlay(bool useOverlay, int fontSize, limit* limit_array[], int 
 
     // set overlay to default state
     wchar_t* wcstring = new wchar_t[200];
-    for (int i = 0; i < (array_size - 1); i++) {
+    for (int i = 0; i < (array_size); i++) {
         formatHotkeyStatusWcString( wcstring, 200, limit_array[i]);
         updateOverlayLine( wcstring, limit_array[i]->overlayLineNumber, colorDefault);
     }
@@ -122,30 +122,39 @@ void initializeOverlay(bool useOverlay, int fontSize, limit* limit_array[], int 
 }
 
 
-void setKeyDownStateOfHotkeys(int key){
-    for (int i = 0; i < (size_of_limit_ptr_array  - 1); i++) {
-        if (key == limit_ptr_array[i]->hotkey) {
+void hotkeyResetKeyDownState(int key){
+    for (int i = 0; i < size_of_limit_ptr_array; i++) {
+        if (key == (int)limit_ptr_array[i]->hotkey) {
             limit_ptr_array[i]->hotkey_down= false;
         }
     }
 }
 
-void triggerHotkeys(int key){
-    for (int i = 0; i < (size_of_limit_ptr_array - 2); i++) { // TODO make exitapp part of the global hotkey system
-        if (limit_ptr_array[i]->modkey_state != 0 && key == limit_ptr_array[i]->hotkey) {
-            onTriggerHotkey(limit_ptr_array[i]);
-            limit_ptr_array[i]->modkey_state = 0;
+void modkeyResetKeyDownState(int key) {
+    for (int i = 0; i < size_of_limit_ptr_array; i++) {
+        if (key == (int)limit_ptr_array[i]->modkey) {
+            limit_ptr_array[i]->modkey_down = false;
         }
     }
+}
 
-    if ( exitapp.modkey_state != 0 && key == exitapp.hotkey )
-    {
-        wcout << "shutting down\n";
-        if ( !debug ){
-            ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
-            ShowWindow( GetConsoleWindow(), SW_RESTORE );
+
+
+void modkeySetDownState(int key) {
+    for (int i = 0; i < size_of_limit_ptr_array; i++) {
+        if (key == limit_ptr_array[i]->modkey) {
+            limit_ptr_array[i]->modkey_down = true;
         }
-        PostQuitMessage(0);
+    }
+}
+
+
+
+void triggerHotkeys(int key){
+    for (int i = 0; i < size_of_limit_ptr_array; i++) { 
+        if (limit_ptr_array[i]->modkey_down == true && key == limit_ptr_array[i]->hotkey) {
+            onTriggerHotkey(limit_ptr_array[i]);
+        }
     }
 }
 
@@ -155,8 +164,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
     if  ( ( nCode == HC_ACTION ) && ( ( wParam == WM_SYSKEYUP ) || ( wParam == WM_KEYUP ) ) )      
     {
         KBDLLHOOKSTRUCT hooked_key =  *( ( KBDLLHOOKSTRUCT* )lParam );
+
         int key = hooked_key.vkCode;
-        setKeyDownStateOfHotkeys(key);
+
+        modkeyResetKeyDownState(key);
+        hotkeyResetKeyDownState(key);
     }
 
 
@@ -166,14 +178,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
         int key = hooked_key.vkCode;
 
-        // TODO use the hotkey system properly instead of using GetAsyncState
-        // 2x cuz i don't want to bitshift and this gets state of key at the moment its called too
-        for (int i = 0; i < 2; i++) {
-            for (int i = 0; i < (size_of_limit_ptr_array - 1); i++) {
-                limit_ptr_array[i]->modkey_state = GetAsyncKeyState(limit_ptr_array[i]->modkey);
-            }
-        }
-
+        modkeySetDownState(key);
         triggerHotkeys(key);
     }
     return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
@@ -190,13 +195,20 @@ int onTriggerHotkey(limit* limit)
     }
     if (!limit->hotkey_down) {
 		limit->hotkey_down = true;
+		if (wcscmp(limit->name, L"exitapp"   ) == 0){
+            wcout << "shutting down\n";
+			if ( !debug ){
+				ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
+				ShowWindow( GetConsoleWindow(), SW_RESTORE );
+			}
+			PostQuitMessage(0);
+		} else 
 		if (wcscmp(limit->name, L"game"   ) == 0){
 			toggleWholeGameLimit(limit, colorOn, colorOff);
 		} else 
 		if (wcscmp(limit->name, L"suspend") == 0){
 			toggleSuspend(limit, colorOn, colorOff);
-		}
-		else {
+		} else {
 			toggleBlockingLimit(limit, colorOn, colorOff);
         }
         printf( "state of %ws: %s\n", limit->name, limit->state ? "true" : "false" );
@@ -247,6 +259,7 @@ void setPathToConfigFile()
 
 
 
+// TODO reword this entire function to use new system
 void setFilterRuleString()
 {
     strcpy_s( myNetRules, sizeof( myNetRules ), "(udp.DstPort < 1 and udp.DstPort > 1)" ); // set to rule that wont match anything
