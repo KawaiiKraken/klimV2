@@ -19,6 +19,7 @@ struct limit {
     bool hotkey_down = false;
     bool modkey_down = false;
     int overlayLineNumber = -1;
+    char windivert_rule[250];
     void toggleState() {
         state = !state;
         wcscpy_s(state_name, state ? (wchar_t*)L"(on)" : (wchar_t*)L"(off)");
