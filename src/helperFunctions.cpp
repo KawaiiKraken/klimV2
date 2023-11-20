@@ -63,6 +63,7 @@ bool isD2Active()
 }
 
 
+// random TODO make hotkey systemw work with right and left keys
 void formatHotkeyStatusWcString( wchar_t* wcString, int szWcString, limit* limit){ 
     char hotkeyBuffer[1] = { limit->hotkey };
     char modkeyBuffer[1] = { limit->modkey };
@@ -75,13 +76,16 @@ void formatHotkeyStatusWcString( wchar_t* wcString, int szWcString, limit* limit
     mbstowcs_s( &outSize, wcModkeyBuffer, 2, modkeyBuffer, 1);
 
     wcscpy_s(wcString, static_cast<rsize_t>(szWcString) - 1, wcModkeyBuffer);
-    if ( limit->modkey == VK_SHIFT ){
+    //if ( limit->modkey == VK_SHIFT ){
+    if ( limit->modkey == VK_LSHIFT ){
         wcscpy_s( wcString, sizeof(L"shift"), L"shift" );
     }
-    if ( limit->modkey == VK_CONTROL ){
+    //if ( limit->modkey == VK_CONTROL ){
+    if ( limit->modkey == VK_LCONTROL ){
         wcscpy_s( wcString, sizeof(L"ctrl"), L"ctrl" );
     }
-    if ( limit->modkey == VK_MENU ){
+    //if ( limit->modkey == VK_MENU ){
+    if ( limit->modkey == VK_LMENU ){
         wcscpy_s( wcString, sizeof(L"alt"), L"alt" );
     }
     wcscat_s(wcString, szWcString, L"+");
@@ -264,7 +268,7 @@ void toggleBlockingLimit(limit* limit, COLORREF colorOn, COLORREF colorOff)
     delete []wcstring;
 }
 
-void setVarByKeyName(limit* limit, char* key, wchar_t* buffer) {
+void setVarByKeyName(limit* limit, int* key, wchar_t* buffer) {
     wchar_t* wcSingleChar = nullptr;
     // convert from key name to virtual keycode
     if (wcscmp(buffer, L"") == 0) {
@@ -272,15 +276,17 @@ void setVarByKeyName(limit* limit, char* key, wchar_t* buffer) {
         printf("set %ls to: 0x0\n", limit->name);
     } else 
     if (wcscmp(buffer, L"alt") == 0) {
-        *key = VK_MENU;
+        *key = VK_LMENU;
         printf("set %ls to: alt\n", limit->name);
     } else
     if (wcscmp(buffer, L"shift") == 0) {
-        *key = VK_SHIFT;
+        //*key = VK_SHIFT;
+        *key = VK_LSHIFT;
         printf("set %ls to: shift\n", limit->name);
     } else
     if (wcscmp(buffer, L"ctrl") == 0) {
-        *key = VK_CONTROL;
+        //*key = VK_CONTROL;
+        *key = VK_LCONTROL;
         printf("set %ls to: ctrl\n", limit->name);
     } else {
         wcSingleChar = &buffer[0];

@@ -12,13 +12,13 @@
 
 struct limit {
     wchar_t* name;
-    char hotkey = 0x0;
-    char modkey = 0x0;
+    int hotkey = 0x0;
+    int modkey = 0x0;
     bool state = false;
     wchar_t state_name[20] = {'\0'};
     bool hotkey_down = false;
+    bool modkey_down = false;
     int overlayLineNumber = -1;
-    DWORD modkey_state = 0;
     void toggleState() {
         state = !state;
         wcscpy_s(state_name, state ? (wchar_t*)L"(on)" : (wchar_t*)L"(off)");
