@@ -267,17 +267,21 @@ void toggleBlockingLimit(limit* limit, COLORREF colorOn, COLORREF colorOff)
 void setVarByKeyName(limit* limit, char* key, wchar_t* buffer) {
     wchar_t* wcSingleChar = nullptr;
     // convert from key name to virtual keycode
-    if ( wcscmp( buffer, L"alt" ) == 0 ){
+    if (wcscmp(buffer, L"") == 0) {
+        *key = 0x0;
+        printf("set %ls to: 0x0\n", limit->name);
+    } else 
+    if (wcscmp(buffer, L"alt") == 0) {
         *key = VK_MENU;
-        printf( "set %ls to: alt\n", limit->name);
-    } else 
-    if ( wcscmp( buffer, L"shift" ) == 0 ){
+        printf("set %ls to: alt\n", limit->name);
+    } else
+    if (wcscmp(buffer, L"shift") == 0) {
         *key = VK_SHIFT;
-        printf( "set %ls to: shift\n", limit->name);
-    } else 
-    if ( wcscmp( buffer, L"ctrl" ) == 0 ){
+        printf("set %ls to: shift\n", limit->name);
+    } else
+    if (wcscmp(buffer, L"ctrl") == 0) {
         *key = VK_CONTROL;
-        printf( "set %ls to: ctrl\n", limit->name);
+        printf("set %ls to: ctrl\n", limit->name);
     } else {
         wcSingleChar = &buffer[0];
         *key = VkKeyScanW( *wcSingleChar );

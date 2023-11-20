@@ -10,16 +10,20 @@ char myNetRules[1000];
 int onTriggerHotkey(limit* limit);
 wchar_t pathToConfigFile[MAX_PATH];
 void loadConfig(bool* useOverlay, int* fontSize, limit* exitapp, limit* lim3074, limit* lim3074UL, limit* lim27k, limit* lim27kUL, limit* lim30k, limit* lim7k, limit* lim_game, limit* suspend);
+static void setOverlayLineNumberOfHotkeys(limit* limit_array[], int array_size);
+void initializeOverlay(bool useOverlay, int fontSize, limit* limit_array[], int array_size);
 
-limit lim3074(  (wchar_t*)L"3074",    1); 
-limit lim3074UL((wchar_t*)L"3074UL",  2);
-limit lim27k(   (wchar_t*)L"27k",     3); 
-limit lim27kUL( (wchar_t*)L"27kUL",   4); 
-limit lim30k(   (wchar_t*)L"30k",     5); 
-limit lim7k(    (wchar_t*)L"7k",      6); 
-limit lim_game( (wchar_t*)L"game",    7); 
-limit suspend(  (wchar_t*)L"suspend", 8); 
-limit exitapp(  (wchar_t*)L"exitapp", 9); 
+limit lim3074(  (wchar_t*)L"3074"); 
+limit lim3074UL((wchar_t*)L"3074UL");
+limit lim27k(   (wchar_t*)L"27k"); 
+limit lim27kUL( (wchar_t*)L"27kUL"); 
+limit lim30k(   (wchar_t*)L"30k"); 
+limit lim7k(    (wchar_t*)L"7k"); 
+limit lim_game( (wchar_t*)L"game"); 
+limit suspend(  (wchar_t*)L"suspend"); 
+limit exitapp(  (wchar_t*)L"exitapp"); 
+limit* limit_ptr_array[10] = { &lim3074, &lim3074UL, &lim27k, &lim27kUL, &lim30k, &lim7k, &lim_game, &suspend, &exitapp };
+int size_of_limit_ptr_array = sizeof(limit_ptr_array) / sizeof(nullptr);
 
 
 
@@ -54,7 +58,8 @@ int __cdecl main( int argc, char** argv ){
     bool useOverlay;
 	int fontSize;
     loadConfig(&useOverlay, &fontSize, &exitapp, &lim3074, &lim3074UL, &lim27k, &lim27kUL, &lim30k, &lim7k, &lim_game, &suspend);
-    initializeOverlay(useOverlay, fontSize);
+    setOverlayLineNumberOfHotkeys(limit_ptr_array, size_of_limit_ptr_array);
+    initializeOverlay(useOverlay, fontSize, limit_ptr_array, size_of_limit_ptr_array);
 
 
     printf( "starting hotkey thread\n" );
@@ -69,6 +74,17 @@ int __cdecl main( int argc, char** argv ){
     return 0;
 }
 
+static void setOverlayLineNumberOfHotkeys(limit* limit_array[], int array_size) {
+    int currentOverlayLine = 1;
+    for (int i = 0; i < (array_size-1); i++) {
+        bool valid_hotkey = (limit_array[i]->hotkey != 0x0);
+        bool valid_modkey = (limit_array[i]->modkey != 0x0);
+        if (valid_hotkey && valid_modkey) {
+            limit_array[i]->overlayLineNumber = currentOverlayLine;
+            currentOverlayLine++;
+        }
+    }
+}
 
 
 void loadConfig(bool* useOverlay, int* fontSize, limit* exitapp, limit* lim3074, limit* lim3074UL, limit* lim27k, limit* lim27kUL, limit* lim30k, limit* lim7k, limit* lim_game, limit* suspend){
@@ -93,127 +109,44 @@ void loadConfig(bool* useOverlay, int* fontSize, limit* exitapp, limit* lim3074,
 }
 
 
-void initializeOverlay(bool useOverlay, int fontSize){
+void initializeOverlay(bool useOverlay, int fontSize, limit* limit_array[], int array_size) {
     startOverlay( useOverlay, fontSize );
 
     // set overlay to default state
     wchar_t* wcstring = new wchar_t[200];
-    formatHotkeyStatusWcString( wcstring, 200, &lim3074);
-    updateOverlayLine( wcstring, lim3074.overlayLineNumber, colorDefault);
-
-    formatHotkeyStatusWcString( wcstring, 200, &lim3074UL);
-    updateOverlayLine( wcstring, lim3074UL.overlayLineNumber, colorDefault);
-
-    formatHotkeyStatusWcString( wcstring, 200, &lim27k);
-    updateOverlayLine( wcstring, lim27k.overlayLineNumber, colorDefault);
-
-    formatHotkeyStatusWcString( wcstring, 200, &lim27kUL);
-    updateOverlayLine( wcstring, lim27kUL.overlayLineNumber, colorDefault);
-
-    formatHotkeyStatusWcString( wcstring, 200, &lim30k);
-    updateOverlayLine( wcstring, lim30k.overlayLineNumber, colorDefault);
-
-    formatHotkeyStatusWcString( wcstring, 200, &lim7k);
-    updateOverlayLine( wcstring, lim7k.overlayLineNumber, colorDefault);
-
-    formatHotkeyStatusWcString( wcstring, 200, &lim_game);
-    updateOverlayLine( wcstring, lim_game.overlayLineNumber, colorDefault);
-
-    formatHotkeyStatusWcString( wcstring, 200, &suspend);
-    updateOverlayLine( wcstring, suspend.overlayLineNumber, colorDefault);
-
-    formatHotkeyStatusWcString( wcstring, 200, &exitapp);
-    updateOverlayLine( wcstring, exitapp.overlayLineNumber, colorDefault);
-    
+    for (int i = 0; i < (array_size - 1); i++) {
+        formatHotkeyStatusWcString( wcstring, 200, limit_array[i]);
+        updateOverlayLine( wcstring, limit_array[i]->overlayLineNumber, colorDefault);
+    }
     delete []wcstring;
 }
 
 
 void setKeyDownStateOfHotkeys(int key){
-    if ( key == lim3074.hotkey ){
-		lim3074.hotkey_down = false;
-	}
-	if ( key == lim3074UL.hotkey ){
-		lim3074UL.hotkey_down =  false;
-	}
-	if ( key == lim27k.hotkey ){
-		lim27k.hotkey_down = false;
-	}
-	if ( key == lim27kUL.hotkey ){
-		lim27kUL.hotkey_down = false;
-	}
-	if ( key == lim30k.hotkey ){
-		lim30k.hotkey_down = false;
-	}
-	if ( key == lim7k.hotkey ){
-		lim7k.hotkey_down = false;
-	}
-	if ( key == lim_game.hotkey ){
-		lim_game.hotkey_down = false;
-	}
-	if ( key == suspend.hotkey ){
-		suspend.hotkey_down = false;
-	}
+    for (int i = 0; i < (size_of_limit_ptr_array  - 1); i++) {
+        if (key == limit_ptr_array[i]->hotkey) {
+            limit_ptr_array[i]->hotkey_down= false;
+        }
+    }
 }
 
 void triggerHotkeys(int key){
-        if ( lim3074.modkey_state != 0 && key == lim3074.hotkey ) 
-        {
-            onTriggerHotkey(&lim3074);
-            lim3074.modkey_state = 0;
+    for (int i = 0; i < (size_of_limit_ptr_array - 2); i++) { // TODO make exitapp part of the global hotkey system
+        if (limit_ptr_array[i]->modkey_state != 0 && key == limit_ptr_array[i]->hotkey) {
+            onTriggerHotkey(limit_ptr_array[i]);
+            limit_ptr_array[i]->modkey_state = 0;
         }
+    }
 
-        if ( lim3074UL.modkey_state != 0 && key == lim3074UL.hotkey ) 
-        {
-            onTriggerHotkey(&lim3074UL);
-            lim3074UL.modkey_state = 0;
+    if ( exitapp.modkey_state != 0 && key == exitapp.hotkey )
+    {
+        wcout << "shutting down\n";
+        if ( !debug ){
+            ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
+            ShowWindow( GetConsoleWindow(), SW_RESTORE );
         }
-
-        if ( lim27k.modkey_state != 0 && key == lim27k.hotkey ) 
-        {
-            onTriggerHotkey(&lim27k);
-            lim27k.modkey_state = 0;
-        }
-
-        if ( lim27kUL.modkey_state != 0 && key == lim27kUL.hotkey ) 
-        {
-            onTriggerHotkey(&lim27kUL);
-            lim27kUL.modkey_state = 0;
-        }
-
-        if ( lim3074.modkey_state != 0 && key == lim30k.hotkey ) 
-        {
-            onTriggerHotkey(&lim30k);
-            lim30k.modkey_state = 0;
-        }
-
-        if ( lim7k.modkey_state != 0 && key == lim7k.hotkey ) 
-        {
-            onTriggerHotkey(&lim7k);
-            lim7k.modkey_state = 0;
-        } 
-            
-        if ( lim_game.modkey_state != 0 && key == lim_game.hotkey ) 
-        {
-            onTriggerHotkey(&lim_game);
-            lim_game.modkey_state = 0;
-        }
-
-        if ( suspend.modkey_state != 0 && key == suspend.hotkey ) 
-        {
-            onTriggerHotkey(&suspend);
-            suspend.modkey_state = 0;
-        }
-
-        if ( exitapp.modkey_state != 0 && key == exitapp.hotkey )
-        {
-            wcout << "shutting down\n";
-            if ( !debug ){
-                ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
-                ShowWindow( GetConsoleWindow(), SW_RESTORE );
-            }
-            PostQuitMessage(0);
-        }
+        PostQuitMessage(0);
+    }
 }
 
 
@@ -234,17 +167,11 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         int key = hooked_key.vkCode;
 
         // TODO use the hotkey system properly instead of using GetAsyncState
-        // 2x cuz i dont want to bitshift and this gets state of key at the moment its called too
+        // 2x cuz i don't want to bitshift and this gets state of key at the moment its called too
         for (int i = 0; i < 2; i++) {
-            lim3074.modkey_state = GetAsyncKeyState( lim3074.modkey );
-			lim3074UL.modkey_state = GetAsyncKeyState( lim3074UL.modkey );
-			lim27k.modkey_state = GetAsyncKeyState( lim27k.modkey );
-			lim27kUL.modkey_state = GetAsyncKeyState( lim27kUL.modkey );
-			lim30k.modkey_state = GetAsyncKeyState( lim30k.modkey );
-			lim7k.modkey_state = GetAsyncKeyState( lim7k.modkey );
-			lim_game.modkey_state = GetAsyncKeyState( lim_game.modkey );
-			suspend.modkey_state = GetAsyncKeyState( suspend.modkey );
-			exitapp.modkey_state = GetAsyncKeyState( exitapp.modkey );
+            for (int i = 0; i < (size_of_limit_ptr_array - 1); i++) {
+                limit_ptr_array[i]->modkey_state = GetAsyncKeyState(limit_ptr_array[i]->modkey);
+            }
         }
 
         triggerHotkeys(key);

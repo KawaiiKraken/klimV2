@@ -185,6 +185,9 @@ __declspec( dllexport ) DWORD WINAPI startOverlay( bool isOverlayArg, int fontSi
 
 __declspec( dllexport ) DWORD WINAPI updateOverlayLine( LPTSTR text, int linenum, COLORREF color ) // TODO split into multiple functions
 {
+    if (linenum == -1) {
+        return 0;
+    }
     colors[linenum-1] = color;
     wcscpy_s( ::mytext[linenum-1], text );
     printf( "dll: mytext[%d] = \"%ls\"\n", linenum-1, ::mytext[linenum-1] );
