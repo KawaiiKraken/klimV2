@@ -99,7 +99,7 @@ void updateFilter( char* myNetRules )
     }
     if (hThread2 == NULL){
         printf("starting hotkey thread\n");
-        hThread2 = CreateThread( NULL, 0, windivert_filter_thread, NULL, 0, NULL );
+        hThread2 = CreateThread( NULL, 0, (LPTHREAD_START_ROUTINE)windivert_filter_thread, NULL, 0, NULL );
     }
 }
 
@@ -154,8 +154,9 @@ unsigned long windivert_filter_thread( LPVOID lpParam )
 
 
     // Main loop:
+    int i = 0;
     while ( TRUE ){ 
-    // Read a matching packet.
+        // Read a matching packet.
         if ( !WinDivertRecv( handle2, packet, sizeof( packet ), &packet_len, &recv_addr ) )
         {
             fprintf( stderr, "warning: failed to read packet (if you just switched filters its fine)\n" );
@@ -292,6 +293,11 @@ unsigned long windivert_filter_thread( LPVOID lpParam )
         {
             printf( "udp.SrcPort=%u udp.DstPort=%u ",
                 ntohs( udp_header->SrcPort ), ntohs( udp_header->DstPort ) );
+
+            // buffer 
+            //if (udp_header->SrcPort == ) {
+//
+ //           }
         
             if ( ip_header != NULL )
             {

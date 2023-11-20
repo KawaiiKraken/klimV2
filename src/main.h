@@ -37,7 +37,6 @@ bool debug = FALSE;
 void MessageLoop();
 void setPathToConfigFile();
 void setFilterRuleString();
-void initializeOverlay(bool useOverlay, int fontSize);
 int __cdecl Overlay( LPTSTR );   
 DWORD WINAPI hotkeyThread( LPVOID lpParm );
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam );

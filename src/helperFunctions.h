@@ -12,8 +12,8 @@
 
 struct limit {
     wchar_t* name;
-    char hotkey = 0x3A; // this vkcode is undefined so it won't trigger anything, its only here to please the compiler 
-    char modkey = 0x3A;
+    char hotkey = 0x0;
+    char modkey = 0x0;
     bool state = false;
     wchar_t state_name[20] = {'\0'};
     bool hotkey_down = false;
@@ -23,7 +23,8 @@ struct limit {
         state = !state;
         wcscpy_s(state_name, state ? (wchar_t*)L"(on)" : (wchar_t*)L"(off)");
     }
-    limit(wchar_t* n, int i) : name(n), overlayLineNumber(i) {}
+    //limit(wchar_t* n, int i) : name(n), overlayLineNumber(i) {}
+    limit(wchar_t* n) : name(n) {}
 };
 
 void formatHotkeyStatusWcString( wchar_t* wcstring, int szWcstring, limit* limit);
