@@ -115,11 +115,8 @@ LRESULT CALLBACK WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam 
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint( hwnd, &ps );
-
-            // All painting occurs here, between BeginPaint and EndPaint.
             FillRect( hdc, &ps.rcPaint, CreateSolidBrush( RGB( 10, 10, 10 ) ) );
             SetBkColor( hdc, RGB( 10, 10, 10 ) );
-            // !!!FONT!!!
             RECT rect;
             HFONT hFontOriginal, hFont1, hFont2;
             hFont1 = CreateFont( fontSize-3, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
@@ -139,21 +136,11 @@ LRESULT CALLBACK WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam 
             rect.top = rect.bottom;
             rect.bottom = screenSize.bottom;
             rect.right = screenSize.right;
-            rect = DrawTextLine( ::mytext[0], 0, rect, hdc );
-            rect = DrawTextLine( ::mytext[0], 1, rect, hdc );
-            rect = DrawTextLine( ::mytext[0], 2, rect, hdc );
-            rect = DrawTextLine( ::mytext[0], 3, rect, hdc );
-            rect = DrawTextLine( ::mytext[0], 4, rect, hdc );
-            rect = DrawTextLine( ::mytext[0], 5, rect, hdc );
-            rect = DrawTextLine( ::mytext[0], 6, rect, hdc );
-            rect = DrawTextLine( ::mytext[0], 7, rect, hdc );
-            rect = DrawTextLine( ::mytext[0], 8, rect, hdc );
-            rect = DrawTextLine( ::mytext[0], 9, rect, hdc );
+            for (int i = 0; i < 10; i++) {
+                rect = DrawTextLine( ::mytext[0], i, rect, hdc );
+            }
             SelectObject( hdc,hFontOriginal );
             DeleteObject( hFont2 );
-        
-            // !!!ENDFONT!!!
-
             EndPaint( hwnd, &ps );
             return 0;
         }
@@ -183,7 +170,7 @@ __declspec( dllexport ) DWORD WINAPI startOverlay( bool isOverlayArg, int fontSi
     return 0;
 }
 
-__declspec( dllexport ) DWORD WINAPI updateOverlayLine( LPTSTR text, int linenum, COLORREF color ) // TODO split into multiple functions
+__declspec( dllexport ) DWORD WINAPI UpdateOverlayLine( LPTSTR text, int linenum, COLORREF color ) // TODO split into multiple functions
 {
     if (linenum == -1) {
         return 0;

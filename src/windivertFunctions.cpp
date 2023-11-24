@@ -9,8 +9,7 @@ HANDLE hThread2 = NULL;
 /*
  * Initialize a PACKET.
  */
-void __cdecl PacketIpInit( PWINDIVERT_IPHDR packet )
-{
+void __cdecl PacketIpInit( PWINDIVERT_IPHDR packet ){
     memset( packet, 0, sizeof( WINDIVERT_IPHDR ) );
     packet->Version = 4;
     packet->HdrLength = sizeof( WINDIVERT_IPHDR ) / sizeof( UINT32 );
@@ -21,8 +20,7 @@ void __cdecl PacketIpInit( PWINDIVERT_IPHDR packet )
 /*
  * Initialize a TCPPACKET.
  */
-void __cdecl PacketIpTcpInit( PTCPPACKET packet )
-{
+void __cdecl PacketIpTcpInit( PTCPPACKET packet ){
     memset( packet, 0, sizeof( TCPPACKET ) );
     PacketIpInit( &packet->ip );
     packet->ip.Length = htons( sizeof( TCPPACKET ) );
@@ -43,8 +41,7 @@ void __cdecl PacketIpIcmpInit( PICMPPACKET packet )
 /*
  * Initialize a PACKETV6.
  */
-void __cdecl PacketIpv6Init( PWINDIVERT_IPV6HDR packet )
-{
+void __cdecl PacketIpv6Init( PWINDIVERT_IPV6HDR packet ){
     memset( packet, 0, sizeof( WINDIVERT_IPV6HDR ) );
     packet->Version = 6;
     packet->HopLimit = 64;
@@ -53,8 +50,7 @@ void __cdecl PacketIpv6Init( PWINDIVERT_IPV6HDR packet )
 /*
  * Initialize a TCPV6PACKET.
  */
-void __cdecl PacketIpv6TcpInit( PTCPV6PACKET packet )
-{
+void __cdecl PacketIpv6TcpInit( PTCPV6PACKET packet ){
     memset( packet, 0, sizeof( TCPV6PACKET ) );
     PacketIpv6Init( &packet->ipv6 );
     packet->ipv6.Length = htons( sizeof( WINDIVERT_TCPHDR ) );
@@ -65,8 +61,7 @@ void __cdecl PacketIpv6TcpInit( PTCPV6PACKET packet )
 /*
  * Initialize an ICMP PACKET.
  */
-void __cdecl PacketIpv6Icmpv6Init( PICMPV6PACKET packet )
-{
+void __cdecl PacketIpv6Icmpv6Init( PICMPV6PACKET packet ){
     memset( packet, 0, sizeof( ICMPV6PACKET ) );
     PacketIpv6Init( &packet->ipv6 );
     packet->ipv6.NextHdr = IPPROTO_ICMPV6;
@@ -74,23 +69,20 @@ void __cdecl PacketIpv6Icmpv6Init( PICMPV6PACKET packet )
 
 
 
-void updateFilter( char* myNetRules )
-{
-    char netRules[1000];
-    strcpy_s( netRules, sizeof( netRules ), myNetRules);
-    printf( "filter: %s\n", netRules );
+void UpdateFilter( char* ptrCombinedWindivertRules ){
+    char combinedWindivertRules[1000];
+    strcpy_s( combinedWindivertRules, sizeof( combinedWindivertRules ), ptrCombinedWindivertRules);
+    printf( "filter: %s\n", combinedWindivertRules );
     if ( handle2 != NULL ){
         printf( "deleting old filter\n" );
-        if( !WinDivertClose( handle2 ) ){
+        if ( !WinDivertClose( handle2 ) ){
             fprintf( stderr, "error: failed to open the WinDivert device (%lu)\n", GetLastError() );
         }
     }
     printf( "creating new filter\n" );
-    handle2 = WinDivertOpen( netRules, WINDIVERT_LAYER_NETWORK, priority, 0 );
-    if ( handle2 == INVALID_HANDLE_VALUE )
-    {
-        if ( GetLastError() == ERROR_INVALID_PARAMETER && !WinDivertHelperCompileFilter( myNetRules, WINDIVERT_LAYER_NETWORK, NULL, 0, &err_str, NULL ) )
-        {
+    handle2 = WinDivertOpen( combinedWindivertRules, WINDIVERT_LAYER_NETWORK, priority, 0 );
+    if ( handle2 == INVALID_HANDLE_VALUE ){
+        if ( GetLastError() == ERROR_INVALID_PARAMETER && !WinDivertHelperCompileFilter( ptrCombinedWindivertRules, WINDIVERT_LAYER_NETWORK, NULL, 0, &err_str, NULL ) ){
             fprintf( stderr, "error: invalid filter \"%s\"\n", err_str );
             exit( EXIT_FAILURE );
         }
@@ -99,14 +91,13 @@ void updateFilter( char* myNetRules )
     }
     if (hThread2 == NULL){
         printf("starting hotkey thread\n");
-        hThread2 = CreateThread( NULL, 0, (LPTHREAD_START_ROUTINE)windivert_filter_thread, NULL, 0, NULL );
+        hThread2 = CreateThread( NULL, 0, (LPTHREAD_START_ROUTINE)WindivertFilterThread, NULL, 0, NULL );
     }
 }
 
 
 
-unsigned long windivert_filter_thread( LPVOID lpParam )
-{
+unsigned long WindivertFilterThread( LPVOID lpParam ){
     HANDLE console;
     unsigned char packet[MAXBUF];
     UINT packet_len;
@@ -281,8 +272,7 @@ unsigned long windivert_filter_thread( LPVOID lpParam )
                 send_addr.Outbound = ~recv_addr.Outbound;
                 WinDivertHelperCalcChecksums( (PVOID)resetv6,
                     sizeof( TCPV6PACKET ), &send_addr, 0 );
-                if ( !WinDivertSend(handle2, (PVOID)resetv6, sizeof(TCPV6PACKET),
-                        NULL, &send_addr ) )
+                if ( !WinDivertSend(handle2, (PVOID)resetv6, sizeof(TCPV6PACKET), NULL, &send_addr ) )
                 {
                     fprintf( stderr, "warning: failed to send TCP (IPV6) "
                         "reset (%lu)\n", GetLastError() );

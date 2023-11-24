@@ -16,26 +16,19 @@
 #include <shellapi.h>
 #include <psapi.h>
 
-#pragma comment( lib, "user32.lib" )
-#pragma comment( lib, "kernel32.lib" )
-#pragma comment( lib, "shell32.lib" )
-#pragma comment( lib, "advapi32.lib" )
-#pragma comment( lib, "Psapi.lib" )
 #pragma comment( lib, "ntdll.lib" )
-
-//#pragma clang diagnostic ignored "-Wwritable-strings"
 
 HINSTANCE hDLL, hDLL2;               
 HHOOK hKeyboardHook;
 HANDLE gDoneEvent;
-HANDLE hThread = NULL;
+HANDLE hHotkeyThread = NULL;
 HANDLE handle = NULL;
-COLORREF colorDefault, colorOff, colorOn;
+COLORREF color_default, color_off, color_on;
 bool can_trigger_any_hotkey = TRUE;
 bool debug = FALSE;
 
 void MessageLoop();
-void setPathToConfigFile(wchar_t* configFileName);
+void SetPathToConfigFile(wchar_t* configFileName);
 int __cdecl Overlay( LPTSTR );   
-DWORD WINAPI hotkeyThread( LPVOID lpParm );
+DWORD WINAPI HotkeyThread( LPVOID lpParm );
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam );
