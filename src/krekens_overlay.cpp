@@ -10,21 +10,21 @@
 // TODO make it not take away focus when spawned
 // TODO comments
 
-wchar_t mytext[10][1000];
-HWND hwnd, emptyhwnd;
-HINSTANCE dllHinst;
+wchar_t overlay_text[20][1000];
+COLORREF line_color_arr[10];
+HWND hwnd;
+HINSTANCE dllHInst;
 HANDLE threadHandle = nullptr;
-int nCmdShow = NULL;
 int fontSize;
-bool isOverlay;
+bool useOverlay;
 RECT screenSize;
-COLORREF colors[10];
+COLORREF transparent = RGB(1, 1, 1);
 
 
 RECT DrawTextLine( wchar_t* text, int index, RECT rect, HDC hdc ){
-            SetTextColor( hdc, colors[index] );
-            DrawText( hdc, ::mytext[index], -1, &rect, NULL );
-            DrawText( hdc, ::mytext[index], -1, &rect, DT_CALCRECT );
+            SetTextColor( hdc, line_color_arr[index] );
+            DrawText( hdc, ::overlay_text[index], -1, &rect, NULL );
+            DrawText( hdc, ::overlay_text[index], -1, &rect, DT_CALCRECT );
             rect.top = rect.bottom;
             rect.bottom = screenSize.bottom;
             rect.right = screenSize.right;
@@ -33,9 +33,9 @@ RECT DrawTextLine( wchar_t* text, int index, RECT rect, HDC hdc ){
 
 LRESULT CALLBACK WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
-DWORD WINAPI myfunc( LPVOID lpParam )
+DWORD WINAPI funcCreateWindow( LPVOID lpParam )
 {
-    HINSTANCE hInstance = dllHinst;
+    HINSTANCE hInstance = dllHInst;
     // Register the window class.
     const wchar_t CLASS_NAME[]  = L"Sample Window Class";
     
@@ -49,45 +49,23 @@ DWORD WINAPI myfunc( LPVOID lpParam )
     RegisterClass( &wc );
 
     // Create the window.
-    int winstyle = ( WS_VISIBLE | WS_SYSMENU | WS_DISABLED );
-    int ex_winstyle = ( WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE );
-    if ( isOverlay == false ){
-        winstyle = ( WS_VISIBLE | WS_OVERLAPPEDWINDOW );
-        ex_winstyle = ( 0 );
+    int window_styles = ( WS_VISIBLE | WS_SYSMENU | WS_DISABLED );
+    int ex_window_styles = ( WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE );
+    if ( useOverlay == false ){
+        window_styles = ( WS_VISIBLE | WS_OVERLAPPEDWINDOW );
+        ex_window_styles = ( 0 );
     }
-    hwnd = CreateWindowEx(
-        ex_winstyle,// Optional window styles. // remove WS_EX_APPWINDOW to hide from taskbar WS_EX_TOOLWINDOW??
-        CLASS_NAME,                     // Window class
-        L"klimV2",    // Window text
-        winstyle,          // Window style
-        //WS_VISIBLE | WS_POPUP,          // Window style
-
-        // Size and position
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-
-        NULL,       // Parent window    
-        NULL,       // Menu
-        hInstance,  // Instance handle
-        NULL        // Additional application data
-        );
-    SetLayeredWindowAttributes( hwnd, RGB(10,10,10), 0, LWA_COLORKEY ); // set transparent color
-    if ( isOverlay == true ){
-        SetWindowLong( hwnd, GWL_STYLE, winstyle & ~WS_BORDER );
+    hwnd = CreateWindowEx( ex_window_styles, CLASS_NAME, L"klim", window_styles, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL );
+    SetLayeredWindowAttributes( hwnd, transparent, 0, LWA_COLORKEY ); // set transparent color
+    if ( useOverlay == true ){
+        SetWindowLong( hwnd, GWL_STYLE, window_styles & ~WS_BORDER );
     }
     // set window pos
     SystemParametersInfoA( SPI_GETWORKAREA, NULL, &screenSize, NULL );
     int ret;
-    if ( isOverlay == true ){
+    if ( useOverlay == true ){
         ret = SetWindowPos( hwnd, HWND_TOPMOST, screenSize.left, screenSize.top, screenSize.right, screenSize.bottom, SWP_NOACTIVATE | SWP_SHOWWINDOW );
-        if (ret == 0){
-            printf( "dll: adjustWindowRect FAILED\n" );
-        }
-        printf( "dll: window position: xpos - %ld; ypos - %ld; cx - %ld; cy - %ld\n", screenSize.left, screenSize.top, screenSize.right, screenSize.bottom );
-    }
-
-    if ( hwnd == NULL )
-    {
-        return 0;
+        printf( "dll: window position: x=%ld; y=%ld; cx=%ld; cy=%ld\n", screenSize.left, screenSize.top, screenSize.right, screenSize.bottom );
     }
 
     ShowWindow( hwnd, SW_SHOWNA );
@@ -115,32 +93,19 @@ LRESULT CALLBACK WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam 
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint( hwnd, &ps );
-            FillRect( hdc, &ps.rcPaint, CreateSolidBrush( RGB( 10, 10, 10 ) ) );
-            SetBkColor( hdc, RGB( 10, 10, 10 ) );
+            FillRect( hdc, &ps.rcPaint, CreateSolidBrush( transparent ) );
+            SetBkColor( hdc, transparent );
+            HFONT hFont1 = CreateFont( fontSize-3, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
+                CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT( "Impact" ) );
+            SelectObject( hdc, hFont1 );
             RECT rect;
-            HFONT hFontOriginal, hFont1, hFont2;
-            hFont1 = CreateFont( fontSize-3, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
-                CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT( "Impact" ) );
-            hFontOriginal = (HFONT)SelectObject( hdc, hFont1 );
-            SetRect( &rect, 5, 5, screenSize.right, screenSize.bottom ); // set to screen width so text is never cut
-            SetTextColor( hdc, RGB( 255, 255, 255 ) );
-            DrawText( hdc, L"made by kreken", -1, &rect, NULL );
-            DrawText( hdc, L"made by kreken", -1, &rect, DT_CALCRECT );
-            SelectObject( hdc,hFontOriginal );
-            DeleteObject( hFont1 );
-
-            hFont2 = CreateFont( fontSize, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, 
-                CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT( "Impact" ) );
-            hFontOriginal = (HFONT)SelectObject( hdc, hFont2 );
-            
-            rect.top = rect.bottom;
-            rect.bottom = screenSize.bottom;
-            rect.right = screenSize.right;
+            SetRect( &rect, 5, 5, screenSize.right, screenSize.bottom ); // set to screen width so text is never cut except its not full screen size for some reason??
+            line_color_arr[0] = RGB( 255, 255, 255 );
+            wcscpy_s( ::overlay_text[0], L"by kreky :3");
             for (int i = 0; i < 10; i++) {
-                rect = DrawTextLine( ::mytext[0], i, rect, hdc );
+                rect = DrawTextLine( ::overlay_text[0], i, rect, hdc );
             }
-            SelectObject( hdc,hFontOriginal );
-            DeleteObject( hFont2 );
+            DeleteObject( hFont1 );
             EndPaint( hwnd, &ps );
             return 0;
         }
@@ -162,10 +127,10 @@ __declspec( dllexport ) DWORD WINAPI startOverlay( bool isOverlayArg, int fontSi
 {
     printf( "dll: overlay start\n" );
     fontSize = fontSizeArg;
-    isOverlay = isOverlayArg;
+    useOverlay = isOverlayArg;
     threadId = GetThreadId( threadHandle );
     if ( threadId == 0 ){ // if window created update instead
-        threadHandle = CreateThread( NULL, NULL, myfunc, NULL, 0, NULL );
+        threadHandle = CreateThread( NULL, NULL, funcCreateWindow, NULL, 0, NULL );
     }
     return 0;
 }
@@ -175,9 +140,9 @@ __declspec( dllexport ) DWORD WINAPI UpdateOverlayLine( LPTSTR text, int linenum
     if (linenum == -1) {
         return 0;
     }
-    colors[linenum-1] = color;
-    wcscpy_s( ::mytext[linenum-1], text );
-    printf( "dll: mytext[%d] = \"%ls\"\n", linenum-1, ::mytext[linenum-1] );
+    line_color_arr[linenum] = color;
+    wcscpy_s( ::overlay_text[linenum], text );
+    printf( "dll: overlay_text[%d] = \"%ls\"\n", linenum, ::overlay_text[linenum] );
     RedrawWindow( hwnd, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN );
     return 0;
 }
@@ -188,7 +153,7 @@ BOOL WINAPI DllMain(
     DWORD ul_reason_for_call,     // reason for calling function
     LPVOID lpvReserved )  // reserved
 {
-    dllHinst = hinstDLL;
+    dllHInst = hinstDLL;
     switch ( ul_reason_for_call ) {
     case DLL_PROCESS_ATTACH:
         break;
