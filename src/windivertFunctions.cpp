@@ -58,7 +58,9 @@ unsigned long WindivertFilterThread( LPVOID lpParam ){
     // Main loop:
     while ( TRUE ){ 
         // Read a matching packet.
-        WinDivertRecvEx(hWindivert, packet, sizeof(packet), 0, 0, 0, 0, 0);
+        if (!WinDivertRecvEx(hWindivert, packet, sizeof(packet), 0, 0, 0, 0, 0)) {
+            continue;
+        }
        
         WinDivertHelperParsePacket( packet, packet_len, 0, 0, 0, 0, 0, &tcp_header, &udp_header, 0, &payload_len, 0, 0 );
 
