@@ -10,7 +10,7 @@
 
 INT16 priority = 1000;
 const char *err_str;
-HANDLE handle2 = NULL;
+HANDLE hWindivert = NULL;
 HANDLE hThread2 = NULL;
 
 
@@ -19,15 +19,15 @@ void UpdateFilter( char* ptrCombinedWindivertRules ){
     char combinedWindivertRules[1000];
     strcpy_s( combinedWindivertRules, sizeof( combinedWindivertRules ), ptrCombinedWindivertRules);
     printf( "filter: %s\n", combinedWindivertRules );
-    if ( handle2 != NULL ){
+    if ( hWindivert != NULL ){
         printf( "deleting old filter\n" );
-        if ( !WinDivertClose( handle2 ) ){
+        if ( !WinDivertClose( hWindivert ) ){
             fprintf( stderr, "error: failed to open the WinDivert device (%lu)\n", GetLastError() );
         }
     }
     printf( "creating new filter\n" );
-    handle2 = WinDivertOpen( combinedWindivertRules, WINDIVERT_LAYER_NETWORK, priority, 0 );
-    if ( handle2 == INVALID_HANDLE_VALUE ){
+    hWindivert = WinDivertOpen( combinedWindivertRules, WINDIVERT_LAYER_NETWORK, priority, 0 );
+    if ( hWindivert == INVALID_HANDLE_VALUE ){
         if ( GetLastError() == ERROR_INVALID_PARAMETER && !WinDivertHelperCompileFilter( ptrCombinedWindivertRules, WINDIVERT_LAYER_NETWORK, NULL, 0, &err_str, NULL ) ){
             fprintf( stderr, "error: invalid filter \"%s\"\n", err_str );
             exit( EXIT_FAILURE );
@@ -47,39 +47,20 @@ unsigned long WindivertFilterThread( LPVOID lpParam ){
     HANDLE console;
     unsigned char packet[MAXBUF];
     UINT packet_len = 1500;
-    WINDIVERT_ADDRESS recv_addr, send_addr;
-    PWINDIVERT_IPHDR ip_header;
-    PWINDIVERT_IPV6HDR ipv6_header;
-    PWINDIVERT_ICMPHDR icmp_header;
-    PWINDIVERT_ICMPV6HDR icmpv6_header;
+    WINDIVERT_ADDRESS send_addr;
     PWINDIVERT_TCPHDR tcp_header;
     PWINDIVERT_UDPHDR udp_header;
-    UINT32 src_addr[4], dst_addr[4];
-    char src_str[INET6_ADDRSTRLEN+1], dst_str[INET6_ADDRSTRLEN+1];
     UINT payload_len;
     
     // Get console for pretty colors.
     console = GetStdHandle( STD_OUTPUT_HANDLE );
 
-    UINT addr_len = sizeof(WINDIVERT_ADDRESS);
     // Main loop:
     while ( TRUE ){ 
-        UINT recv_len;
         // Read a matching packet.
-        if ( !WinDivertRecvEx( handle2, packet, sizeof( packet ), &recv_len, 0, &recv_addr, &addr_len, NULL ) )
-        {
-            fprintf( stderr, "warning: failed to read packet (if you just switched filters its fine)\n" );
-            continue;
-        }
+        WinDivertRecvEx(hWindivert, packet, sizeof(packet), 0, 0, 0, 0, 0);
        
-        PVOID payload;
-        WinDivertHelperParsePacket( packet, packet_len, &ip_header, &ipv6_header,
-            NULL, &icmp_header, &icmpv6_header, &tcp_header, &udp_header, &payload,
-            &payload_len, NULL, NULL );
-        if ( ip_header == NULL && ipv6_header == NULL )
-        {
-            continue;
-        }
+        WinDivertHelperParsePacket( packet, packet_len, 0, 0, 0, 0, 0, &tcp_header, &udp_header, 0, &payload_len, 0, 0 );
 
         // Dump packet info..
         SetConsoleTextAttribute( console, FOREGROUND_RED );
@@ -87,33 +68,6 @@ unsigned long WindivertFilterThread( LPVOID lpParam ){
         SetConsoleTextAttribute( console,
             FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE );
 
-        if ( ip_header != NULL )
-        {
-            WinDivertHelperFormatIPv4Address( ntohl( ip_header->SrcAddr ),
-                src_str, sizeof( src_str ) );
-            WinDivertHelperFormatIPv4Address( ntohl( ip_header->DstAddr ),
-                dst_str, sizeof(dst_str ) );
-        }
-        if ( ipv6_header != NULL )
-        {
-            WinDivertHelperNtohIpv6Address( ipv6_header->SrcAddr, src_addr );
-            WinDivertHelperNtohIpv6Address( ipv6_header->DstAddr, dst_addr );
-            WinDivertHelperFormatIPv6Address( src_addr, src_str, sizeof( src_str ) );
-            WinDivertHelperFormatIPv6Address( dst_addr, dst_str, sizeof( dst_str ) );
-        }
-
-        //printf("ip.SrcAddr=%s ip.DstAddr=%s ", src_str, dst_str);
-
-        if ( icmp_header != NULL )
-        {
-            printf( "icmp.Type=%u icmp.Code=%u ",
-                icmp_header->Type, icmp_header->Code );
-        }
-        if ( icmpv6_header != NULL )
-        {
-            printf( "icmpv6.Type=%u icmpv6.Code=%u ",
-                icmpv6_header->Type, icmpv6_header->Code );
-        }
         if ( tcp_header != NULL)
         {
             printf( "tcp.SrcPort=%u tcp.DstPort=%u tcp.Flags=",
@@ -147,7 +101,7 @@ unsigned long WindivertFilterThread( LPVOID lpParam ){
                 printf( "AckNum=%d", ntohl( tcp_header->AckNum ) );
             }
 		    printf(" SeqNum=%d", ntohl( tcp_header->SeqNum ) );
-            printf( " len=%d", packet_len );
+            printf( " size=%d", payload_len );
         }
         if (udp_header != NULL)
         {
