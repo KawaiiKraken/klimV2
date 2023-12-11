@@ -4,12 +4,14 @@
 #include "../phnt/phnt_windows.h"
 #include "../phnt/phnt.h"
 #include "windivertFunctions.h"
-#include "..\jsoncpp_x64-windows\include\json\json.h"
+#include "jsoncpp_header\json.h"
+
+#define undefined_key 0x0
 
 struct limit {
     wchar_t* name;
-    int hotkey = 0x0;
-    int modkey = 0x0;
+    int hotkey = undefined_key;
+    int modkey = undefined_key;
     bool state = false;
     wchar_t state_name[20] = {'\0'};
     bool hotkey_down = false;
