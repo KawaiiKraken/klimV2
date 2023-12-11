@@ -2,7 +2,6 @@
 #include "main.h"
 #include "helperFunctions.h"
 #include "krekens_overlay.h"
-#include "..\jsoncpp_x64-windows\include\json\json.h"
 
 using namespace std;
 
@@ -30,12 +29,12 @@ int size_of_limit_ptr_array = sizeof(limit_ptr_array) / sizeof(limit_ptr_array[0
 
 
 int __cdecl main( int argc, char** argv ){
-strcpy_s( lim_3074.windivert_rule,    sizeof( lim_3074.windivert_rule ),    " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)" ); 
-strcpy_s( lim_3074_ul.windivert_rule, sizeof( lim_3074_ul.windivert_rule ), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
-strcpy_s( lim_27k.windivert_rule,     sizeof( lim_27k.windivert_rule ),     " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)" ); 
-strcpy_s( lim_27k_ul.windivert_rule,  sizeof( lim_27k_ul.windivert_rule ),  " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)" ); 
-strcpy_s( lim_30k.windivert_rule,     sizeof( lim_30k.windivert_rule ),     " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)" ); 
-strcpy_s( lim_7k.windivert_rule,      sizeof( lim_7k.windivert_rule ),      " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)" ); 
+    strcpy_s( lim_3074.windivert_rule,    sizeof( lim_3074.windivert_rule ),    " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)" ); 
+	strcpy_s( lim_3074_ul.windivert_rule, sizeof( lim_3074_ul.windivert_rule ), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
+	strcpy_s( lim_27k.windivert_rule,     sizeof( lim_27k.windivert_rule ),     " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)" ); 
+	strcpy_s( lim_27k_ul.windivert_rule,  sizeof( lim_27k_ul.windivert_rule ),  " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)" ); 
+	strcpy_s( lim_30k.windivert_rule,     sizeof( lim_30k.windivert_rule ),     " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)" ); 
+	strcpy_s( lim_7k.windivert_rule,      sizeof( lim_7k.windivert_rule ),      " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)" ); 
 
     if ( argv[1] != NULL ){
         if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){
@@ -91,9 +90,9 @@ strcpy_s( lim_7k.windivert_rule,      sizeof( lim_7k.windivert_rule ),      " or
 static void SetOverlayLineNumberOfHotkeys( limit* limit_ptr_array[], int size_of_limit_ptr_array ){
     int current_overlay_line = 1;
     for ( int i = 0; i < size_of_limit_ptr_array; i++ ){
-        bool valid_hotkey = ( limit_ptr_array[i]->hotkey != 0x0 );
-        bool valid_modkey = ( limit_ptr_array[i]->modkey != 0x0 );
-        if ( valid_hotkey && valid_modkey ){
+        bool valid_hotkey = ( limit_ptr_array[i]->hotkey != undefined_key );
+        bool valid_modkey = ( limit_ptr_array[i]->modkey != undefined_key );
+        if ( valid_hotkey || valid_modkey ){
             limit_ptr_array[i]->overlay_line_number = current_overlay_line;
             current_overlay_line++;
         }
@@ -162,7 +161,7 @@ void ModkeyResetKeyDownState(int key){
 
 void ModkeySetDownState( int key ){
     for ( int i = 0; i < size_of_limit_ptr_array; i++ ){
-        if ( key == limit_ptr_array[i]->modkey ){
+        if ( key == limit_ptr_array[i]->modkey || limit_ptr_array[i]->modkey == undefined_key ){
             limit_ptr_array[i]->modkey_down = true;
         }
     }

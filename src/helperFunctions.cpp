@@ -2,7 +2,6 @@
 #include "krekens_overlay.h"
 #include <iostream>
 #include <fstream>
-#include "..\jsoncpp_x64-windows\include\json\json.h"
 
 const wchar_t* GetFilename( const wchar_t *path ){
     const wchar_t *filename = wcsrchr( path, '\\' );
