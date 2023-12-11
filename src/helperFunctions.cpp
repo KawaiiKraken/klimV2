@@ -77,7 +77,9 @@ void FormatHotkeyStatusWcString( wchar_t* wcString, int szWcString, limit* limit
     if ( limit->modkey == VK_LMENU ){
         wcscpy_s( wcString, sizeof( L"alt" ), L"alt" );
     }
-    wcscat_s( wcString, szWcString, L"+" );
+    if (limit->modkey != undefined_key) {
+        wcscat_s( wcString, szWcString, L"+" );
+    }
     wcscat_s( wcString, szWcString, wc_hotkey_buffer );
     wcscat_s( wcString, szWcString, L" to " );
     wcscat_s( wcString, szWcString, limit->name );
