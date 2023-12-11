@@ -170,9 +170,42 @@
     <ClInclude Include="jsoncpp_x64-windows\include\json\writer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\jsoncpp_header\allocator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\jsoncpp_header\assertions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\jsoncpp_header\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\jsoncpp_header\forwards.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\jsoncpp_header\json.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\jsoncpp_header\json_features.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\jsoncpp_header\reader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\jsoncpp_header\value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\jsoncpp_header\version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\jsoncpp_header\writer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="WinDivert\WinDivert.lib">
+      <Filter>Resource Files</Filter>
+    </Library>
+    <Library Include="..\..\..\..\..\tools\vcpkg\installed\x64-windows\lib\jsoncpp.lib">
       <Filter>Resource Files</Filter>
     </Library>
   </ItemGroup>
