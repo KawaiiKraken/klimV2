@@ -3,8 +3,6 @@
 #define PHNT_VERSION PHNT_THRESHOLD // Windows 10
 
 
-#pragma clang diagnostic ignored "-Wunused-variable"
-
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
