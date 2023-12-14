@@ -68,16 +68,15 @@ void FormatHotkeyStatusWcString( wchar_t* wcString, int szWcString, limit* limit
     mbstowcs_s( &out_size, wc_modkey_buffer, 2, modkey_buffer, 1 );
 
     wcscpy_s( wcString, static_cast<rsize_t>( szWcString ) - 1, wc_modkey_buffer );
-    if ( limit->modkey == VK_LSHIFT ){
-        wcscpy_s( wcString, sizeof( L"shift" ), L"shift" );
-    }
-    if ( limit->modkey == VK_LCONTROL ){
-        wcscpy_s( wcString, sizeof( L"ctrl" ), L"ctrl" );
-    }
+
     if ( limit->modkey == VK_LMENU ){
         wcscpy_s( wcString, sizeof( L"alt" ), L"alt" );
     }
     if (limit->modkey != undefined_key) {
+        int scan_code = MapVirtualKey(limit->modkey, 0);
+		wchar_t nameBuffer[256];
+        int length = GetKeyNameText(scan_code << 16, nameBuffer, sizeof(nameBuffer) / sizeof(nameBuffer[0]));
+        wcscpy_s( wcString, szWcString,nameBuffer );
         wcscat_s( wcString, szWcString, L"+" );
     }
     wcscat_s( wcString, szWcString, wc_hotkey_buffer );
@@ -118,24 +117,24 @@ bool FileExists( LPCTSTR szPath ){
 
 void WriteDefaultJsonConfig( wchar_t* filepath ){
     Json::Value config;
-    config["hotkey_exitapp"] = "k";
-    config["modkey_exitapp"] = "ctrl";
-    config["hotkey_3074"] = "g";
-    config["modkey_3074"] = "ctrl";
-    config["hotkey_3074_ul"] = "c";
-    config["modkey_3074_ul"] = "ctrl";
+    config["hotkey_exitapp"] = "K";
+    config["modkey_exitapp"] = "Ctrl";
+    config["hotkey_3074"] = "G";
+    config["modkey_3074"] = "Ctrl";
+    config["hotkey_3074_ul"] = "C";
+    config["modkey_3074_ul"] = "Ctrl";
     config["hotkey_27k"] = "6";
-    config["modkey_27k"] = "ctrl";
+    config["modkey_27k"] = "Ctrl";
     config["hotkey_27k_ul"] = "7";
-    config["modkey_27k_ul"] = "ctrl";
-    config["hotkey_30k"] = "l";
-    config["modkey_30k"] = "ctrl";
-    config["hotkey_7k"] = "j";
-    config["modkey_7k"] = "ctrl";
-    config["hotkey_game"] = "o";
-    config["modkey_game"] = "ctrl";
-    config["hotkey_suspend"] = "p";
-    config["modkey_suspend"] = "ctrl";
+    config["modkey_27k_ul"] = "Ctrl";
+    config["hotkey_30k"] = "L";
+    config["modkey_30k"] = "Ctrl";
+    config["hotkey_7k"] = "J";
+    config["modkey_7k"] = "Ctrl";
+    config["hotkey_game"] = "O";
+    config["modkey_game"] = "Ctrl";
+    config["hotkey_suspend"] = "P";
+    config["modkey_suspend"] = "Ctrl";
     config["use_overlay"] = true;
     config["font_size"] = 30;
     config["color_default"] = "0x00FFFFFF";
@@ -250,31 +249,23 @@ void ToggleBlockingLimit( limit* limit, COLORREF color_on, COLORREF color_off ){
 
 
 
-void SetVarByKeyName( limit* limit, int* key, wchar_t* buffer ){
-    // convert from key name to virtual keycode
-    if ( wcscmp( buffer, L"") == 0 ){
-        *key = 0x0;
-        printf( "set %ls to: 0x0\n", limit->name );
-    } 
-    else if  ( wcscmp( buffer, L"alt" ) == 0 ){
-        *key = VK_LMENU;
-        printf( "set %ls to: alt\n", limit->name );
-    } 
-    else if  ( wcscmp( buffer, L"shift" ) == 0 ){
-        //*key = VK_SHIFT;
-        *key = VK_LSHIFT;
-        printf( "set %ls to: shift\n", limit->name );
-    } 
-    else if ( wcscmp( buffer, L"ctrl" ) == 0 ){
-        //*key = VK_CONTROL;
-        *key = VK_LCONTROL;
-        printf ("set %ls to: ctrl\n", limit->name );
-    } else {
-        wchar_t* single_wc = nullptr;
-        single_wc = &buffer[0];
-        *key = VkKeyScanW( *single_wc );
-        printf( "set %ls to: %wc+%wc\n", limit->name, limit->hotkey, limit->modkey );
+int GetVKCodeFromName(const wchar_t* keyName) {
+    std::wcout << "attempting to map key: " << keyName << std::endl;
+    for (int vkCode = 1; vkCode < 256; vkCode++) {
+        int scanCode = MapVirtualKey(vkCode, 0);
+
+        wchar_t nameBuffer[256];
+        int length = GetKeyNameText(scanCode << 16, nameBuffer, sizeof(nameBuffer) / sizeof(nameBuffer[0]));
+
+        //printf("comparing %ws to %ws\n", nameBuffer, keyName);
+
+        if (length && wcscmp(keyName, nameBuffer) == 0) {
+            //std::cout << "scanCode: " << scanCode << std::endl;
+            std::cout << "vkCode: " << vkCode << std::endl;
+            return vkCode;
+        }
     }
+    return 0x0; 
 }
 
 
@@ -285,6 +276,6 @@ void SetVarFromJson( limit* limit, std::string hotkey, std::string modkey ){
     wchar_t modkey_buffer[20];
     MultiByteToWideChar( CP_UTF8, 0, hotkey_char_ptr, -1, hotkey_buffer, 20 );
     MultiByteToWideChar( CP_UTF8, 0, modkey_char_ptr, -1, modkey_buffer, 20 );
-    SetVarByKeyName( limit, &limit->hotkey, hotkey_buffer );
-    SetVarByKeyName( limit, &limit->modkey, modkey_buffer );
+    limit->hotkey = GetVKCodeFromName(hotkey_buffer);
+    limit->modkey = GetVKCodeFromName(modkey_buffer);
 }

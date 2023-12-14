@@ -300,61 +300,61 @@ int run_gui(){
 
 
 int __cdecl main( int argc, char** argv ){
-    run_gui();
+    //run_gui();
     
-//    strcpy_s( lim_3074.windivert_rule,    sizeof( lim_3074.windivert_rule ),    " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)" ); 
-//	strcpy_s( lim_3074_ul.windivert_rule, sizeof( lim_3074_ul.windivert_rule ), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
-//	strcpy_s( lim_27k.windivert_rule,     sizeof( lim_27k.windivert_rule ),     " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)" ); 
-//	strcpy_s( lim_27k_ul.windivert_rule,  sizeof( lim_27k_ul.windivert_rule ),  " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)" ); 
-//	strcpy_s( lim_30k.windivert_rule,     sizeof( lim_30k.windivert_rule ),     " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)" ); 
-//	strcpy_s( lim_7k.windivert_rule,      sizeof( lim_7k.windivert_rule ),      " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)" ); 
-//
-//    if ( argv[1] != NULL ){
-//        if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){
-//            printf( "debug: true\n" );
-//            debug = true;
-//        } else {
-//            printf( "error: invalid argument...\n" );
-//            printf( "options:\n" );
-//            printf( "    --debug     prevents console hiding and enables hotkey trigger outside of destiny 2.\n" );
-//            return 0;
-//        }
-//    } else {
-//        ShowWindow( GetConsoleWindow(), SW_HIDE );
-//    }
-//
-//    if ( !RunningAsAdmin() ){
-//        MessageBox( NULL, ( LPCWSTR )L"ERROR: not running as admin", ( LPCWSTR )L"ERROR", MB_ICONERROR | MB_DEFBUTTON2 );
-//        return 0;
-//    }
-//
-//    
-//    SetPathToConfigFile( ( wchar_t* )L"config.txt" );
-//    if ( !FileExists( path_to_config_file ) ){
-//        WriteDefaultJsonConfig( path_to_config_file );
-//    }
-//
-//    bool use_overlay;
-//	int font_size;
-//    LoadConfig( &use_overlay, &font_size, limit_ptr_array, size_of_limit_ptr_array );
-//    SetOverlayLineNumberOfHotkeys( limit_ptr_array, size_of_limit_ptr_array );
-//    InitializeOverlay( use_overlay, font_size, limit_ptr_array, size_of_limit_ptr_array );
-//
-//
-//    printf( "starting hotkey thread\n" );
-//
-//    // TODO remove dwThread
-//    DWORD dwThread;
-//    hHotkeyThread = CreateThread( NULL, NULL, ( LPTHREAD_START_ROUTINE )HotkeyThread, ( LPVOID )NULL, NULL, &dwThread );
-//
-//    if ( hHotkeyThread ){
-//        return WaitForSingleObject( hHotkeyThread, INFINITE );
-//    }
-//    else {
-//        return 1;
-//    }
-//    CloseHandle( hHotkeyThread );
-//    FreeLibrary( hDLL );
+    strcpy_s( lim_3074.windivert_rule,    sizeof( lim_3074.windivert_rule ),    " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)" ); 
+	strcpy_s( lim_3074_ul.windivert_rule, sizeof( lim_3074_ul.windivert_rule ), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
+	strcpy_s( lim_27k.windivert_rule,     sizeof( lim_27k.windivert_rule ),     " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)" ); 
+	strcpy_s( lim_27k_ul.windivert_rule,  sizeof( lim_27k_ul.windivert_rule ),  " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)" ); 
+	strcpy_s( lim_30k.windivert_rule,     sizeof( lim_30k.windivert_rule ),     " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)" ); 
+	strcpy_s( lim_7k.windivert_rule,      sizeof( lim_7k.windivert_rule ),      " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)" ); 
+
+    if ( argv[1] != NULL ){
+        if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){
+            printf( "debug: true\n" );
+            debug = true;
+        } else {
+            printf( "error: invalid argument...\n" );
+            printf( "options:\n" );
+            printf( "    --debug     prevents console hiding and enables hotkey trigger outside of destiny 2.\n" );
+            return 0;
+        }
+    } else {
+        ShowWindow( GetConsoleWindow(), SW_HIDE );
+    }
+
+    if ( !RunningAsAdmin() ){
+        MessageBox( NULL, ( LPCWSTR )L"ERROR: not running as admin", ( LPCWSTR )L"ERROR", MB_ICONERROR | MB_DEFBUTTON2 );
+        return 0;
+    }
+
+    
+    SetPathToConfigFile( ( wchar_t* )L"config.txt" );
+    if ( !FileExists( path_to_config_file ) ){
+        WriteDefaultJsonConfig( path_to_config_file );
+    }
+
+    bool use_overlay;
+	int font_size;
+    LoadConfig( &use_overlay, &font_size, limit_ptr_array, size_of_limit_ptr_array );
+    SetOverlayLineNumberOfHotkeys( limit_ptr_array, size_of_limit_ptr_array );
+    InitializeOverlay( use_overlay, font_size, limit_ptr_array, size_of_limit_ptr_array );
+
+
+    printf( "starting hotkey thread\n" );
+
+    // TODO remove dwThread
+    DWORD dwThread;
+    hHotkeyThread = CreateThread( NULL, NULL, ( LPTHREAD_START_ROUTINE )HotkeyThread, ( LPVOID )NULL, NULL, &dwThread );
+
+    if ( hHotkeyThread ){
+        return WaitForSingleObject( hHotkeyThread, INFINITE );
+    }
+    else {
+        return 1;
+    }
+    CloseHandle( hHotkeyThread );
+    FreeLibrary( hDLL );
     return 0;
 }
 
@@ -527,7 +527,9 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
     {
         KBDLLHOOKSTRUCT hooked_key =  *( ( KBDLLHOOKSTRUCT* )lParam );
 
-        int key = hooked_key.vkCode;
+        //int key = hooked_key.vkCode;
+        int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
+        std::cout << "key recv: " << key << std::endl;
 
         ModkeyResetKeyDownState( key );
         HotkeyResetKeyDownState( key );
@@ -538,7 +540,8 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
     {
         KBDLLHOOKSTRUCT hooked_key = *( ( KBDLLHOOKSTRUCT* ) lParam );
 
-        int key = hooked_key.vkCode;
+        int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
+        //int key = hooked_key.vkCode;
 
         ModkeySetDownState( key );
         TriggerHotkeys( key );
