@@ -17,6 +17,7 @@
 #include <chrono>
 #include <condition_variable>
 
+std::mutex mutex;
 limit lim_3074(    ( wchar_t* )L"3074" ); 
 limit lim_3074_ul( ( wchar_t* )L"3074UL" );
 limit lim_27k(     ( wchar_t* )L"27k" ); 
@@ -50,42 +51,56 @@ class HotkeyManager {
 public:
     void asyncBindHotkey(int i) {
         // TODO fix limit being unreadable due to access violation
-            if (_bindingInProgress == true || limit_ptr_array[i]->bindingComplete == false) {
-                MessageBox(NULL, (wchar_t*)L"error hotkey is already being bound...", NULL, MB_OK);
-                return;
-            }
-            limit_ptr_array[i]->bindingComplete = false;
+        while (!mutex.try_lock()) {
+            Sleep(1);
+        }
+        _cur_line = i;
+        if (limit_ptr_array[i]->bindingComplete == false) {
+            MessageBox(NULL, (wchar_t*)L"error hotkey is already being bound...", NULL, MB_OK);
+	        return;
+        }
+        limit_ptr_array[i]->bindingComplete = false;
 
-            _bindingInProgress = true;
-            _currentHotkeyList.clear();
+        _currentHotkeyList.clear();
 
-            while (_bindingInProgress == true) {
-                Sleep(10);
-            }
-            std::cout << "current size: " << _currentHotkeyList.size() << std::endl;
-            limit_ptr_array[i]->key_list = _currentHotkeyList;
-            limit_ptr_array[i]->bindingComplete = true;
-            return;
+        //while (limit_ptr_array[i]->bindingComplete == false) {
+        done = false;
+        while (done == false) {
+            Sleep(10);
+        }
+		limit_ptr_array[_cur_line]->updateUI = true;
+        std::cout << "current size: " << _currentHotkeyList.size() << std::endl;
+	    limit_ptr_array[_cur_line]->bindingComplete = true;
+        _cur_line = -1;
+        mutex.unlock();
+
+        return;
 	}
 
 	void KeyboardInputHandler(int key, bool isKeyDown)
 	{
-		if (isKeyDown)
-		{
-			std::cout << "Key Down: " << key << std::endl;
-            auto it = std::find(_currentHotkeyList.begin(), _currentHotkeyList.end(), key);
-            if (it == _currentHotkeyList.end() && _bindingInProgress == true) {
-                _currentHotkeyList.push_back(key);
+        if (_cur_line != -1) {
+		    if (isKeyDown)
+			{
+				std::cout << "Key Down: " << key << std::endl;
+				auto it = std::find(_currentHotkeyList.begin(), _currentHotkeyList.end(), key);
+				//if (it == _currentHotkeyList.end() && limit_ptr_array[_cur_line]->bindingComplete == false) {
+				if (it == _currentHotkeyList.end()) {
+				    _currentHotkeyList.push_back(key);
+				}
+			} else
+			{
+				std::cout << "Key Up: " << key << std::endl;
+				auto it = std::find(_currentHotkeyList.begin(), _currentHotkeyList.end(), key);
+				limit_ptr_array[_cur_line]->key_list = _currentHotkeyList;
+				//limit_ptr_array[_cur_line]->bindingComplete = true;
+                done = true;
 			}
-		} else
-		{
-			std::cout << "Key Up: " << key << std::endl;
-            auto it = std::find(_currentHotkeyList.begin(), _currentHotkeyList.end(), key);
-            _bindingInProgress = false;
-		}
+        }
 	}
 private:
-    bool _bindingInProgress = false;
+    int _cur_line = -1;
+    int done = false;
 
     std::vector<int> _currentHotkeyList;
 };
@@ -165,8 +180,14 @@ int run_gui(){
     // Main loop
     bool done = false;
     std::vector<bool> button_clicked(size_of_limit_ptr_array);
+    std::vector<std::string> String;
+    const char* in_progress = "in progress..";
+    for (int i = 0; i < (size_of_limit_ptr_array); i++) {
+        String.push_back("not set");
+    }
     while (!done)
     {
+        int line_of_button_clicked = -1;
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
         MSG msg;
@@ -200,21 +221,13 @@ int run_gui(){
 
             {
                 for (int i = 0; i < size_of_limit_ptr_array; i++) {
-                    std::lock_guard<std::mutex> lock(limit_ptr_array[i]->mutex);
                     ImGui::PushID(i);
                     if (ImGui::Button("Click to bind")) {
-                        button_clicked[i] = true;
-                        limit_ptr_array[i]->String = "in progress..";
-                        limit_ptr_array[i]->bindingComplete = false;
+                        if (String[i] != in_progress) {
+						        button_clicked[i] = true;
+                                std::cout << "button " << i << " clicked [callback]" << std::endl;
+						}
                     }
-                    else if (limit_ptr_array[i]->bindingComplete == true && limit_ptr_array[i]->String == "in progress..") {
-                        limit_ptr_array[i]->String = "";
-                        for (int i = 0; i < limit_ptr_array[i]->key_list.size(); i++) {
-                            limit_ptr_array[i]->String += std::to_string(limit_ptr_array[i]->key_list[i]);
-                            limit_ptr_array[i]->String.append(", ");
-                        }
-                    }
-
 
                     ImGui::SameLine();
 					char name[50];
@@ -222,7 +235,7 @@ int run_gui(){
 					wcstombs_s(&size, name, limit_ptr_array[i]->name, 50);
 					ImGui::Text(name);               // Display some text (you can use a format strings too)
 					ImGui::SameLine();
-					ImGui::Text(limit_ptr_array[i]->String.data());               // Display some text (you can use a format strings too)
+					ImGui::Text("bind: %s", String[i].data());               // Display some text (you can use a format strings too)
                     ImGui::PopID();
                 }
             }
@@ -234,17 +247,28 @@ int run_gui(){
         // Rendering
         ImGui::Render();
 
-        for (int i = 0; i < (button_clicked.size()-1); i++) {
+        for (int i = 0; i < button_clicked.size(); i++) {
+            if (limit_ptr_array[i]->bindingComplete == true && String[i] == in_progress) {
+                std::cout << "attempting to update ui.." << std::endl;
+                // TODO fix ui updating
+                String[i] = "";
+			    for (int j = 0; j < limit_ptr_array[i]->key_list.size(); j++) {
+			        String[i] += std::to_string(limit_ptr_array[i]->key_list[j]);
+					String[i].append(", ");
+				}
+			}
+
             if (button_clicked[i] == true) {
-                std::cout << "button_clicked.size = " << button_clicked.size() << std::endl;
-                button_clicked[i] = false;
-                //std::string s = std::to_string(button_clicked.size());
-                //char const* const_char = s.c_str();
-                //MessageBoxA(NULL, const_char, (char*)"debug", MB_OK);
-                std::thread([&]() {
-                    hotkeyManager.asyncBindHotkey(i);
-                    }).detach();
+                // TODO fix button 8 not registering
+                std::cout << "button " << i << " clicked [registered]" << std::endl;
+                String[i] = in_progress;
+				button_clicked[i] = false;
+				line_of_button_clicked = i;
+				std::thread([&]() {
+					hotkeyManager.asyncBindHotkey(line_of_button_clicked);
+					}).detach();
             }
+
         }
 
 

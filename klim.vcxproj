@@ -134,6 +134,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\helperFunctions.cpp" />
+    <ClCompile Include="src\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\imgui_impl_win32.cpp" />
     <ClCompile Include="src\krekens_overlay.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\windivertFunctions.cpp" />
