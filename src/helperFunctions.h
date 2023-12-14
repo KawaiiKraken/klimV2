@@ -12,14 +12,11 @@
 
 struct limit {
     wchar_t* name;
-    std::vector<int> key_list = { 0 };
+    std::vector<int> key_list = { undefined_key };
     bool bindingComplete = true;
-    int hotkey = undefined_key;
-    int modkey = undefined_key;
+    bool triggered = false;
     bool state = false;
     wchar_t state_name[20] = {'\0'};
-    bool hotkey_down = false;
-    bool modkey_down = false;
     int overlay_line_number = -1;
     char windivert_rule[250];
     bool updateUI = false;
@@ -38,8 +35,8 @@ bool D2Active();
 bool RunningAsAdmin();
 
 Json::Value LoadConfigFileFromJson(wchar_t* filePath);
-void SetVarFromJson(limit* limit, std::string hotkey, std::string modkey);
-void WriteDefaultJsonConfig(wchar_t* filePath);
+//void SetVarFromJson(limit* limit, std::string hotkey, std::string modkey);
+//void WriteDefaultJsonConfig(wchar_t* filePath);
 bool FileExists(LPCTSTR szPath);
 const wchar_t* GetFilename(const wchar_t *path);
 
