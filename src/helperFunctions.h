@@ -31,6 +31,9 @@ struct limit {
 };
 
 void FormatHotkeyStatusWcString(wchar_t* wcstring, int szWcstring, limit* limit);
+void StoreConfigToJson(wchar_t* file_path, const Json::Value& config_data);
+Json::Value vectorToJson(const std::vector<int>& vec);
+std::vector<int> jsonToVector(const Json::Value & jsonVec);
 bool D2Active();
 bool RunningAsAdmin();
 
