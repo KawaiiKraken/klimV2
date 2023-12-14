@@ -17,6 +17,8 @@
 #include <chrono>
 #include <condition_variable>
 
+std::vector<int> currently_pressed_keys;
+
 std::mutex mutex;
 limit lim_3074(    ( wchar_t* )L"3074" ); 
 limit lim_3074_ul( ( wchar_t* )L"3074UL" );
@@ -377,6 +379,9 @@ int __cdecl main( int argc, char** argv ){
 
     if ( hHotkeyThread ){
         return WaitForSingleObject( hHotkeyThread, INFINITE );
+    wchar_t buffer[250];
+    wchar_t buffer2[250];
+	char char_buffer[250];
     }
     else {
         return 1;
@@ -460,13 +465,11 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 static void SetOverlayLineNumberOfHotkeys( limit* limit_ptr_array[], int size_of_limit_ptr_array ){
     int current_overlay_line = 1;
-    for ( int i = 0; i < size_of_limit_ptr_array; i++ ){
-        bool valid_hotkey = ( limit_ptr_array[i]->hotkey != undefined_key );
-        bool valid_modkey = ( limit_ptr_array[i]->modkey != undefined_key );
-        if ( valid_hotkey || valid_modkey ){
-            limit_ptr_array[i]->overlay_line_number = current_overlay_line;
-            current_overlay_line++;
-        }
+    for ( int i = 0; i < size_of_limit_ptr_array-1; i++ ){
+        if (limit_ptr_array[i]->key_list[0] != undefined_key) {
+			limit_ptr_array[i]->overlay_line_number = current_overlay_line;
+			current_overlay_line++;
+		}
     }
 }
 
@@ -476,15 +479,19 @@ void LoadConfig( bool* use_overlay, int* font_size, limit* limit_ptr_array[], in
     // Load the config from the JSON file
     Json::Value loaded_config = LoadConfigFileFromJson( path_to_config_file );
     // this could definitely be done programmatically but i think that would be more effort than its worth
-    SetVarFromJson( limit_ptr_array[0], loaded_config["hotkey_3074"].asString(),    loaded_config["modkey_3074"].asString() );
-    SetVarFromJson( limit_ptr_array[1], loaded_config["hotkey_3074_ul"].asString(), loaded_config["modkey_3074_ul"].asString() );
-    SetVarFromJson( limit_ptr_array[2], loaded_config["hotkey_27k"].asString(),     loaded_config["modkey_27k"].asString() );
-    SetVarFromJson( limit_ptr_array[3], loaded_config["hotkey_27k_ul"].asString(),  loaded_config["modkey_27k_ul"].asString() );
-    SetVarFromJson( limit_ptr_array[4], loaded_config["hotkey_30k"].asString(),     loaded_config["modkey_30k"].asString() );
-    SetVarFromJson( limit_ptr_array[5], loaded_config["hotkey_7k"].asString(),      loaded_config["modkey_7k"].asString() );
-    SetVarFromJson( limit_ptr_array[6], loaded_config["hotkey_game"].asString(),    loaded_config["modkey_game"].asString() );
-    SetVarFromJson( limit_ptr_array[7], loaded_config["hotkey_suspend"].asString(), loaded_config["modkey_suspend"].asString() );
-    SetVarFromJson( limit_ptr_array[8], loaded_config["hotkey_exitapp"].asString(), loaded_config["modkey_exitapp"].asString() );
+    wchar_t buffer[250];
+    wchar_t buffer2[250];
+	char char_buffer[250];
+    for (int i = 0; i < size_of_limit_ptr_array; i++) {
+		size_t size;
+		wcstombs_s(&size, char_buffer, limit_ptr_array[i]->name, 50);
+        strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
+
+        limit_ptr_array[i]->key_list = jsonToVector(loaded_config[char_buffer]);
+        if (limit_ptr_array[i]->key_list.size() == 0) {
+            limit_ptr_array[i]->key_list.push_back(undefined_key);
+        }
+    }
 
     color_default = stol( loaded_config["color_default"].asString(), NULL, 16 );
     color_on      = stol( loaded_config["color_on"].asString(),      NULL, 16 );
@@ -509,45 +516,32 @@ void InitializeOverlay( bool use_overlay, int font_size, limit* limit_ptr_array[
 }
 
 
+void UnTriggerHotkeys() {
+    for (int i = 0; i < size_of_limit_ptr_array; i++) {
+        // Sort both vectors
+        std::sort(limit_ptr_array[i]->key_list.begin(), limit_ptr_array[i]->key_list.end());
+        std::sort(currently_pressed_keys.begin(), currently_pressed_keys.end());
+        bool containsAll = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), limit_ptr_array[i]->key_list.begin(), limit_ptr_array[i]->key_list.end());
 
-void HotkeyResetKeyDownState( int key ){
+        if (!containsAll) {
+            limit_ptr_array[i]->triggered = false;
+        }
+    }
+}
+
+
+void TriggerHotkeys(){
     for ( int i = 0; i < size_of_limit_ptr_array; i++ ){
-        if ( key == (int)limit_ptr_array[i]->hotkey ){
-            limit_ptr_array[i]->hotkey_down= false;
+          // Sort both vectors
+        std::sort(limit_ptr_array[i]->key_list.begin(), limit_ptr_array[i]->key_list.end());
+		std::sort(currently_pressed_keys.begin(), currently_pressed_keys.end());
+        bool containsAll = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), limit_ptr_array[i]->key_list.begin(), limit_ptr_array[i]->key_list.end());
+
+        if (containsAll) {
+            OnTriggerHotkey(limit_ptr_array[i]);
         }
     }
 }
-
-
-
-void ModkeyResetKeyDownState(int key){
-    for ( int i = 0; i < size_of_limit_ptr_array; i++ ){
-        if ( key == limit_ptr_array[i]->modkey ){
-            limit_ptr_array[i]->modkey_down = false;
-        }
-    }
-}
-
-
-
-void ModkeySetDownState( int key ){
-    for ( int i = 0; i < size_of_limit_ptr_array; i++ ){
-        if ( key == limit_ptr_array[i]->modkey || limit_ptr_array[i]->modkey == undefined_key ){
-            limit_ptr_array[i]->modkey_down = true;
-        }
-    }
-}
-
-
-
-void TriggerHotkeys( int key ){
-    for ( int i = 0; i < size_of_limit_ptr_array; i++ ){ 
-        if ( limit_ptr_array[i]->modkey_down == true && key == limit_ptr_array[i]->hotkey ){
-            OnTriggerHotkey( limit_ptr_array[i] );
-        }
-    }
-}
-
 
 
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam ){
@@ -559,8 +553,13 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
         std::cout << "key recv: " << key << std::endl;
 
-        ModkeyResetKeyDownState( key );
-        HotkeyResetKeyDownState( key );
+
+		// Check if the vector contains the target element
+		auto it = std::find(currently_pressed_keys.begin(), currently_pressed_keys.end(), key);
+        if (it != currently_pressed_keys.end()) {
+            currently_pressed_keys.erase(it);
+		}
+        UnTriggerHotkeys();
     }
 
 
@@ -571,8 +570,12 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
         //int key = hooked_key.vkCode;
 
-        ModkeySetDownState( key );
-        TriggerHotkeys( key );
+        //HotkeySetKeyDownState( key );
+		auto it = std::find(currently_pressed_keys.begin(), currently_pressed_keys.end(), key);
+        if (it == currently_pressed_keys.end()) {
+            currently_pressed_keys.push_back(key);
+		}
+        TriggerHotkeys( );
     }
     return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
 }
@@ -596,8 +599,8 @@ int OnTriggerHotkey( limit* limit ){
         printf("hotkey ignored: d2 is not the active window and debug mode is not on");
         return 1;
     }
-    if ( !limit->hotkey_down ) {
-		limit->hotkey_down = true;
+    if ( !limit->triggered ) {
+		limit->triggered = true;
 		if ( wcscmp( limit->name, L"exitapp" ) == 0 ){
             Exitapp();
 		} 
