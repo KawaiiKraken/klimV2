@@ -12,9 +12,8 @@
 
 struct limit {
     wchar_t* name;
-    std::vector<int> key_list;
+    std::vector<int> key_list = { 0 };
     bool bindingComplete = true;
-    std::string String = "not set";
     int hotkey = undefined_key;
     int modkey = undefined_key;
     bool state = false;
@@ -23,7 +22,7 @@ struct limit {
     bool modkey_down = false;
     int overlay_line_number = -1;
     char windivert_rule[250];
-    std::mutex mutex;
+    bool updateUI = false;
     void ToggleState() {
         state = !state;
         wcscpy_s(state_name, state ? (wchar_t*)L"(on)" : (wchar_t*)L"(off)");
