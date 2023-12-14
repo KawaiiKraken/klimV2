@@ -167,54 +167,39 @@ Json::Value LoadConfigFileFromJson( wchar_t* filepath ){
 
 
 
-void SuspendProcess( DWORD pid ){
+void SuspendProcess( DWORD pid, bool suspend){
     if ( pid == 0 ){
         return;
     }
-    HANDLE hProc = NULL;
-    hProc = OpenProcess( PROCESS_SUSPEND_RESUME, 0, pid ); 
-    if ( hProc != NULL ){
-        printf( "suspending process\n" );
-        NtSuspendProcess( hProc );
-        CloseHandle( hProc );
-    }
-}
 
+    HANDLE hProc = OpenProcess( PROCESS_SUSPEND_RESUME, 0, pid ); 
 
-
-void ResumeProcess(DWORD pid){
-    if ( pid == 0 ){
+    if (hProc == NULL) {
         return;
     }
-    HANDLE hProc = NULL;
-    hProc = OpenProcess( PROCESS_SUSPEND_RESUME, 0, pid ); 
-    if ( hProc != NULL ){
-        printf( "resuming process\n" );
-        NtResumeProcess( hProc );
-        CloseHandle( hProc );
-    }
+    suspend ? printf("suspending process\n") : printf("resuming process\n");
+    suspend ? NtSuspendProcess( hProc ) : NtResumeProcess( hProc );
+    CloseHandle( hProc );
 }
 
 
 
 void ToggleSuspend( limit* suspend, COLORREF color_on, COLORREF color_off ){
+    if ( !D2Active() ){ // prevents from pausing random stuff if running with debug
+        MessageBox(NULL, L"failed to pause...\nd2 is not the active window", NULL, MB_OK | MB_ICONWARNING);
+        return;
+    }
+
     DWORD pid = 0;
     GetWindowThreadProcessId( GetForegroundWindow(), &pid );
-    if ( D2Active() ){ // prevents from pausing random stuff if running with debug
-        suspend->ToggleState();
+    suspend->state ? SuspendProcess( pid, true ) : SuspendProcess( pid, false );
 
-        if ( suspend->state ){
-            SuspendProcess( pid );
-        } else {
-            ResumeProcess( pid );
-        }
-
-        COLORREF color = suspend->state ? color_on : color_off;
-        wchar_t* wcstring = new wchar_t[200];
-        FormatHotkeyStatusWcString( wcstring, 200, suspend );
-        UpdateOverlayLine( wcstring, suspend->overlay_line_number, color );
-        delete []wcstring;
-    }
+    suspend->ToggleState();
+    COLORREF color = suspend->state ? color_on : color_off;
+    wchar_t* wcstring = new wchar_t[200];
+    FormatHotkeyStatusWcString( wcstring, 200, suspend );
+    UpdateOverlayLine( wcstring, suspend->overlay_line_number, color );
+    delete []wcstring;
 }
 
 
