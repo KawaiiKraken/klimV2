@@ -297,10 +297,36 @@ int run_gui(){
     return 0;
 }
 
+void WriteConfig() {
+    Json::Value config;
+
+    wchar_t buffer[250];
+    wchar_t buffer2[250];
+	char char_buffer[250];
+    for (int i = 0; i < size_of_limit_ptr_array; i++) {
+        if (limit_ptr_array[i]->key_list[0] == 0x0) {
+            continue;
+        }
+		size_t size;
+		wcstombs_s(&size, char_buffer, limit_ptr_array[i]->name, 50);
+        strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
+
+        wchar_t keyName[256];
+        config[char_buffer] = vectorToJson(limit_ptr_array[i]->key_list);
+    }
+
+    // random defaults for now
+    config["use_overlay"] = true;
+    config["font_size"] = 30;
+    config["color_default"] = "0x00FFFFFF";
+    config["color_on"] = "0x000000FF";
+    config["color_off"] = "0x00FFFFFF";
+
+    StoreConfigToJson(path_to_config_file, config);
+}
 
 
 int __cdecl main( int argc, char** argv ){
-    //run_gui();
     
     strcpy_s( lim_3074.windivert_rule,    sizeof( lim_3074.windivert_rule ),    " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)" ); 
 	strcpy_s( lim_3074_ul.windivert_rule, sizeof( lim_3074_ul.windivert_rule ), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
@@ -331,7 +357,9 @@ int __cdecl main( int argc, char** argv ){
     
     SetPathToConfigFile( ( wchar_t* )L"config.txt" );
     if ( !FileExists( path_to_config_file ) ){
-        WriteDefaultJsonConfig( path_to_config_file );
+        run_gui();
+        WriteConfig();
+        //WriteDefaultJsonConfig( path_to_config_file );
     }
 
     bool use_overlay;

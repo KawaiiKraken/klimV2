@@ -11,11 +11,32 @@ const wchar_t* GetFilename( const wchar_t *path ){
         filename++;
     return filename;
 }
+// Function to convert a vector to Json::Value
+Json::Value vectorToJson(const std::vector<int>& vec) {
+    Json::Value jsonVec;
+
+    for (const auto& element : vec) {
+        jsonVec.append(element);
+    }
+
+    return jsonVec;
+}
+
+// Function to convert Json::Value to a vector
+std::vector<int> jsonToVector(const Json::Value& jsonVec) {
+    std::vector<int> vec;
+
+    for (const auto& element : jsonVec) {
+        vec.push_back(element.asInt());
+    }
+
+    return vec;
+}
 
 void StoreConfigToJson( wchar_t* file_path, const Json::Value& config_data ){
-    if ( FileExists( file_path ) ){
-        return;
-    }
+    //if ( FileExists( file_path ) ){
+        //return;
+    //}
     printf( "creating new config file\n" );
     HANDLE hFile = CreateFileW( ( LPCTSTR )file_path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
 
@@ -143,6 +164,7 @@ void WriteDefaultJsonConfig( wchar_t* filepath ){
 
     StoreConfigToJson(filepath, config);
 }
+
 
 
 
