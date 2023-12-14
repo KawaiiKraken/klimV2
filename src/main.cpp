@@ -249,17 +249,20 @@ int run_gui(){
 
         for (int i = 0; i < button_clicked.size(); i++) {
             if (limit_ptr_array[i]->bindingComplete == true && String[i] == in_progress) {
-                std::cout << "attempting to update ui.." << std::endl;
-                // TODO fix ui updating
+                std::cout << "updating ui.." << std::endl;
                 String[i] = "";
 			    for (int j = 0; j < limit_ptr_array[i]->key_list.size(); j++) {
-			        String[i] += std::to_string(limit_ptr_array[i]->key_list[j]);
-					String[i].append(", ");
+                    if (String[i] != "") {
+					    String[i].append("+");
+                    }
+                    int scan_code = MapVirtualKey(limit_ptr_array[i]->key_list[j], 0);
+                    char name_buffer[256];
+                    GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
+                    String[i] += name_buffer;
 				}
 			}
 
             if (button_clicked[i] == true) {
-                // TODO fix button 8 not registering
                 std::cout << "button " << i << " clicked [registered]" << std::endl;
                 String[i] = in_progress;
 				button_clicked[i] = false;
