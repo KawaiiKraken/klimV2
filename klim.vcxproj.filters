@@ -33,6 +33,9 @@
     <ClCompile Include="src\imgui_impl_win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ConfigFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="phnt\ntbcd.h">
@@ -134,15 +137,6 @@
     <ClInclude Include="src\helperFunctions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\krekens_overlay.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\main.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\windivertFunctions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WinDivert\windivert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -205,6 +199,18 @@
     </ClInclude>
     <ClInclude Include="src\jsoncpp_header\writer.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ConfigFile.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\main.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\windivertFunctions.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\krekens_overlay.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

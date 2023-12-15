@@ -13,6 +13,23 @@
 #include <wchar.h>
 #include <shellapi.h>
 #include <psapi.h>
+#include "helperFunctions.h"
+#include "krekens_overlay.h"
+#include "imgui.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_win32.h"
+#include "ConfigFile.h"
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <GL/GL.h>
+#include <tchar.h>
+#include <iostream>
+#include <vector>
+#include <future>
+#include <chrono>
+#include <condition_variable>
 
 #pragma comment( lib, "ntdll.lib" )
 
