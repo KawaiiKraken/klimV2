@@ -1,5 +1,6 @@
 #ifndef HELPERFUNCTIONS_H
 #define HELPERFUNCTIONS_H
+
 #include <windows.h>
 #include <tchar.h>
 #include <psapi.h>

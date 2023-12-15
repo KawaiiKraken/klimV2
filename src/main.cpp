@@ -2,6 +2,7 @@
 std::vector<int> currently_pressed_keys;
 
 std::mutex mutex;
+std::mutex* mutex_ptr = &mutex;
 limit lim_3074(    ( wchar_t* )L"3074" ); 
 limit lim_3074_ul( ( wchar_t* )L"3074UL" );
 limit lim_27k(     ( wchar_t* )L"27k" ); 
@@ -11,9 +12,9 @@ limit lim_7k(      ( wchar_t* )L"7k" );
 limit lim_game(    ( wchar_t* )L"game" ); 
 limit suspend(     ( wchar_t* )L"suspend" ); 
 limit exitapp(     ( wchar_t* )L"exitapp" ); 
-limit* limit_ptr_array[] = { &lim_3074, &lim_3074_ul, &lim_27k, &lim_27k_ul, &lim_30k, &lim_7k, &lim_game, &suspend, &exitapp };
-int size_of_limit_ptr_array = sizeof(limit_ptr_array) / sizeof(limit_ptr_array[0]);
+std::vector<limit*> limit_ptr_vector = { &lim_3074, &lim_3074_ul, &lim_27k, &lim_27k_ul, &lim_30k, &lim_7k, &lim_game, &suspend, &exitapp };
 
+HotkeyManager hotkeyManager(limit_ptr_vector);
 // Data stored per platform window
 struct WGL_WindowData { HDC hDC; };
 
@@ -31,62 +32,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 typedef void (*KeyboardEventCallback)(int, bool);
 
 
-class HotkeyManager {
-public:
-    void asyncBindHotkey(int i) {
-        while (!mutex.try_lock()) {
-            Sleep(1);
-        }
-        _cur_line = i;
-        if (limit_ptr_array[i]->bindingComplete == false) {
-            MessageBox(NULL, (wchar_t*)L"error hotkey is already being bound...", NULL, MB_OK);
-            mutex.unlock();
-	        return;
-        }
-        limit_ptr_array[i]->bindingComplete = false;
 
-        _currentHotkeyList.clear();
-
-        done = false;
-        while (done == false) {
-            Sleep(10);
-        }
-		limit_ptr_array[_cur_line]->updateUI = true;
-        std::cout << "current size: " << _currentHotkeyList.size() << std::endl;
-	    limit_ptr_array[_cur_line]->bindingComplete = true;
-        _cur_line = -1;
-        mutex.unlock();
-
-        return;
-	}
-
-	void KeyboardInputHandler(int key, bool isKeyDown)
-	{
-        if (_cur_line != -1) {
-		    if (isKeyDown)
-			{
-				std::cout << "Key Down: " << key << std::endl;
-				auto it = std::find(_currentHotkeyList.begin(), _currentHotkeyList.end(), key);
-				if (it == _currentHotkeyList.end()) {
-				    _currentHotkeyList.push_back(key);
-				}
-			} else
-			{
-				std::cout << "Key Up: " << key << std::endl;
-				auto it = std::find(_currentHotkeyList.begin(), _currentHotkeyList.end(), key);
-				limit_ptr_array[_cur_line]->key_list = _currentHotkeyList;
-                done = true;
-			}
-        }
-	}
-private:
-    int _cur_line = -1;
-    int done = false;
-
-    std::vector<int> _currentHotkeyList;
-};
-
-HotkeyManager hotkeyManager;
 
 
 
@@ -94,10 +40,10 @@ HotkeyManager hotkeyManager;
 char combined_windivert_rules[1000];
 int OnTriggerHotkey( limit* limit );
 wchar_t path_to_config_file[MAX_PATH];
-void LoadConfig( bool* useOverlay, int* fontSize, limit* limit_array[], int array_size );
-static void SetOverlayLineNumberOfHotkeys( limit* limit_array[], int array_size );
-void SetFilterRuleString( limit* limit_array[], int array_size );
-void InitializeOverlay( bool useOverlay, int fontSize, limit* limit_array[], int array_size );
+void LoadConfig( bool* useOverlay, int* fontSize, std::vector<limit*> limit_ptr_vector);
+static void SetOverlayLineNumberOfHotkeys( std::vector<limit*> limit_ptr_vector);
+void SetFilterRuleString(std::vector<limit*> limit_ptr_vector);
+void InitializeOverlay( bool useOverlay, int fontSize, std::vector<limit*> limit_ptr_vector);
 
 
 // TODO make exitapp work when d2 is not the active window
@@ -159,10 +105,10 @@ int run_gui(){
 
     // Main loop
     bool done = false;
-    std::vector<bool> button_clicked(size_of_limit_ptr_array);
+    std::vector<bool> button_clicked(limit_ptr_vector.size());
     std::vector<std::string> String;
     const char* in_progress = "in progress..";
-    for (int i = 0; i < (size_of_limit_ptr_array); i++) {
+    for (int i = 0; i < (limit_ptr_vector.size()); i++) {
         String.push_back("not set");
     }
     while (!done)
@@ -200,7 +146,7 @@ int run_gui(){
             ImGui::Begin("config", NULL, flags);
 
             {
-                for (int i = 0; i < size_of_limit_ptr_array; i++) {
+                for (int i = 0; i < limit_ptr_vector.size(); i++) {
                     ImGui::PushID(i);
                     if (ImGui::Button("Click to bind")) {
                         if (String[i] != in_progress) {
@@ -212,7 +158,7 @@ int run_gui(){
                     ImGui::SameLine();
 					char name[50];
 					size_t size;
-					wcstombs_s(&size, name, limit_ptr_array[i]->name, 50);
+					wcstombs_s(&size, name, limit_ptr_vector[i]->name, 50);
 					ImGui::Text(name);               // Display some text (you can use a format strings too)
 					ImGui::SameLine();
 					ImGui::Text("bind: %s", String[i].data());               // Display some text (you can use a format strings too)
@@ -228,14 +174,14 @@ int run_gui(){
         ImGui::Render();
 
         for (int i = 0; i < button_clicked.size(); i++) {
-            if (limit_ptr_array[i]->bindingComplete == true && String[i] == in_progress) {
+            if (limit_ptr_vector[i]->bindingComplete == true && String[i] == in_progress) {
                 std::cout << "updating ui.." << std::endl;
                 String[i] = "";
-			    for (int j = 0; j < limit_ptr_array[i]->key_list.size(); j++) {
+			    for (int j = 0; j < limit_ptr_vector[i]->key_list.size(); j++) {
                     if (String[i] != "") {
 					    String[i].append("+");
                     }
-                    int scan_code = MapVirtualKey(limit_ptr_array[i]->key_list[j], 0);
+                    int scan_code = MapVirtualKey(limit_ptr_vector[i]->key_list[j], 0);
                     char name_buffer[256];
                     GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
                     String[i] += name_buffer;
@@ -281,15 +227,15 @@ void WriteConfig() {
     Json::Value config;
 
 	char char_buffer[250];
-    for (int i = 0; i < size_of_limit_ptr_array; i++) {
-        if (limit_ptr_array[i]->key_list[0] == 0x0) {
+    for (int i = 0; i < limit_ptr_vector.size(); i++) {
+        if (limit_ptr_vector[i]->key_list[0] == 0x0) {
             continue;
         }
 		size_t size;
-		wcstombs_s(&size, char_buffer, limit_ptr_array[i]->name, 50);
+		wcstombs_s(&size, char_buffer, limit_ptr_vector[i]->name, 50);
         strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
 
-        config[char_buffer] = ConfigFile::vectorToJson(limit_ptr_array[i]->key_list);
+        config[char_buffer] = ConfigFile::vectorToJson(limit_ptr_vector[i]->key_list);
     }
 
     // random defaults for now
@@ -340,9 +286,9 @@ int __cdecl main( int argc, char** argv ){
 
     bool use_overlay;
 	int font_size;
-    LoadConfig( &use_overlay, &font_size, limit_ptr_array, size_of_limit_ptr_array );
-    SetOverlayLineNumberOfHotkeys( limit_ptr_array, size_of_limit_ptr_array );
-    InitializeOverlay( use_overlay, font_size, limit_ptr_array, size_of_limit_ptr_array );
+    LoadConfig( &use_overlay, &font_size, limit_ptr_vector);
+    SetOverlayLineNumberOfHotkeys( limit_ptr_vector);
+    InitializeOverlay( use_overlay, font_size, limit_ptr_vector);
 
 
     printf( "starting hotkey thread\n" );
@@ -433,11 +379,11 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 
 
-static void SetOverlayLineNumberOfHotkeys( limit* limit_ptr_array[], int size_of_limit_ptr_array ){
+static void SetOverlayLineNumberOfHotkeys( std::vector<limit*> limit_ptr_vector){
     int current_overlay_line = 1;
-    for ( int i = 0; i < size_of_limit_ptr_array-1; i++ ){
-        if (limit_ptr_array[i]->key_list[0] != undefined_key) {
-			limit_ptr_array[i]->overlay_line_number = current_overlay_line;
+    for ( int i = 0; i < limit_ptr_vector.size() - 1; i++) {
+        if (limit_ptr_vector[i]->key_list[0] != undefined_key) {
+			limit_ptr_vector[i]->overlay_line_number = current_overlay_line;
 			current_overlay_line++;
 		}
     }
@@ -445,18 +391,18 @@ static void SetOverlayLineNumberOfHotkeys( limit* limit_ptr_array[], int size_of
 
 
 
-void LoadConfig( bool* use_overlay, int* font_size, limit* limit_ptr_array[], int size_of_limit_ptr_array ){
+void LoadConfig( bool* use_overlay, int* font_size, std::vector<limit*> limit_ptr_vector){
     // Load the config from the JSON file
     Json::Value loaded_config = ConfigFile::LoadConfigFileFromJson( path_to_config_file );
 	char char_buffer[250];
-    for (int i = 0; i < size_of_limit_ptr_array; i++) {
+    for (int i = 0; i < limit_ptr_vector.size(); i++) {
 		size_t size;
-		wcstombs_s(&size, char_buffer, limit_ptr_array[i]->name, 50);
+		wcstombs_s(&size, char_buffer, limit_ptr_vector[i]->name, 50);
         strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
 
-        limit_ptr_array[i]->key_list = ConfigFile::jsonToVector(loaded_config[char_buffer]);
-        if (limit_ptr_array[i]->key_list.size() == 0) {
-            limit_ptr_array[i]->key_list.push_back(undefined_key);
+        limit_ptr_vector[i]->key_list = ConfigFile::jsonToVector(loaded_config[char_buffer]);
+        if (limit_ptr_vector[i]->key_list.size() == 0) {
+            limit_ptr_vector[i]->key_list.push_back(undefined_key);
         }
     }
 
@@ -470,42 +416,42 @@ void LoadConfig( bool* use_overlay, int* font_size, limit* limit_ptr_array[], in
 
 
 
-void InitializeOverlay( bool use_overlay, int font_size, limit* limit_ptr_array[], int size_of_limit_ptr_array ){
+void InitializeOverlay( bool use_overlay, int font_size, std::vector<limit*> limit_ptr_vector){
     startOverlay( use_overlay, font_size );
 
     // set overlay to default state
     wchar_t* wc_string = new wchar_t[200];
-    for ( int i = 0; i < size_of_limit_ptr_array; i++ ){
-        FormatHotkeyStatusWcString( wc_string, 200, limit_ptr_array[i] );
-        UpdateOverlayLine( wc_string, limit_ptr_array[i]->overlay_line_number, color_default );
+    for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
+        FormatHotkeyStatusWcString( wc_string, 200, limit_ptr_vector[i] );
+        UpdateOverlayLine( wc_string, limit_ptr_vector[i]->overlay_line_number, color_default );
     }
     delete []wc_string;
 }
 
 
-void UnTriggerHotkeys() {
-    for (int i = 0; i < size_of_limit_ptr_array; i++) {
+void UnTriggerHotkeys( std::vector<limit*> limit_ptr_vector) {
+    for (int i = 0; i < limit_ptr_vector.size(); i++) {
         // Sort both vectors
-        std::sort(limit_ptr_array[i]->key_list.begin(), limit_ptr_array[i]->key_list.end());
+        std::sort(limit_ptr_vector[i]->key_list.begin(), limit_ptr_vector[i]->key_list.end());
         std::sort(currently_pressed_keys.begin(), currently_pressed_keys.end());
-        bool containsAll = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), limit_ptr_array[i]->key_list.begin(), limit_ptr_array[i]->key_list.end());
+        bool containsAll = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), limit_ptr_vector[i]->key_list.begin(), limit_ptr_vector[i]->key_list.end());
 
         if (!containsAll) {
-            limit_ptr_array[i]->triggered = false;
+            limit_ptr_vector[i]->triggered = false;
         }
     }
 }
 
 
-void TriggerHotkeys(){
-    for ( int i = 0; i < size_of_limit_ptr_array; i++ ){
+void TriggerHotkeys( std::vector<limit*> limit_ptr_vector){
+    for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
           // Sort both vectors
-        std::sort(limit_ptr_array[i]->key_list.begin(), limit_ptr_array[i]->key_list.end());
+        std::sort(limit_ptr_vector[i]->key_list.begin(), limit_ptr_vector[i]->key_list.end());
 		std::sort(currently_pressed_keys.begin(), currently_pressed_keys.end());
-        bool containsAll = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), limit_ptr_array[i]->key_list.begin(), limit_ptr_array[i]->key_list.end());
+        bool containsAll = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), limit_ptr_vector[i]->key_list.begin(), limit_ptr_vector[i]->key_list.end());
 
         if (containsAll) {
-            OnTriggerHotkey(limit_ptr_array[i]);
+            OnTriggerHotkey(limit_ptr_vector[i]);
         }
     }
 }
@@ -525,7 +471,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         if (it != currently_pressed_keys.end()) {
             currently_pressed_keys.erase(it);
 		}
-        UnTriggerHotkeys();
+        UnTriggerHotkeys(limit_ptr_vector);
     }
 
 
@@ -539,7 +485,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         if (it == currently_pressed_keys.end()) {
             currently_pressed_keys.push_back(key);
 		}
-        TriggerHotkeys( );
+        TriggerHotkeys(limit_ptr_vector);
     }
     return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
 }
@@ -578,7 +524,7 @@ int OnTriggerHotkey( limit* limit ){
 			ToggleBlockingLimit( limit, color_on, color_off );
         }
         printf( "state of %ws: %s\n", limit->name, limit->state ? "true" : "false" );
-        SetFilterRuleString( limit_ptr_array, size_of_limit_ptr_array );
+        SetFilterRuleString( limit_ptr_vector );
         UpdateFilter( combined_windivert_rules );
     }
     return 0;
@@ -625,13 +571,13 @@ void SetPathToConfigFile( wchar_t* config_filename ){
 
 
 
-void SetFilterRuleString( limit* limit_array[], int array_size ){
+void SetFilterRuleString( std::vector<limit*> limit_ptr_vector){
     strcpy_s( combined_windivert_rules, sizeof( combined_windivert_rules ), "(udp.DstPort < 1 and udp.DstPort > 1)" ); // set to rule that wont match anything
 
-    for ( int i = 0; i < array_size; i++ ){
-        if ( strcmp( limit_array[i]->windivert_rule, "" ) != 0 ){
-            if ( limit_array[i]->state ){
-                strcat_s( combined_windivert_rules, sizeof( combined_windivert_rules ), limit_array[i]->windivert_rule );
+    for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
+        if ( strcmp( limit_ptr_vector[i]->windivert_rule, "" ) != 0 ){
+            if ( limit_ptr_vector[i]->state ){
+                strcat_s( combined_windivert_rules, sizeof( combined_windivert_rules ), limit_ptr_vector[i]->windivert_rule );
             }
         }
     }
