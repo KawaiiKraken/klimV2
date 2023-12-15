@@ -11,7 +11,7 @@ const wchar_t* GetFilename( const wchar_t *path ){
         filename++;
     return filename;
 }
-// Function to convert a vector to Json::Value
+
 Json::Value vectorToJson(const std::vector<int>& vec) {
     Json::Value jsonVec;
 
@@ -22,7 +22,7 @@ Json::Value vectorToJson(const std::vector<int>& vec) {
     return jsonVec;
 }
 
-// Function to convert Json::Value to a vector
+
 std::vector<int> jsonToVector(const Json::Value& jsonVec) {
     std::vector<int> vec;
 
@@ -33,6 +33,7 @@ std::vector<int> jsonToVector(const Json::Value& jsonVec) {
     return vec;
 }
 
+// TODO make it overwrite the file
 void StoreConfigToJson( wchar_t* file_path, const Json::Value& config_data ){
     //if ( FileExists( file_path ) ){
         //return;
@@ -76,15 +77,13 @@ bool D2Active(){
 }
 
 
-// random TODO make hotkey system work with right and left keys
 void FormatHotkeyStatusWcString( wchar_t* wcString, int szWcString, limit* limit ){ 
-    wchar_t* wc_buffer[250];
     wcscpy_s(wcString, szWcString, L"");
     for (int i = 0; i < limit->key_list.size() - 1; i++) {
 
         int scan_code = MapVirtualKey(limit->key_list[i], 0);
         wchar_t nameBuffer[256];
-        int length = GetKeyNameText(scan_code << 16, nameBuffer, sizeof(nameBuffer) / sizeof(nameBuffer[0]));
+        GetKeyNameText(scan_code << 16, nameBuffer, sizeof(nameBuffer) / sizeof(nameBuffer[0]));
         wcscat_s(wcString, szWcString, L"+");
         wcscat_s(wcString, szWcString, nameBuffer);
     }
@@ -205,39 +204,3 @@ void ToggleBlockingLimit( limit* limit, COLORREF color_on, COLORREF color_off ){
     UpdateOverlayLine( wcstring, limit->overlay_line_number, color );
     delete []wcstring;
 }
-
-
-/*
-int GetVKCodeFromName(const wchar_t* keyName) {
-    std::wcout << "attempting to map key: " << keyName << std::endl;
-    for (int vkCode = 1; vkCode < 256; vkCode++) {
-        int scanCode = MapVirtualKey(vkCode, 0);
-
-        wchar_t nameBuffer[256];
-        int length = GetKeyNameText(scanCode << 16, nameBuffer, sizeof(nameBuffer) / sizeof(nameBuffer[0]));
-
-        //printf("comparing %ws to %ws\n", nameBuffer, keyName);
-
-        if (length && wcscmp(keyName, nameBuffer) == 0) {
-            //std::cout << "scanCode: " << scanCode << std::endl;
-            std::cout << "vkCode: " << vkCode << std::endl;
-            return vkCode;
-        }
-    }
-    return 0x0; 
-}
-*/
-
-
-/*
-void SetVarFromJson( limit* limit, std::string hotkey, std::string modkey ){
-    const char* hotkey_char_ptr = hotkey.c_str();
-    const char* modkey_char_ptr = modkey.c_str();
-    wchar_t hotkey_buffer[20];
-    wchar_t modkey_buffer[20];
-    MultiByteToWideChar( CP_UTF8, 0, hotkey_char_ptr, -1, hotkey_buffer, 20 );
-    MultiByteToWideChar( CP_UTF8, 0, modkey_char_ptr, -1, modkey_buffer, 20 );
-    limit->hotkey = GetVKCodeFromName(hotkey_buffer);
-    limit->modkey = GetVKCodeFromName(modkey_buffer);
-}
-*/

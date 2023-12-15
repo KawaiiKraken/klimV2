@@ -35,8 +35,6 @@ bool D2Active();
 bool RunningAsAdmin();
 
 Json::Value LoadConfigFileFromJson(wchar_t* filePath);
-//void SetVarFromJson(limit* limit, std::string hotkey, std::string modkey);
-//void WriteDefaultJsonConfig(wchar_t* filePath);
 bool FileExists(LPCTSTR szPath);
 const wchar_t* GetFilename(const wchar_t *path);
 
