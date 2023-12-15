@@ -22,7 +22,7 @@ struct limit {
     limit(wchar_t* n) : name(n) {}
 };
 
-static class Limit {
+class Limit {
 public:
     static void ToggleBlockingLimit( limit* limit,     COLORREF colorOn, COLORREF colorOff);
 	static void ToggleSuspend(       limit* suspend,   COLORREF colorOn, COLORREF colorOff);

@@ -15,7 +15,7 @@
 
 
 
-static class Helper {
+class Helper {
 public:
 	static bool D2Active();
 	static bool RunningAsAdmin();

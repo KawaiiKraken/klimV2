@@ -100,7 +100,7 @@ int __cdecl main( int argc, char** argv ){
 
 static void SetOverlayLineNumberOfLimits( std::vector<limit*> limit_ptr_vector){
     int current_overlay_line = 1;
-    for ( int i = 0; i < limit_ptr_vector.size() - 1; i++) {
+    for ( int i = 0; i < limit_ptr_vector.size(); i++) {
         if (limit_ptr_vector[i]->key_list[0] != undefined_key) {
 			limit_ptr_vector[i]->overlay_line_number = current_overlay_line;
 			current_overlay_line++;
@@ -117,8 +117,10 @@ void InitializeOverlay( bool use_overlay, int font_size, std::vector<limit*> lim
     // set overlay to default state
     wchar_t* wc_string = new wchar_t[200];
     for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
-        Limit::FormatHotkeyStatusWcString( wc_string, 200, limit_ptr_vector[i] );
-        UpdateOverlayLine( wc_string, limit_ptr_vector[i]->overlay_line_number, color_default );
+        if (limit_ptr_vector[i]->overlay_line_number != -1) {
+            Limit::FormatHotkeyStatusWcString(wc_string, 200, limit_ptr_vector[i]);
+            UpdateOverlayLine(wc_string, limit_ptr_vector[i]->overlay_line_number, color_default);
+        }
     }
     delete []wc_string;
 }
