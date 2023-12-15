@@ -15,6 +15,7 @@ public:
 	static void StoreConfigToJson(wchar_t* file_path, const Json::Value& config_data);
 	static Json::Value vectorToJson(const std::vector<int>& vec);
 	static std::vector<int> jsonToVector(const Json::Value& jsonVec);
+	static const wchar_t* GetFilename(const wchar_t* path);
 };
 
 #endif CONFIGFILE_H

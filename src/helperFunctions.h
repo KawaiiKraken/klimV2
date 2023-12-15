@@ -8,6 +8,9 @@
 #include "windivertFunctions.h"
 #include <vector>
 #include <mutex>
+#include "krekens_overlay.h"
+#include <iostream>
+#include "ConfigFile.h"
 
 #define undefined_key 0x0
 
@@ -31,8 +34,6 @@ struct limit {
 void FormatHotkeyStatusWcString(wchar_t* wcstring, int szWcstring, limit* limit);
 bool D2Active();
 bool RunningAsAdmin();
-
-const wchar_t* GetFilename(const wchar_t *path);
 
 void ToggleBlockingLimit( limit* limit,     COLORREF colorOn, COLORREF colorOff);
 void ToggleSuspend(       limit* suspend,   COLORREF colorOn, COLORREF colorOff);

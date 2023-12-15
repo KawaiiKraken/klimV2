@@ -66,3 +66,13 @@ std::vector<int> ConfigFile::jsonToVector(const Json::Value& jsonVec) {
     return vec;
 }
 
+const wchar_t* ConfigFile::GetFilename( const wchar_t *path ){
+    const wchar_t *filename = wcsrchr( path, '\\' );
+    if ( filename == NULL )
+        filename = path;
+    else
+        filename++;
+    return filename;
+}
+
+
