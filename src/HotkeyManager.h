@@ -6,6 +6,7 @@
 #include <chrono>
 #include <Windows.h>
 #include "helperFunctions.h"
+#include "Limit.h"
 
 class HotkeyManager {
 public:

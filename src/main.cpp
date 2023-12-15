@@ -25,9 +25,11 @@ HotkeyManager* UserInterface::hotkeyInstance = &hotkeyManager;
 char combined_windivert_rules[1000];
 int OnTriggerHotkey( limit* limit );
 wchar_t path_to_config_file[MAX_PATH];
-static void SetOverlayLineNumberOfHotkeys( std::vector<limit*> limit_ptr_vector);
+static void SetOverlayLineNumberOfLimits( std::vector<limit*> limit_ptr_vector);
 void SetFilterRuleString(std::vector<limit*> limit_ptr_vector);
 void InitializeOverlay( bool useOverlay, int fontSize, std::vector<limit*> limit_ptr_vector);
+
+
 
 
 
@@ -54,7 +56,7 @@ int __cdecl main( int argc, char** argv ){
         ShowWindow( GetConsoleWindow(), SW_HIDE );
     }
 
-    if ( !RunningAsAdmin() ){
+    if ( !Helper::RunningAsAdmin() ){
         MessageBox( NULL, ( LPCWSTR )L"ERROR: not running as admin", ( LPCWSTR )L"ERROR", MB_ICONERROR | MB_DEFBUTTON2 );
         return 0;
     }
@@ -69,7 +71,7 @@ int __cdecl main( int argc, char** argv ){
     bool use_overlay;
 	int font_size;
     ConfigFile::LoadConfig( &use_overlay, &font_size, &color_default, &color_on, &color_off, limit_ptr_vector, path_to_config_file);
-    SetOverlayLineNumberOfHotkeys( limit_ptr_vector);
+    SetOverlayLineNumberOfLimits( limit_ptr_vector);
     InitializeOverlay( use_overlay, font_size, limit_ptr_vector);
 
 
@@ -96,7 +98,7 @@ int __cdecl main( int argc, char** argv ){
 
 
 
-static void SetOverlayLineNumberOfHotkeys( std::vector<limit*> limit_ptr_vector){
+static void SetOverlayLineNumberOfLimits( std::vector<limit*> limit_ptr_vector){
     int current_overlay_line = 1;
     for ( int i = 0; i < limit_ptr_vector.size() - 1; i++) {
         if (limit_ptr_vector[i]->key_list[0] != undefined_key) {
@@ -115,7 +117,7 @@ void InitializeOverlay( bool use_overlay, int font_size, std::vector<limit*> lim
     // set overlay to default state
     wchar_t* wc_string = new wchar_t[200];
     for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
-        FormatHotkeyStatusWcString( wc_string, 200, limit_ptr_vector[i] );
+        Limit::FormatHotkeyStatusWcString( wc_string, 200, limit_ptr_vector[i] );
         UpdateOverlayLine( wc_string, limit_ptr_vector[i]->overlay_line_number, color_default );
     }
     delete []wc_string;
@@ -185,22 +187,12 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
 
 
 
-void Exitapp(){
-    std::wcout << "shutting down\n";
-    if ( !debug ){
-		ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE );
-		ShowWindow( GetConsoleWindow(), SW_RESTORE );
-		}
-	PostQuitMessage( 0 );
-}
-
-
 
 int OnTriggerHotkey( limit* limit ){
     if ( wcscmp( limit->name, L"exitapp" ) == 0 ){
-        Exitapp();
+        Helper::Exitapp(debug);
 	} 
-    if ( !( D2Active() || debug ) )
+    if ( !( Helper::D2Active() || debug ) )
     {
         printf("hotkey ignored: d2 is not the active window and debug mode is not on");
         return 1;
@@ -208,13 +200,13 @@ int OnTriggerHotkey( limit* limit ){
     if ( !limit->triggered ) {
 		limit->triggered = true;
         if ( wcscmp( limit->name, L"game" ) == 0){
-			ToggleWholeGameLimit( limit, color_on, color_off );
+			Limit::ToggleWholeGameLimit( limit, color_on, color_off );
 		} 
         else if ( wcscmp( limit->name, L"suspend") == 0 ){
-			ToggleSuspend( limit, color_on, color_off );
+			Limit::ToggleSuspend( limit, color_on, color_off );
 		} 
         else {
-			ToggleBlockingLimit( limit, color_on, color_off );
+			Limit::ToggleBlockingLimit( limit, color_on, color_off );
         }
         printf( "state of %ws: %s\n", limit->name, limit->state ? "true" : "false" );
         SetFilterRuleString( limit_ptr_vector );
@@ -254,7 +246,7 @@ DWORD WINAPI HotkeyThread( LPVOID lpParam ){
 void SetPathToConfigFile( wchar_t* config_filename ){ 
     wchar_t file_path_self[MAX_PATH], folder_path_self[MAX_PATH];
     GetModuleFileName( NULL, file_path_self, MAX_PATH );
-    wcsncpy_s( folder_path_self, MAX_PATH, file_path_self, ( wcslen( file_path_self ) - wcslen( GetFilename( file_path_self ) ) ) );
+    wcsncpy_s( folder_path_self, MAX_PATH, file_path_self, ( wcslen( file_path_self ) - wcslen( Helper::GetFilename( file_path_self ) ) ) );
     wchar_t filename[MAX_PATH], file_path[MAX_PATH];
     wcscpy_s( filename, MAX_PATH, config_filename );
     wcscpy_s( file_path, MAX_PATH, folder_path_self );

@@ -12,33 +12,16 @@
 #include "krekens_overlay.h"
 #include <iostream>
 
-#define undefined_key 0x0
 
-struct limit {
-    wchar_t* name;
-    std::vector<int> key_list = { undefined_key };
-    bool bindingComplete = true;
-    bool triggered = false;
-    bool state = false;
-    wchar_t state_name[20] = {'\0'};
-    int overlay_line_number = -1;
-    char windivert_rule[250];
-    bool updateUI = false;
-    void ToggleState() {
-        state = !state;
-        wcscpy_s(state_name, state ? (wchar_t*)L"(on)" : (wchar_t*)L"(off)");
-    }
-    limit(wchar_t* n) : name(n) {}
+
+
+static class Helper {
+public:
+	static bool D2Active();
+	static bool RunningAsAdmin();
+	static void Exitapp(bool debug);
+	static const wchar_t* GetFilename(const wchar_t* path);
 };
-
-void FormatHotkeyStatusWcString(wchar_t* wcstring, int szWcstring, limit* limit);
-bool D2Active();
-bool RunningAsAdmin();
-
-void ToggleBlockingLimit( limit* limit,     COLORREF colorOn, COLORREF colorOff);
-void ToggleSuspend(       limit* suspend,   COLORREF colorOn, COLORREF colorOff);
-void ToggleWholeGameLimit(limit* lim_game,  COLORREF colorOn, COLORREF colorOff);
-const wchar_t* GetFilename(const wchar_t* path);
 
 
 #endif HELPERFUNCTIONS_H
