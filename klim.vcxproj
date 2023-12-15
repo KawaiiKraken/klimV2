@@ -139,6 +139,7 @@
     <ClCompile Include="src\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\imgui_impl_win32.cpp" />
     <ClCompile Include="src\krekens_overlay.cpp" />
+    <ClCompile Include="src\Limit.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\UserInterface.cpp" />
     <ClCompile Include="src\windivertFunctions.cpp" />
@@ -200,6 +201,7 @@
     <ClInclude Include="src\jsoncpp_header\version.h" />
     <ClInclude Include="src\jsoncpp_header\writer.h" />
     <ClInclude Include="src\krekens_overlay.h" />
+    <ClInclude Include="src\Limit.h" />
     <ClInclude Include="src\main.h" />
     <ClInclude Include="src\UserInterface.h" />
     <ClInclude Include="src\windivertFunctions.h" />

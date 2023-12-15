@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include "Limit.h"
 
 
 class ConfigFile {

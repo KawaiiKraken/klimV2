@@ -42,6 +42,9 @@
     <ClCompile Include="src\UserInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Limit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="phnt\ntbcd.h">
@@ -222,6 +225,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\helperFunctions.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Limit.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
