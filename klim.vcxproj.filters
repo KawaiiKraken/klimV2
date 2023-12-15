@@ -140,9 +140,6 @@
     <ClInclude Include="phnt\winsta.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\helperFunctions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WinDivert\windivert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -222,6 +219,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\UserInterface.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helperFunctions.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

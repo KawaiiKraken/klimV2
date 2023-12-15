@@ -11,7 +11,7 @@ bool D2Active(){
     GetModuleFileNameEx( hProc, NULL, buffer, MAX_PATH );
     CloseHandle( hProc );
 
-    const wchar_t* filename = ConfigFile::GetFilename( buffer );
+    const wchar_t* filename = GetFilename( buffer );
     printf( "active window filename: %ls\n", filename );
 
     if ( wcscmp( filename, L"destiny2.exe" ) == 0 ){
@@ -123,3 +123,14 @@ void ToggleBlockingLimit( limit* limit, COLORREF color_on, COLORREF color_off ){
     UpdateOverlayLine( wcstring, limit->overlay_line_number, color );
     delete []wcstring;
 }
+
+const wchar_t* GetFilename( const wchar_t *path ){
+    const wchar_t *filename = wcsrchr( path, '\\' );
+    if ( filename == NULL )
+        filename = path;
+    else
+        filename++;
+    return filename;
+}
+
+
