@@ -1,4 +1,3 @@
-// for some reason the .h file path would never resolve for this file, hopefully i can split it after some vs update
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_win32.h"
