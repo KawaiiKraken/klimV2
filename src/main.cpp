@@ -25,7 +25,6 @@ HotkeyManager* UserInterface::hotkeyInstance = &hotkeyManager;
 char combined_windivert_rules[1000];
 int OnTriggerHotkey( limit* limit );
 wchar_t path_to_config_file[MAX_PATH];
-void LoadConfig( bool* useOverlay, int* fontSize, std::vector<limit*> limit_ptr_vector);
 static void SetOverlayLineNumberOfHotkeys( std::vector<limit*> limit_ptr_vector);
 void SetFilterRuleString(std::vector<limit*> limit_ptr_vector);
 void InitializeOverlay( bool useOverlay, int fontSize, std::vector<limit*> limit_ptr_vector);
@@ -33,31 +32,6 @@ void InitializeOverlay( bool useOverlay, int fontSize, std::vector<limit*> limit
 
 // TODO make exitapp work when d2 is not the active window
 
-
-void WriteConfig() {
-    Json::Value config;
-
-	char char_buffer[250];
-    for (int i = 0; i < limit_ptr_vector.size(); i++) {
-        if (limit_ptr_vector[i]->key_list[0] == 0x0) {
-            continue;
-        }
-		size_t size;
-		wcstombs_s(&size, char_buffer, limit_ptr_vector[i]->name, 50);
-        strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
-
-        config[char_buffer] = ConfigFile::vectorToJson(limit_ptr_vector[i]->key_list);
-    }
-
-    // random defaults for now
-    config["use_overlay"] = true;
-    config["font_size"] = 30;
-    config["color_default"] = "0x00FFFFFF";
-    config["color_on"] = "0x000000FF";
-    config["color_off"] = "0x00FFFFFF";
-
-    ConfigFile::StoreConfigToJson(path_to_config_file, config);
-}
 
 
 int __cdecl main( int argc, char** argv ){
@@ -92,12 +66,12 @@ int __cdecl main( int argc, char** argv ){
     SetPathToConfigFile( ( wchar_t* )L"config.txt" );
     if ( !ConfigFile::FileExists( path_to_config_file ) ){
         userInterface.run_gui();
-        WriteConfig();
+        ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file);
     }
 
     bool use_overlay;
 	int font_size;
-    LoadConfig( &use_overlay, &font_size, limit_ptr_vector);
+    ConfigFile::LoadConfig( &use_overlay, &font_size, &color_default, &color_on, &color_off, limit_ptr_vector, path_to_config_file);
     SetOverlayLineNumberOfHotkeys( limit_ptr_vector);
     InitializeOverlay( use_overlay, font_size, limit_ptr_vector);
 
@@ -111,7 +85,9 @@ int __cdecl main( int argc, char** argv ){
         return WaitForSingleObject( hHotkeyThread, INFINITE );
     }
     else {
-        CloseHandle( hHotkeyThread );
+        if (hHotkeyThread != 0) {
+            CloseHandle( hHotkeyThread );
+        }
 		FreeLibrary( hDLL );
         return 1;
     }
@@ -133,30 +109,6 @@ static void SetOverlayLineNumberOfHotkeys( std::vector<limit*> limit_ptr_vector)
     }
 }
 
-
-
-void LoadConfig( bool* use_overlay, int* font_size, std::vector<limit*> limit_ptr_vector){
-    // Load the config from the JSON file
-    Json::Value loaded_config = ConfigFile::LoadConfigFileFromJson( path_to_config_file );
-	char char_buffer[250];
-    for (int i = 0; i < limit_ptr_vector.size(); i++) {
-		size_t size;
-		wcstombs_s(&size, char_buffer, limit_ptr_vector[i]->name, 50);
-        strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
-
-        limit_ptr_vector[i]->key_list = ConfigFile::jsonToVector(loaded_config[char_buffer]);
-        if (limit_ptr_vector[i]->key_list.size() == 0) {
-            limit_ptr_vector[i]->key_list.push_back(undefined_key);
-        }
-    }
-
-    color_default = stol( loaded_config["color_default"].asString(), NULL, 16 );
-    color_on      = stol( loaded_config["color_on"].asString(),      NULL, 16 );
-    color_off     = stol( loaded_config["color_off"].asString(),     NULL, 16 );
-
-    *use_overlay  = loaded_config["use_overlay"].asBool();
-    *font_size    = loaded_config["font_size"].asInt();
-}
 
 
 
@@ -305,7 +257,7 @@ DWORD WINAPI HotkeyThread( LPVOID lpParam ){
 void SetPathToConfigFile( wchar_t* config_filename ){ 
     wchar_t file_path_self[MAX_PATH], folder_path_self[MAX_PATH];
     GetModuleFileName( NULL, file_path_self, MAX_PATH );
-    wcsncpy_s( folder_path_self, MAX_PATH, file_path_self, ( wcslen( file_path_self ) - wcslen( ConfigFile::GetFilename( file_path_self ) ) ) );
+    wcsncpy_s( folder_path_self, MAX_PATH, file_path_self, ( wcslen( file_path_self ) - wcslen( GetFilename( file_path_self ) ) ) );
     wchar_t filename[MAX_PATH], file_path[MAX_PATH];
     wcscpy_s( filename, MAX_PATH, config_filename );
     wcscpy_s( file_path, MAX_PATH, folder_path_self );

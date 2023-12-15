@@ -11,7 +11,6 @@
 #include <mutex>
 #include "krekens_overlay.h"
 #include <iostream>
-#include "ConfigFile.h"
 
 #define undefined_key 0x0
 
@@ -39,5 +38,7 @@ bool RunningAsAdmin();
 void ToggleBlockingLimit( limit* limit,     COLORREF colorOn, COLORREF colorOff);
 void ToggleSuspend(       limit* suspend,   COLORREF colorOn, COLORREF colorOff);
 void ToggleWholeGameLimit(limit* lim_game,  COLORREF colorOn, COLORREF colorOff);
+const wchar_t* GetFilename(const wchar_t* path);
+
 
 #endif HELPERFUNCTIONS_H
