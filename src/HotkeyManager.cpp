@@ -4,11 +4,11 @@ HotkeyManager::HotkeyManager(std::vector<limit*> _limit_ptr_vector)
 }
 void HotkeyManager::asyncBindHotkey(int i) {
     _cur_line = i;
-    if (_limit_ptr_vector[i]->bindingComplete == false) {
+    if (_limit_ptr_vector[_cur_line]->bindingComplete == false) {
         MessageBox(NULL, (wchar_t*)L"error hotkey is already being bound...", NULL, MB_OK);
 	    return;
     }
-    _limit_ptr_vector[i]->bindingComplete = false;
+    _limit_ptr_vector[_cur_line]->bindingComplete = false;
 
     _currentHotkeyList.clear();
 

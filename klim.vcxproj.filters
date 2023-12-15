@@ -39,6 +39,9 @@
     <ClCompile Include="src\HotkeyManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\UserInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="phnt\ntbcd.h">
@@ -216,6 +219,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\HotkeyManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UserInterface.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

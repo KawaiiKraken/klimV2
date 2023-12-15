@@ -31,6 +31,10 @@
 #include <chrono>
 #include <condition_variable>
 #include "HotkeyManager.h"
+#include "UserInterface.h"
+#include "imgui.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_win32.h"
 
 #pragma comment( lib, "ntdll.lib" )
 
