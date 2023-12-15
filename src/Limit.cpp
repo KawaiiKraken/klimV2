@@ -50,15 +50,18 @@ void Limit::ToggleSuspend( limit* suspend, COLORREF color_on, COLORREF color_off
 }
 
 
-// TODO fix this function
 void Limit::FormatHotkeyStatusWcString( wchar_t* wcString, int szWcString, limit* limit ){ 
+    if (limit->key_list[0] == undefined_key) {
+        return;
+    }
+    wchar_t nameBuffer[256];
     wcscpy_s(wcString, szWcString, L"");
-    for (int i = 0; i < limit->key_list.size() - 1; i++) {
-
+    for (int i = 0; i < limit->key_list.size(); i++) {
+        if (wcscmp(wcString, L"") != 0) {
+            wcscat_s(wcString, szWcString, L"+");
+        }
         int scan_code = MapVirtualKey(limit->key_list[i], 0);
-        wchar_t nameBuffer[256];
         GetKeyNameText(scan_code << 16, nameBuffer, sizeof(nameBuffer) / sizeof(nameBuffer[0]));
-        wcscat_s(wcString, szWcString, L"+");
         wcscat_s(wcString, szWcString, nameBuffer);
     }
     wcscat_s(wcString, szWcString, L" to ");
