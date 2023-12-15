@@ -30,6 +30,7 @@
 #include <future>
 #include <chrono>
 #include <condition_variable>
+#include "HotkeyManager.h"
 
 #pragma comment( lib, "ntdll.lib" )
 
