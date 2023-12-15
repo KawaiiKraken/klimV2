@@ -1,17 +1,4 @@
 #include "helperFunctions.h"
-#include "krekens_overlay.h"
-#include <iostream>
-
-const wchar_t* GetFilename( const wchar_t *path ){
-    const wchar_t *filename = wcsrchr( path, '\\' );
-    if ( filename == NULL )
-        filename = path;
-    else
-        filename++;
-    return filename;
-}
-
-
 
 
 bool D2Active(){
@@ -24,7 +11,7 @@ bool D2Active(){
     GetModuleFileNameEx( hProc, NULL, buffer, MAX_PATH );
     CloseHandle( hProc );
 
-    const wchar_t* filename = GetFilename( buffer );
+    const wchar_t* filename = ConfigFile::GetFilename( buffer );
     printf( "active window filename: %ls\n", filename );
 
     if ( wcscmp( filename, L"destiny2.exe" ) == 0 ){
