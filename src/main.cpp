@@ -30,9 +30,6 @@ void SetFilterRuleString(std::vector<limit*> limit_ptr_vector);
 void InitializeOverlay( bool useOverlay, int fontSize, std::vector<limit*> limit_ptr_vector);
 
 
-// TODO make exitapp work when d2 is not the active window
-
-
 
 int __cdecl main( int argc, char** argv ){
     
@@ -200,6 +197,9 @@ void Exitapp(){
 
 
 int OnTriggerHotkey( limit* limit ){
+    if ( wcscmp( limit->name, L"exitapp" ) == 0 ){
+        Exitapp();
+	} 
     if ( !( D2Active() || debug ) )
     {
         printf("hotkey ignored: d2 is not the active window and debug mode is not on");
@@ -207,10 +207,7 @@ int OnTriggerHotkey( limit* limit ){
     }
     if ( !limit->triggered ) {
 		limit->triggered = true;
-		if ( wcscmp( limit->name, L"exitapp" ) == 0 ){
-            Exitapp();
-		} 
-        else if ( wcscmp( limit->name, L"game" ) == 0){
+        if ( wcscmp( limit->name, L"game" ) == 0){
 			ToggleWholeGameLimit( limit, color_on, color_off );
 		} 
         else if ( wcscmp( limit->name, L"suspend") == 0 ){
