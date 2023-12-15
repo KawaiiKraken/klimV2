@@ -1,21 +1,4 @@
 #include "main.h"
-#include "helperFunctions.h"
-#include "krekens_overlay.h"
-#include "imgui.h"
-#include "imgui_impl_opengl3.h"
-#include "imgui_impl_win32.h"
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-#include <GL/GL.h>
-#include <tchar.h>
-#include <iostream>
-#include <vector>
-#include <future>
-#include <chrono>
-#include <condition_variable>
-
 std::vector<int> currently_pressed_keys;
 
 std::mutex mutex;
@@ -306,7 +289,7 @@ void WriteConfig() {
 		wcstombs_s(&size, char_buffer, limit_ptr_array[i]->name, 50);
         strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
 
-        config[char_buffer] = vectorToJson(limit_ptr_array[i]->key_list);
+        config[char_buffer] = ConfigFile::vectorToJson(limit_ptr_array[i]->key_list);
     }
 
     // random defaults for now
@@ -316,7 +299,7 @@ void WriteConfig() {
     config["color_on"] = "0x000000FF";
     config["color_off"] = "0x00FFFFFF";
 
-    StoreConfigToJson(path_to_config_file, config);
+    ConfigFile::StoreConfigToJson(path_to_config_file, config);
 }
 
 
@@ -350,7 +333,7 @@ int __cdecl main( int argc, char** argv ){
 
     
     SetPathToConfigFile( ( wchar_t* )L"config.txt" );
-    if ( !FileExists( path_to_config_file ) ){
+    if ( !ConfigFile::FileExists( path_to_config_file ) ){
         run_gui();
         WriteConfig();
     }
@@ -464,14 +447,14 @@ static void SetOverlayLineNumberOfHotkeys( limit* limit_ptr_array[], int size_of
 
 void LoadConfig( bool* use_overlay, int* font_size, limit* limit_ptr_array[], int size_of_limit_ptr_array ){
     // Load the config from the JSON file
-    Json::Value loaded_config = LoadConfigFileFromJson( path_to_config_file );
+    Json::Value loaded_config = ConfigFile::LoadConfigFileFromJson( path_to_config_file );
 	char char_buffer[250];
     for (int i = 0; i < size_of_limit_ptr_array; i++) {
 		size_t size;
 		wcstombs_s(&size, char_buffer, limit_ptr_array[i]->name, 50);
         strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
 
-        limit_ptr_array[i]->key_list = jsonToVector(loaded_config[char_buffer]);
+        limit_ptr_array[i]->key_list = ConfigFile::jsonToVector(loaded_config[char_buffer]);
         if (limit_ptr_array[i]->key_list.size() == 0) {
             limit_ptr_array[i]->key_list.push_back(undefined_key);
         }

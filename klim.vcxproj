@@ -103,7 +103,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -133,6 +133,7 @@
     <Manifest />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ConfigFile.cpp" />
     <ClCompile Include="src\helperFunctions.cpp" />
     <ClCompile Include="src\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\imgui_impl_win32.cpp" />
@@ -183,6 +184,7 @@
     <ClInclude Include="phnt\phnt_windows.h" />
     <ClInclude Include="phnt\subprocesstag.h" />
     <ClInclude Include="phnt\winsta.h" />
+    <ClInclude Include="src\ConfigFile.h" />
     <ClInclude Include="src\helperFunctions.h" />
     <ClInclude Include="src\jsoncpp_header\allocator.h" />
     <ClInclude Include="src\jsoncpp_header\assertions.h" />
