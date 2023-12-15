@@ -1,4 +1,3 @@
-// TODO comments
 #include "main.h"
 #include "helperFunctions.h"
 #include "krekens_overlay.h"
@@ -52,20 +51,19 @@ typedef void (*KeyboardEventCallback)(int, bool);
 class HotkeyManager {
 public:
     void asyncBindHotkey(int i) {
-        // TODO fix limit being unreadable due to access violation
         while (!mutex.try_lock()) {
             Sleep(1);
         }
         _cur_line = i;
         if (limit_ptr_array[i]->bindingComplete == false) {
             MessageBox(NULL, (wchar_t*)L"error hotkey is already being bound...", NULL, MB_OK);
+            mutex.unlock();
 	        return;
         }
         limit_ptr_array[i]->bindingComplete = false;
 
         _currentHotkeyList.clear();
 
-        //while (limit_ptr_array[i]->bindingComplete == false) {
         done = false;
         while (done == false) {
             Sleep(10);
@@ -86,7 +84,6 @@ public:
 			{
 				std::cout << "Key Down: " << key << std::endl;
 				auto it = std::find(_currentHotkeyList.begin(), _currentHotkeyList.end(), key);
-				//if (it == _currentHotkeyList.end() && limit_ptr_array[_cur_line]->bindingComplete == false) {
 				if (it == _currentHotkeyList.end()) {
 				    _currentHotkeyList.push_back(key);
 				}
@@ -95,7 +92,6 @@ public:
 				std::cout << "Key Up: " << key << std::endl;
 				auto it = std::find(_currentHotkeyList.begin(), _currentHotkeyList.end(), key);
 				limit_ptr_array[_cur_line]->key_list = _currentHotkeyList;
-				//limit_ptr_array[_cur_line]->bindingComplete = true;
                 done = true;
 			}
         }
@@ -176,7 +172,6 @@ int run_gui(){
     //IM_ASSERT(font != NULL);
 
     // Our state
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // Main loop
@@ -302,8 +297,6 @@ int run_gui(){
 void WriteConfig() {
     Json::Value config;
 
-    wchar_t buffer[250];
-    wchar_t buffer2[250];
 	char char_buffer[250];
     for (int i = 0; i < size_of_limit_ptr_array; i++) {
         if (limit_ptr_array[i]->key_list[0] == 0x0) {
@@ -313,7 +306,6 @@ void WriteConfig() {
 		wcstombs_s(&size, char_buffer, limit_ptr_array[i]->name, 50);
         strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
 
-        wchar_t keyName[256];
         config[char_buffer] = vectorToJson(limit_ptr_array[i]->key_list);
     }
 
@@ -361,7 +353,6 @@ int __cdecl main( int argc, char** argv ){
     if ( !FileExists( path_to_config_file ) ){
         run_gui();
         WriteConfig();
-        //WriteDefaultJsonConfig( path_to_config_file );
     }
 
     bool use_overlay;
@@ -373,21 +364,17 @@ int __cdecl main( int argc, char** argv ){
 
     printf( "starting hotkey thread\n" );
 
-    // TODO remove dwThread
     DWORD dwThread;
     hHotkeyThread = CreateThread( NULL, NULL, ( LPTHREAD_START_ROUTINE )HotkeyThread, ( LPVOID )NULL, NULL, &dwThread );
 
     if ( hHotkeyThread ){
         return WaitForSingleObject( hHotkeyThread, INFINITE );
-    wchar_t buffer[250];
-    wchar_t buffer2[250];
-	char char_buffer[250];
     }
     else {
+        CloseHandle( hHotkeyThread );
+		FreeLibrary( hDLL );
         return 1;
     }
-    CloseHandle( hHotkeyThread );
-    FreeLibrary( hDLL );
     return 0;
 }
 
@@ -478,9 +465,6 @@ static void SetOverlayLineNumberOfHotkeys( limit* limit_ptr_array[], int size_of
 void LoadConfig( bool* use_overlay, int* font_size, limit* limit_ptr_array[], int size_of_limit_ptr_array ){
     // Load the config from the JSON file
     Json::Value loaded_config = LoadConfigFileFromJson( path_to_config_file );
-    // this could definitely be done programmatically but i think that would be more effort than its worth
-    wchar_t buffer[250];
-    wchar_t buffer2[250];
 	char char_buffer[250];
     for (int i = 0; i < size_of_limit_ptr_array; i++) {
 		size_t size;
@@ -549,7 +533,6 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
     {
         KBDLLHOOKSTRUCT hooked_key =  *( ( KBDLLHOOKSTRUCT* )lParam );
 
-        //int key = hooked_key.vkCode;
         int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
         std::cout << "key recv: " << key << std::endl;
 
@@ -568,9 +551,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         KBDLLHOOKSTRUCT hooked_key = *( ( KBDLLHOOKSTRUCT* ) lParam );
 
         int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
-        //int key = hooked_key.vkCode;
 
-        //HotkeySetKeyDownState( key );
 		auto it = std::find(currently_pressed_keys.begin(), currently_pressed_keys.end(), key);
         if (it == currently_pressed_keys.end()) {
             currently_pressed_keys.push_back(key);
