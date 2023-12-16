@@ -79,11 +79,8 @@ Json::Value ConfigFile::LoadConfigFileFromJson( wchar_t* filepath ){
 
 // TODO make it overwrite the file
 void ConfigFile::StoreConfigToJson(wchar_t* file_path, const Json::Value& config_data) {
-    //if ( FileExists( file_path ) ){
-        //return;
-    //}
     printf( "creating new config file\n" );
-    HANDLE hFile = CreateFileW( ( LPCTSTR )file_path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
+    HANDLE hFile = CreateFileW( ( LPCTSTR )file_path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
 
     if ( hFile == INVALID_HANDLE_VALUE ){
         printf( "Error opening file for writing" );
@@ -92,7 +89,7 @@ void ConfigFile::StoreConfigToJson(wchar_t* file_path, const Json::Value& config
 
     std::string json_data = config_data.toStyledString();
 
-    printf("setting config to default\n");
+    printf("writing config\n");
     DWORD bytes_written;
     WriteFile( hFile, json_data.c_str(), static_cast<DWORD>( json_data.length() ), &bytes_written, NULL );
 
