@@ -114,7 +114,7 @@ void Helper::InitializeOverlay( bool use_overlay, int font_size, COLORREF color_
     delete []wc_string;
 }
 
-int Helper::OnTriggerHotkey( limit* limit, bool debug, COLORREF color_on, COLORREF color_off, std::vector<struct limit*> limit_ptr_vector, char combined_windivert_rules[1000]) {
+int Helper::OnTriggerHotkey( limit* limit, bool debug, COLORREF color_on, COLORREF color_off, std::vector<struct limit*> limit_ptr_vector, char* combined_windivert_rules) {
     if ( wcscmp( limit->name, L"exitapp" ) == 0 ){
         Helper::Exitapp(debug);
 	} 
@@ -135,7 +135,7 @@ int Helper::OnTriggerHotkey( limit* limit, bool debug, COLORREF color_on, COLORR
 			Limit::ToggleBlockingLimit( limit, color_on, color_off );
         }
         printf( "state of %ws: %s\n", limit->name, limit->state ? "true" : "false" );
-        SetFilterRuleString( limit_ptr_vector, &combined_windivert_rules );
+        SetFilterRuleString( limit_ptr_vector, combined_windivert_rules );
         UpdateFilter( combined_windivert_rules );
     }
     return 0;
