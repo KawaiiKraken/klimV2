@@ -72,6 +72,8 @@ Json::Value ConfigFile::LoadConfigFileFromJson( wchar_t* filepath ){
         config_file.close();
     } else {
         std::cerr << "Error opening file for reading" << std::endl;
+        MessageBoxA(NULL, "Save a hotkey first", NULL, MB_OK);
+        PostQuitMessage(0);
     }
 
     return json_data;
