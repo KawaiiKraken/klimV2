@@ -77,7 +77,7 @@ int UserInterface::run_gui(){
     std::vector<std::string> String;
     const char* in_progress = "in progress..";
     for (int i = 0; i < (limit_ptr_vector.size()); i++) {
-        String.push_back("not set");
+        String.push_back("blank");
     }
     while (!done)
     {
@@ -116,7 +116,7 @@ int UserInterface::run_gui(){
             {
                 for (int i = 0; i < limit_ptr_vector.size(); i++) {
                     ImGui::PushID(i);
-                    if (ImGui::Button("Click to bind")) {
+                    if (ImGui::Button("Bind")) {
                         if (String[i] != in_progress) {
 						        button_clicked[i] = true;
                                 std::cout << "button " << i << " clicked [callback]" << std::endl;
@@ -124,12 +124,23 @@ int UserInterface::run_gui(){
                     }
 
                     ImGui::SameLine();
+
+                    if (ImGui::Button("Reset")) {
+                        String[i] = "blank";
+                        hotkeyInstance->done = true;
+                        limit_ptr_vector[i]->key_list = { undefined_key };
+                        limit_ptr_vector[i]->bindingComplete = true;
+                        limit_ptr_vector[i]->updateUI = true;
+                    }
+
+                    ImGui::SameLine();
 					char name[50];
 					size_t size;
 					wcstombs_s(&size, name, limit_ptr_vector[i]->name, 50);
-					ImGui::Text(name);               // Display some text (you can use a format strings too)
+					ImGui::Text("%s ", name);               // Display some text (you can use a format strings too)
 					ImGui::SameLine();
-					ImGui::Text("bind: %s", String[i].data());               // Display some text (you can use a format strings too)
+                    ImGui::SetCursorPosX(160);
+					ImGui::Text("[%s]", String[i].data());               // Display some text (you can use a format strings too)
                     ImGui::PopID();
                 }
             }
