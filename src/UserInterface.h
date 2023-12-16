@@ -1,4 +1,3 @@
-// for some reason the .h file path would never resolve for this file, hopefully i can split it after some vs update
 #ifndef USERINTERFACE_H
 #define USERINTERFACE_H
 #include "imgui.h"

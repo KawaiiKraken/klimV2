@@ -7,12 +7,25 @@
 #include <algorithm>
 #include <iomanip>
 #include <winsock.h>
+#include "Limit.h"
 
 INT16 priority = 1000;
 const char *err_str;
 HANDLE hWindivert = NULL;
 HANDLE hThread2 = NULL;
 
+void SetFilterRuleString( std::vector<limit*> limit_ptr_vector, char* combined_windivert_rules[1000]) {
+    strcpy_s( *combined_windivert_rules, sizeof( *combined_windivert_rules ), "(udp.DstPort < 1 and udp.DstPort > 1)" ); // set to rule that wont match anything
+
+    for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
+        if ( strcmp( limit_ptr_vector[i]->windivert_rule, "" ) != 0 ){
+            if ( limit_ptr_vector[i]->state ){
+                strcat_s( *combined_windivert_rules, sizeof( *combined_windivert_rules ), limit_ptr_vector[i]->windivert_rule );
+            }
+        }
+    }
+    printf( "filter: %s\n", *combined_windivert_rules );
+}
 
 
 void UpdateFilter( char* ptrCombinedWindivertRules ){

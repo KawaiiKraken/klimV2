@@ -1,5 +1,6 @@
 #ifndef CONFIGFILE_H
 #define CONFIGFILE_H
+#pragma once
 
 #include "helperFunctions.h"
 #include <windows.h>
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <vector>
 #include "Limit.h"
+#include "jsoncpp_header/json.h"
 
 
 class ConfigFile {
