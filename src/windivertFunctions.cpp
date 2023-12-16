@@ -61,6 +61,9 @@ unsigned long WindivertFilterThread( LPVOID lpParam ){
     unsigned char packet[MAXBUF];
     UINT packet_len = 1500;
     WINDIVERT_ADDRESS send_addr;
+    UINT recv_len;
+    UINT addr_len = sizeof(WINDIVERT_ADDRESS);
+    WINDIVERT_ADDRESS recv_addr;
     PWINDIVERT_TCPHDR tcp_header;
     PWINDIVERT_UDPHDR udp_header;
     UINT payload_len;
@@ -71,7 +74,7 @@ unsigned long WindivertFilterThread( LPVOID lpParam ){
     // Main loop:
     while ( TRUE ){ 
         // Read a matching packet.
-        if (!WinDivertRecvEx(hWindivert, packet, sizeof(packet), 0, 0, 0, 0, 0)) {
+        if (!WinDivertRecvEx(hWindivert, packet, sizeof(packet), &recv_len, 0, &recv_addr, &addr_len, 0)) {
             continue;
         }
        
@@ -124,6 +127,14 @@ unsigned long WindivertFilterThread( LPVOID lpParam ){
                 ntohs(udp_header->SrcPort), ntohs(udp_header->DstPort));
         }
         putchar( '\n' );
+        if ( tcp_header != NULL && ntohs( tcp_header->SrcPort ) == 7500 && !tcp_header->Fin && !tcp_header->Psh ){
+            if ( !WinDivertSendEx( hWindivert, packet, recv_len, NULL, 0, &recv_addr, addr_len, NULL ) ){
+		        fprintf( stderr, "\nwarning: failed to reinject packet (%d)", GetLastError() );
+			}
+			else {
+				printf( "\nreinjected ack packet" );
+			}
+        }
     }
 }
 
