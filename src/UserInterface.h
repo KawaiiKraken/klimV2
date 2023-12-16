@@ -14,7 +14,7 @@
 
 class UserInterface {
 public:
-    UserInterface(std::vector<limit*> limit_ptr_vector); 
+    UserInterface(std::vector<limit*> limit_ptr_vector, wchar_t* path_to_config_file); 
     int run_gui();
     static UserInterface* instance;
     static HotkeyManager* hotkeyInstance;
@@ -33,6 +33,7 @@ private:
 	bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
 	void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
 	void ResetDeviceWGL();
+    wchar_t* path_to_config_file;
 };
 
 

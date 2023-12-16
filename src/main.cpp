@@ -17,13 +17,14 @@ std::vector<limit*> limit_ptr_vector = { &lim_3074, &lim_3074_ul, &lim_27k, &lim
 typedef void (*KeyboardEventCallback)(int, bool);
 std::vector<int> currently_pressed_keys;
 
+char combined_windivert_rules[1000];
+wchar_t path_to_config_file[MAX_PATH];
+
 HotkeyManager hotkeyManager(limit_ptr_vector);
-UserInterface userInterface(limit_ptr_vector);
+UserInterface userInterface(limit_ptr_vector, path_to_config_file);
 UserInterface* UserInterface::instance = &userInterface;
 HotkeyManager* UserInterface::hotkeyInstance = &hotkeyManager;
 
-char combined_windivert_rules[1000];
-wchar_t path_to_config_file[MAX_PATH];
 
 
 int __cdecl main( int argc, char** argv ){
@@ -55,7 +56,6 @@ int __cdecl main( int argc, char** argv ){
     
     ConfigFile::SetPathToConfigFile( ( wchar_t* )L"config.txt", path_to_config_file);
     userInterface.run_gui();
-    ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file);
 
     bool use_overlay;
 	int font_size;
