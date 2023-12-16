@@ -119,3 +119,14 @@ std::vector<int> ConfigFile::jsonToVector(const Json::Value& jsonVec) {
     return vec;
 }
 
+
+void ConfigFile::SetPathToConfigFile( wchar_t* config_filename, wchar_t* path_to_config_file) {
+    wchar_t file_path_self[MAX_PATH], folder_path_self[MAX_PATH];
+    GetModuleFileName( NULL, file_path_self, MAX_PATH );
+    wcsncpy_s( folder_path_self, MAX_PATH, file_path_self, ( wcslen( file_path_self ) - wcslen( Helper::GetFilename( file_path_self ) ) ) );
+    wchar_t filename[MAX_PATH], file_path[MAX_PATH];
+    wcscpy_s( filename, MAX_PATH, config_filename );
+    wcscpy_s( file_path, MAX_PATH, folder_path_self );
+    wcscat_s( file_path, MAX_PATH, filename );
+    wcsncpy_s( path_to_config_file, MAX_PATH, file_path, MAX_PATH );
+}

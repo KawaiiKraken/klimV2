@@ -28,7 +28,7 @@ public:
 	static void SetOverlayLineNumberOfLimits(std::vector<limit*> limit_ptr_vector);
 	static void InitializeOverlay(bool use_overlay, int font_size, COLORREF color_default, std::vector<limit*> limit_ptr_vector);
 private:
-	static int OnTriggerHotkey(limit* limit, bool debug, COLORREF color_on, COLORREF color_off, std::vector<struct limit*> limit_ptr_vector, char combined_windivert_rules[1000]);
+	static int OnTriggerHotkey(limit* limit, bool debug, COLORREF color_on, COLORREF color_off, std::vector<struct limit*> limit_ptr_vector, char* combined_windivert_rules);
 };
 
 
