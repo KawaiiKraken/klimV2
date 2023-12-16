@@ -2,6 +2,7 @@
 #define LIMIT_H
 #include <windows.h>
 #include "helperFunctions.h"
+#include <vector>
 
 #define undefined_key 0x0
 

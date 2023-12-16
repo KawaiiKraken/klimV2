@@ -1,5 +1,9 @@
+#ifndef WINDIVERTFUNCTIONS_H
+#define WINDIVERTFUNCTIONS_H
+
 #include "../WinDivert/windivert.h"
 #include <iostream>
+#include <vector>
 
 #define ntohs(x)            WinDivertHelperNtohs(x)
 #define ntohl(x)            WinDivertHelperNtohl(x)
@@ -10,7 +14,10 @@
 #define INET6_ADDRSTRLEN    45
 #define IPPROTO_ICMPV6      58
 
+struct limit; // forward declaration
 
-// actual functions
 unsigned long WindivertFilterThread( LPVOID lpParam );
 void UpdateFilter( char* myNetRules );
+void SetFilterRuleString(std::vector<limit*> limit_ptr_vector, char* combined_windivert_rules[1000]);
+
+#endif WINDIVERTFUNCTIONS_H

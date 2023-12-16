@@ -1,8 +1,8 @@
 #include "main.h"
-std::vector<int> currently_pressed_keys;
 
 std::mutex mutex;
 std::mutex* mutex_ptr = &mutex;
+
 limit lim_3074(    ( wchar_t* )L"3074" ); 
 limit lim_3074_ul( ( wchar_t* )L"3074UL" );
 limit lim_27k(     ( wchar_t* )L"27k" ); 
@@ -15,26 +15,18 @@ limit exitapp(     ( wchar_t* )L"exitapp" );
 std::vector<limit*> limit_ptr_vector = { &lim_3074, &lim_3074_ul, &lim_27k, &lim_27k_ul, &lim_30k, &lim_7k, &lim_game, &suspend, &exitapp };
 
 typedef void (*KeyboardEventCallback)(int, bool);
+std::vector<int> currently_pressed_keys;
 
 HotkeyManager hotkeyManager(limit_ptr_vector);
 UserInterface userInterface(limit_ptr_vector);
 UserInterface* UserInterface::instance = &userInterface;
 HotkeyManager* UserInterface::hotkeyInstance = &hotkeyManager;
 
-
 char combined_windivert_rules[1000];
-int OnTriggerHotkey( limit* limit );
 wchar_t path_to_config_file[MAX_PATH];
-static void SetOverlayLineNumberOfLimits( std::vector<limit*> limit_ptr_vector);
-void SetFilterRuleString(std::vector<limit*> limit_ptr_vector);
-void InitializeOverlay( bool useOverlay, int fontSize, std::vector<limit*> limit_ptr_vector);
-
-
-
 
 
 int __cdecl main( int argc, char** argv ){
-    
     strcpy_s( lim_3074.windivert_rule,    sizeof( lim_3074.windivert_rule ),    " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)" ); 
 	strcpy_s( lim_3074_ul.windivert_rule, sizeof( lim_3074_ul.windivert_rule ), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
 	strcpy_s( lim_27k.windivert_rule,     sizeof( lim_27k.windivert_rule ),     " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)" ); 
@@ -60,7 +52,6 @@ int __cdecl main( int argc, char** argv ){
         MessageBox( NULL, ( LPCWSTR )L"ERROR: not running as admin", ( LPCWSTR )L"ERROR", MB_ICONERROR | MB_DEFBUTTON2 );
         return 0;
     }
-
     
     SetPathToConfigFile( ( wchar_t* )L"config.txt" );
     if ( !ConfigFile::FileExists( path_to_config_file ) ){
@@ -71,9 +62,8 @@ int __cdecl main( int argc, char** argv ){
     bool use_overlay;
 	int font_size;
     ConfigFile::LoadConfig( &use_overlay, &font_size, &color_default, &color_on, &color_off, limit_ptr_vector, path_to_config_file);
-    SetOverlayLineNumberOfLimits( limit_ptr_vector);
-    InitializeOverlay( use_overlay, font_size, limit_ptr_vector);
-
+    Helper::SetOverlayLineNumberOfLimits( limit_ptr_vector);
+    Helper::InitializeOverlay( use_overlay, font_size, color_default, limit_ptr_vector);
 
     printf( "starting hotkey thread\n" );
 
@@ -94,66 +84,6 @@ int __cdecl main( int argc, char** argv ){
 }
 
 
-
-
-
-
-static void SetOverlayLineNumberOfLimits( std::vector<limit*> limit_ptr_vector){
-    int current_overlay_line = 1;
-    for ( int i = 0; i < limit_ptr_vector.size(); i++) {
-        if (limit_ptr_vector[i]->key_list[0] != undefined_key) {
-			limit_ptr_vector[i]->overlay_line_number = current_overlay_line;
-			current_overlay_line++;
-		}
-    }
-}
-
-
-
-
-void InitializeOverlay( bool use_overlay, int font_size, std::vector<limit*> limit_ptr_vector){
-    startOverlay( use_overlay, font_size );
-
-    // set overlay to default state
-    wchar_t* wc_string = new wchar_t[200];
-    for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
-        if (limit_ptr_vector[i]->overlay_line_number != -1) {
-            Limit::FormatHotkeyStatusWcString(wc_string, 200, limit_ptr_vector[i]);
-            UpdateOverlayLine(wc_string, limit_ptr_vector[i]->overlay_line_number, color_default);
-        }
-    }
-    delete []wc_string;
-}
-
-
-void UnTriggerHotkeys( std::vector<limit*> limit_ptr_vector) {
-    for (int i = 0; i < limit_ptr_vector.size(); i++) {
-        // Sort both vectors
-        std::sort(limit_ptr_vector[i]->key_list.begin(), limit_ptr_vector[i]->key_list.end());
-        std::sort(currently_pressed_keys.begin(), currently_pressed_keys.end());
-        bool containsAll = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), limit_ptr_vector[i]->key_list.begin(), limit_ptr_vector[i]->key_list.end());
-
-        if (!containsAll) {
-            limit_ptr_vector[i]->triggered = false;
-        }
-    }
-}
-
-
-void TriggerHotkeys( std::vector<limit*> limit_ptr_vector){
-    for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
-          // Sort both vectors
-        std::sort(limit_ptr_vector[i]->key_list.begin(), limit_ptr_vector[i]->key_list.end());
-		std::sort(currently_pressed_keys.begin(), currently_pressed_keys.end());
-        bool containsAll = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), limit_ptr_vector[i]->key_list.begin(), limit_ptr_vector[i]->key_list.end());
-
-        if (containsAll) {
-            OnTriggerHotkey(limit_ptr_vector[i]);
-        }
-    }
-}
-
-
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam ){
     if  ( ( nCode == HC_ACTION ) && ( ( wParam == WM_SYSKEYUP ) || ( wParam == WM_KEYUP ) ) )      
     {
@@ -168,9 +98,8 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         if (it != currently_pressed_keys.end()) {
             currently_pressed_keys.erase(it);
 		}
-        UnTriggerHotkeys(limit_ptr_vector);
+        Helper::UnTriggerHotkeys(limit_ptr_vector, currently_pressed_keys);
     }
-
 
     if  ( ( nCode == HC_ACTION ) && ( ( wParam == WM_SYSKEYDOWN ) || ( wParam == WM_KEYDOWN ) ) )      
     {
@@ -182,41 +111,10 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         if (it == currently_pressed_keys.end()) {
             currently_pressed_keys.push_back(key);
 		}
-        TriggerHotkeys(limit_ptr_vector);
+        Helper::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, color_on, color_off, combined_windivert_rules);
     }
     return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
 }
-
-
-
-
-int OnTriggerHotkey( limit* limit ){
-    if ( wcscmp( limit->name, L"exitapp" ) == 0 ){
-        Helper::Exitapp(debug);
-	} 
-    if ( !( Helper::D2Active() || debug ) )
-    {
-        printf("hotkey ignored: d2 is not the active window and debug mode is not on");
-        return 1;
-    }
-    if ( !limit->triggered ) {
-		limit->triggered = true;
-        if ( wcscmp( limit->name, L"game" ) == 0){
-			Limit::ToggleWholeGameLimit( limit, color_on, color_off );
-		} 
-        else if ( wcscmp( limit->name, L"suspend") == 0 ){
-			Limit::ToggleSuspend( limit, color_on, color_off );
-		} 
-        else {
-			Limit::ToggleBlockingLimit( limit, color_on, color_off );
-        }
-        printf( "state of %ws: %s\n", limit->name, limit->state ? "true" : "false" );
-        SetFilterRuleString( limit_ptr_vector );
-        UpdateFilter( combined_windivert_rules );
-    }
-    return 0;
-}
-
 
 
 void MessageLoop(){
@@ -226,7 +124,6 @@ void MessageLoop(){
         DispatchMessage( &message );
     }
 }
-
 
 
 DWORD WINAPI HotkeyThread( LPVOID lpParam ){
@@ -244,7 +141,6 @@ DWORD WINAPI HotkeyThread( LPVOID lpParam ){
 }
 
 
-
 void SetPathToConfigFile( wchar_t* config_filename ){ 
     wchar_t file_path_self[MAX_PATH], folder_path_self[MAX_PATH];
     GetModuleFileName( NULL, file_path_self, MAX_PATH );
@@ -256,17 +152,3 @@ void SetPathToConfigFile( wchar_t* config_filename ){
     wcsncpy_s( path_to_config_file, MAX_PATH, file_path, MAX_PATH );
 }
 
-
-
-void SetFilterRuleString( std::vector<limit*> limit_ptr_vector){
-    strcpy_s( combined_windivert_rules, sizeof( combined_windivert_rules ), "(udp.DstPort < 1 and udp.DstPort > 1)" ); // set to rule that wont match anything
-
-    for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
-        if ( strcmp( limit_ptr_vector[i]->windivert_rule, "" ) != 0 ){
-            if ( limit_ptr_vector[i]->state ){
-                strcat_s( combined_windivert_rules, sizeof( combined_windivert_rules ), limit_ptr_vector[i]->windivert_rule );
-            }
-        }
-    }
-    printf( "filter: %s\n", combined_windivert_rules );
-}
