@@ -1,6 +1,6 @@
 #include "HotkeyManager.h"
 HotkeyManager::HotkeyManager(std::vector<limit*> _limit_ptr_vector)
-    : _cur_line(-1), _currentHotkeyList(), _done(false), _limit_ptr_vector(_limit_ptr_vector) {
+    : _cur_line(-1), _currentHotkeyList(), done(false), _limit_ptr_vector(_limit_ptr_vector) {
 }
 void HotkeyManager::asyncBindHotkey(int i) {
     _cur_line = i;
@@ -12,8 +12,8 @@ void HotkeyManager::asyncBindHotkey(int i) {
 
     _currentHotkeyList.clear();
 
-    _done = false;
-    while (_done == false) {
+    done = false;
+    while (done == false) {
         Sleep(10);
     }
 	_limit_ptr_vector[_cur_line]->updateUI = true;
@@ -38,6 +38,6 @@ void HotkeyManager::KeyboardInputHandler(int key, bool isKeyDown) {
 	    std::cout << "Key Up: " << key << std::endl;
 		auto it = std::find(_currentHotkeyList.begin(), _currentHotkeyList.end(), key);
 		_limit_ptr_vector[_cur_line]->key_list = _currentHotkeyList;
-        _done = true;
+        done = true;
 	}
 }

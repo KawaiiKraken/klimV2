@@ -54,10 +54,8 @@ int __cdecl main( int argc, char** argv ){
     }
     
     ConfigFile::SetPathToConfigFile( ( wchar_t* )L"config.txt", path_to_config_file);
-    if ( !ConfigFile::FileExists( path_to_config_file ) ){
-        userInterface.run_gui();
-        ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file);
-    }
+    userInterface.run_gui();
+    ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file);
 
     bool use_overlay;
 	int font_size;
