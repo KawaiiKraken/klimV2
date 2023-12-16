@@ -26,25 +26,9 @@ it's literally that easy
 - game pauser/suspend: [NtSuspendProcess](https://github.com/diversenok/Suspending-Techniques#suspend-via-ntsuspendprocess)
 - whole game limit: [NetQosPolicy](https://learn.microsoft.com/en-us/powershell/module/netqos/)
   
-# upcoming 
-- auto buffer
-- better overlay/gui
-- other ways to mess with packets?
-- better how to? maybe even a vid
-
 # known issues
 - the mod seasonal monochromatic maestro can cause desync to be permanent 
 - whole game limit requires windows pro
-
-# switch windows version to pro 
-this could be potentially be considered piracy and i don't endorse it
-- run cmd.exe as admin 
-- paste `changepk /ProductKey VK7JG-NPHTM-C97JM-9MPGT-3V66T`
-- reboot 
-- run powershell.exe as admin
-- paste `irm https://massgrave.dev/get | iex`
-- chose hwid (unless youre using a spoofer)
-- reboot
 
 # how to contribute
 - give this repo a star on github
@@ -60,7 +44,8 @@ cd klimV2
 git submodule update --init --recursive
 ```
 open sln in visual studio, hit build
-notes: 
+
+some notes: 
 - you will have to change some <> to "" in phnt
 - you may also have to include/link the windows sdk 
 
