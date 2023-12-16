@@ -15,6 +15,9 @@ for support join our server at the [thrallway](https://thrallway.com)
 # installation
 - download [lastest release](https://github.com/KawaiiKraken/klimV2/releases/latest)
 - run exe 
+- set up hotkeys
+- close settings window
+- limit as much as you want
 it's literally that easy
 
 # how to use
