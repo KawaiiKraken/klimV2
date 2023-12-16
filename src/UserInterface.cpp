@@ -9,10 +9,12 @@
 #include <thread>
 #include "HotkeyManager.h"
 #include "UserInterface.h"
+#include "helperFunctions.h"
+#include "ConfigFile.h"
 
 
-UserInterface::UserInterface(std::vector<limit*> limit_ptr_vector) 
-    : limit_ptr_vector(limit_ptr_vector) {
+UserInterface::UserInterface(std::vector<limit*> limit_ptr_vector, wchar_t* path_to_config_file) 
+    : limit_ptr_vector(limit_ptr_vector), path_to_config_file(path_to_config_file) {
 }
 
 int UserInterface::run_gui(){
@@ -21,7 +23,7 @@ int UserInterface::run_gui(){
     //void (UserInterface::*ptrWndProc)(LRESULT WINAPI)
     WNDCLASSEXW wc = { sizeof(wc), CS_OWNDC, &UserInterface::WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, L"ImGui Example", NULL };
     ::RegisterClassExW(&wc);
-    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui Win32+OpenGL3 Example", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"klim config", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 
     // Initialize OpenGL
     if (!CreateDeviceWGL(hwnd, &g_MainWindow))
@@ -46,7 +48,6 @@ int UserInterface::run_gui(){
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_InitForOpenGL(hwnd);
@@ -110,10 +111,14 @@ int UserInterface::run_gui(){
             const ImGuiViewport* viewport = ImGui::GetMainViewport();
             ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
             ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
+            ImGuiStyle& style = ImGui::GetStyle();
+            style.FrameRounding = 0.0f;
+            style.WindowPadding =  ImVec2(15.0f, 5.0f);
 
             ImGui::Begin("config", NULL, flags);
 
             {
+                ImGui::SeparatorText("Hotkeys");
                 for (int i = 0; i < limit_ptr_vector.size(); i++) {
                     ImGui::PushID(i);
                     if (ImGui::Button("Bind")) {
@@ -139,9 +144,24 @@ int UserInterface::run_gui(){
 					wcstombs_s(&size, name, limit_ptr_vector[i]->name, 50);
 					ImGui::Text("%s ", name);               // Display some text (you can use a format strings too)
 					ImGui::SameLine();
-                    ImGui::SetCursorPosX(160);
+                    ImGui::SetCursorPosX(170);
 					ImGui::Text("[%s]", String[i].data());               // Display some text (you can use a format strings too)
                     ImGui::PopID();
+                }
+
+                ImGui::SetCursorPos(ImVec2(15, 250));
+
+                if (ImGui::Button("Save")) {
+                    ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file);
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Exit")) {
+                    // this only crashes the app but this is good enough for now
+                    // TODO make it actually exit
+                    ImGui::DestroyContext();
+                    Helper::Exitapp(false);
                 }
             }
 
@@ -267,6 +287,11 @@ LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         break;
     case WM_KEYUP:
         hotkeyInstance->KeyboardInputHandler(static_cast<int>(wParam), false);
+        break;
+    case WM_GETMINMAXINFO:
+        MINMAXINFO* minMaxInfo = (MINMAXINFO*)lParam;
+        minMaxInfo->ptMinTrackSize.x = minMaxInfo->ptMaxTrackSize.x = 300; // size x width
+        minMaxInfo->ptMinTrackSize.y = minMaxInfo->ptMaxTrackSize.y = 330; // size y height
         break;
     }
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
