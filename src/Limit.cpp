@@ -39,7 +39,7 @@ void Limit::ToggleSuspend( limit* suspend, COLORREF color_on, COLORREF color_off
 
     DWORD pid = 0;
     GetWindowThreadProcessId( GetForegroundWindow(), &pid );
-    suspend->state ? SuspendProcess( pid, true ) : SuspendProcess( pid, false );
+    suspend->state ? SuspendProcess( pid, false ) : SuspendProcess( pid, true );
 
     suspend->ToggleState();
     COLORREF color = suspend->state ? color_on : color_off;
