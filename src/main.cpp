@@ -61,6 +61,7 @@ int __cdecl main( int argc, char** argv ){
     if (ConfigFile::FileExists(path_to_config_file)) {
         ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, &settings);
     }
+    userInterface.show_overlay = true;
     userInterface.run_gui();
 
     ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, &settings);
