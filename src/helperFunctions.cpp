@@ -41,7 +41,7 @@ void Helper::UnTriggerHotkeys( std::vector<limit*> limit_ptr_vector, std::vector
 void Helper::SetOverlayLineNumberOfLimits( std::vector<limit*> limit_ptr_vector){
     int current_overlay_line = 1;
     for ( int i = 0; i < limit_ptr_vector.size(); i++) {
-        if (limit_ptr_vector[i]->key_list[0] != undefined_key) {
+        if (limit_ptr_vector[i]->key_list.size() > 0) {
 			limit_ptr_vector[i]->overlay_line_number = current_overlay_line;
 			current_overlay_line++;
 		}

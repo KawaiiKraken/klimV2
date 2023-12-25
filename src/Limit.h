@@ -4,11 +4,10 @@
 #include "helperFunctions.h"
 #include <vector>
 
-#define undefined_key 0x0
 
 struct limit {
     wchar_t* name;
-    std::vector<int> key_list = { undefined_key };
+    std::vector<int> key_list;
     bool bindingComplete = true;
     bool triggered = false;
     bool state = false;
