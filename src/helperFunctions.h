@@ -16,6 +16,7 @@
 
 
 struct limit;
+struct Settings;
 
 class Helper {
 public:
@@ -26,7 +27,7 @@ public:
 	static void TriggerHotkeys(std::vector<limit*> limit_ptr_vector, std::vector<int> currently_pressed_keys, bool debug, COLORREF color_on, COLORREF color_off, char combined_windivert_rules[1000]);
 	static void UnTriggerHotkeys(std::vector<limit*> limit_ptr_vector, std::vector<int> currently_pressed_keys);
 	static void SetOverlayLineNumberOfLimits(std::vector<limit*> limit_ptr_vector);
-	static void InitializeOverlay(bool use_overlay, int font_size, COLORREF color_default, std::vector<limit*> limit_ptr_vector);
+	static void InitializeOverlay(Settings settings, std::vector<limit*> limit_ptr_vector);
 private:
 	static int OnTriggerHotkey(limit* limit, bool debug, COLORREF color_on, COLORREF color_off, std::vector<struct limit*> limit_ptr_vector, char* combined_windivert_rules);
 };

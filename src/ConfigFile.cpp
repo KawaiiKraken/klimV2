@@ -1,6 +1,6 @@
 #include "ConfigFile.h"
 
-void ConfigFile::WriteConfig(std::vector<limit*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH]) {
+void ConfigFile::WriteConfig(std::vector<limit*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings) {
     Json::Value config;
 
 	char char_buffer[250];
@@ -16,8 +16,8 @@ void ConfigFile::WriteConfig(std::vector<limit*> limit_ptr_vector, wchar_t path_
     }
 
     // random defaults for now
-    config["use_overlay"] = true;
-    config["font_size"] = 30;
+    config["use_overlay"] = settings->use_overlay;
+    config["font_size"] = settings->font_size;
     config["color_default"] = "0x00FFFFFF";
     config["color_on"] = "0x000000FF";
     config["color_off"] = "0x00FFFFFF";
@@ -27,7 +27,7 @@ void ConfigFile::WriteConfig(std::vector<limit*> limit_ptr_vector, wchar_t path_
 
 
 
-void ConfigFile::LoadConfig( bool* use_overlay, int* font_size, COLORREF* color_default, COLORREF* color_on, COLORREF* color_off , std::vector<limit*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH]){
+void ConfigFile::LoadConfig(std::vector<limit*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings){
     // Load the config from the JSON file
     Json::Value loaded_config = ConfigFile::LoadConfigFileFromJson( path_to_config_file );
 	char char_buffer[250];
@@ -39,12 +39,12 @@ void ConfigFile::LoadConfig( bool* use_overlay, int* font_size, COLORREF* color_
         limit_ptr_vector[i]->key_list = ConfigFile::jsonToVector(loaded_config[char_buffer]);
     }
 
-    *color_default = stol( loaded_config["color_default"].asString(), NULL, 16 );
-    *color_on      = stol( loaded_config["color_on"].asString(),      NULL, 16 );
-    *color_off     = stol( loaded_config["color_off"].asString(),     NULL, 16 );
+    settings->color_default = stol( loaded_config["color_default"].asString(), NULL, 16 );
+    settings->color_on      = stol( loaded_config["color_on"].asString(),      NULL, 16 );
+    settings->color_off     = stol( loaded_config["color_off"].asString(),     NULL, 16 );
 
-    *use_overlay  = loaded_config["use_overlay"].asBool();
-    *font_size    = loaded_config["font_size"].asInt();
+    settings->use_overlay  = loaded_config["use_overlay"].asBool();
+    settings->font_size    = loaded_config["font_size"].asInt();
 }
 
 

@@ -11,10 +11,11 @@
 #include <thread>
 #include "HotkeyManager.h"
 
+struct Settings;
 
 class UserInterface {
 public:
-    UserInterface(std::vector<limit*> limit_ptr_vector, wchar_t* path_to_config_file); 
+    UserInterface(std::vector<limit*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings); 
     int run_gui();
     static UserInterface* instance;
     static HotkeyManager* hotkeyInstance;
@@ -34,6 +35,7 @@ private:
 	void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
 	void ResetDeviceWGL();
     wchar_t* path_to_config_file;
+    Settings* settings;
 };
 
 
