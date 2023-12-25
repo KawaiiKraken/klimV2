@@ -54,6 +54,114 @@ void UserInterface::Overlay(bool* p_open)
     ImGui::End();
 }
 
+void UserInterface::Config(){
+    std::vector<bool> button_clicked(limit_ptr_vector.size());
+    std::vector<std::string> String;
+    int line_of_button_clicked = -1;
+    const char* in_progress = "in progress..";
+    for (int i = 0; i < (limit_ptr_vector.size()); i++) {
+        String.push_back("blank");
+    }
+    static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings;
+	ImGui::Begin("config", NULL, flags);
+
+	ImGui::SeparatorText("Hotkeys");
+    for (int i = 0; i < limit_ptr_vector.size(); i++) {
+        ImGui::PushID(i);
+        std::cout << "key list size: " << limit_ptr_vector[i]->key_list.size() << std::endl;
+        if (limit_ptr_vector[i]->key_list.size() == 0) {
+            String[i] = "blank";
+        }
+        else {
+            String[i] = "";
+            for (int j = 0; j < limit_ptr_vector[i]->key_list.size(); j++) {
+                if (String[i] != "") {
+                    String[i].append("+");
+                }
+                int scan_code = MapVirtualKey(limit_ptr_vector[i]->key_list[j], 0);
+                char name_buffer[256];
+                GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
+                String[i] += name_buffer;
+            }
+        }
+
+        if (ImGui::Button("Bind")) {
+            if (String[i] != in_progress) {
+                button_clicked[i] = true;
+                std::cout << "button " << i << " clicked [callback]" << std::endl;
+            }
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Reset")) {
+            String[i] = "";
+            hotkeyInstance->done = true;
+            limit_ptr_vector[i]->key_list.clear();
+            limit_ptr_vector[i]->bindingComplete = true;
+            limit_ptr_vector[i]->updateUI = true;
+        }
+
+        ImGui::SameLine();
+        char name[50];
+        size_t size;
+        wcstombs_s(&size, name, limit_ptr_vector[i]->name, 50);
+        ImGui::Text("%s ", name);               // Display some text (you can use a format strings too)
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(170);
+        ImGui::Text("[%s]", String[i].data());               // Display some text (you can use a format strings too)
+
+        if (limit_ptr_vector[i]->bindingComplete == true && String[i] == in_progress) {
+            std::cout << "updating ui.." << std::endl;
+            String[i] = "";
+            for (int j = 0; j < limit_ptr_vector[i]->key_list.size(); j++) {
+                if (String[i] != "") {
+                    String[i].append("+");
+                }
+                int scan_code = MapVirtualKey(limit_ptr_vector[i]->key_list[j], 0);
+                char name_buffer[256];
+                GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
+                String[i] += name_buffer;
+            }
+        }
+
+        if (button_clicked[i] == true) {
+            std::cout << "button " << i << " clicked [registered]" << std::endl;
+            String[i] = in_progress;
+            button_clicked[i] = false;
+            line_of_button_clicked = i;
+            std::thread([&]() {
+                hotkeyInstance->asyncBindHotkey(line_of_button_clicked);
+                }).detach();
+        }
+
+        ImGui::PopID();
+    }
+
+    ImGui::Checkbox("use overlay", &settings->use_overlay);
+
+	static float color[4] = { 0.4f, 0.7f, 0.0f, 0.5f };
+	ImGui::ColorEdit4("color", color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+
+
+	//ImGui::SetCursorPos(ImVec2(15, 250));
+	ImGui::SetCursorPos(ImVec2(15, 300));
+
+	if (ImGui::Button("Save")) {
+		ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file, settings);
+	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("Exit")) {
+		// this only crashes the app but this is good enough for now
+		// TODO make it actually exit
+		ImGui::DestroyContext();
+	}
+
+    ImGui::End();	
+}
+
 
 int UserInterface::run_gui(){
     // Create application window
@@ -121,15 +229,8 @@ int UserInterface::run_gui(){
 
     // Main loop
     bool done = false;
-    std::vector<bool> button_clicked(limit_ptr_vector.size());
-    std::vector<std::string> String;
-    const char* in_progress = "in progress..";
-    for (int i = 0; i < (limit_ptr_vector.size()); i++) {
-        String.push_back("blank");
-    }
     while (!done)
     {
-        int line_of_button_clicked = -1;
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
         MSG msg;
@@ -149,130 +250,25 @@ int UserInterface::run_gui(){
         ImGui::NewFrame();
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-        {
-            static float f = 0.0f;
-            static int counter = 0;
-            glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-            bool use_work_area = true; // fullscreen
-            static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings;
-            const ImGuiViewport* viewport = ImGui::GetMainViewport();
-            //ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
-            //ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
-            ImGuiStyle& style = ImGui::GetStyle();
-            style.FrameRounding = 0.0f;
-            style.WindowPadding =  ImVec2(15.0f, 5.0f);
-            bool show_app_simple_overlay = false;
-            if (show_app_simple_overlay)      UserInterface::Overlay(&show_app_simple_overlay);
+        static float f = 0.0f;
+		static int counter = 0;
+		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		bool use_work_area = true; // fullscreen
+		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+		//ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
+		//ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.FrameRounding = 0.0f;
+		style.WindowPadding = ImVec2(15.0f, 5.0f);
+		bool show_app_simple_overlay = false;
+		if (show_app_simple_overlay)      UserInterface::Overlay(&show_app_simple_overlay);
 
-            ImGui::Begin("config", NULL, flags);
+        UserInterface::Config();
 
-            {
-                ImGui::SeparatorText("Hotkeys");
-                for (int i = 0; i < limit_ptr_vector.size(); i++) {
-                    std::cout << "key list size: " << limit_ptr_vector[i]->key_list.size() << std::endl;
-                    if (limit_ptr_vector[i]->key_list.size() == 0) {
-						String[i] = "blank";
-					}
-					else {
-						String[i] = "";
-                        for (int j = 0; j < limit_ptr_vector[i]->key_list.size(); j++) {
-							if (String[i] != "") {
-								String[i].append("+");
-							}
-							int scan_code = MapVirtualKey(limit_ptr_vector[i]->key_list[j], 0);
-							char name_buffer[256];
-							GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
-							String[i] += name_buffer;
-						}
-					}
-
-                    ImGui::PushID(i);
-                    if (ImGui::Button("Bind")) {
-                        if (String[i] != in_progress) {
-						        button_clicked[i] = true;
-                                std::cout << "button " << i << " clicked [callback]" << std::endl;
-						}
-                    }
-
-                    ImGui::SameLine();
-
-                    if (ImGui::Button("Reset")) {
-                        String[i] = "";
-                        hotkeyInstance->done = true;
-                        limit_ptr_vector[i]->key_list.clear();
-                        limit_ptr_vector[i]->bindingComplete = true;
-                        limit_ptr_vector[i]->updateUI = true;
-                    }
-
-                    ImGui::SameLine();
-					char name[50];
-					size_t size;
-					wcstombs_s(&size, name, limit_ptr_vector[i]->name, 50);
-					ImGui::Text("%s ", name);               // Display some text (you can use a format strings too)
-					ImGui::SameLine();
-                    ImGui::SetCursorPosX(170);
-					ImGui::Text("[%s]", String[i].data());               // Display some text (you can use a format strings too)
-                    ImGui::PopID();
-                }
-
-                ImGui::Checkbox("use overlay", &settings->use_overlay);
-
-                static float color[4] = { 0.4f, 0.7f, 0.0f, 0.5f };
-                ImGui::ColorEdit4("color", color,  ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
-
-
-                //ImGui::SetCursorPos(ImVec2(15, 250));
-                ImGui::SetCursorPos(ImVec2(15, 300));
-
-                if (ImGui::Button("Save")) {
-                    ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file, settings);
-                }
-
-                ImGui::SameLine();
-
-                if (ImGui::Button("Exit")) {
-                    // this only crashes the app but this is good enough for now
-                    // TODO make it actually exit
-                    ImGui::DestroyContext();
-                    Helper::Exitapp(false);
-                }
-            }
-
-            ImGui::End();
-        }
-
+        
 
         // Rendering
         ImGui::Render();
-
-        for (int i = 0; i < button_clicked.size(); i++) {
-            if (limit_ptr_vector[i]->bindingComplete == true && String[i] == in_progress) {
-                std::cout << "updating ui.." << std::endl;
-                String[i] = "";
-			    for (int j = 0; j < limit_ptr_vector[i]->key_list.size(); j++) {
-                    if (String[i] != "") {
-					    String[i].append("+");
-                    }
-                    int scan_code = MapVirtualKey(limit_ptr_vector[i]->key_list[j], 0);
-                    char name_buffer[256];
-                    GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
-                    String[i] += name_buffer;
-				}
-			}
-
-            if (button_clicked[i] == true) {
-                std::cout << "button " << i << " clicked [registered]" << std::endl;
-                String[i] = in_progress;
-				button_clicked[i] = false;
-				line_of_button_clicked = i;
-				std::thread([&]() {
-					hotkeyInstance->asyncBindHotkey(line_of_button_clicked);
-					}).detach();
-            }
-
-        }
-
-
 
         glViewport(0, 0, g_Width, g_Height);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
