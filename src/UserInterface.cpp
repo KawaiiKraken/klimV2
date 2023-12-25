@@ -17,7 +17,7 @@ UserInterface::UserInterface(std::vector<limit*> limit_ptr_vector, wchar_t* path
     : limit_ptr_vector(limit_ptr_vector), path_to_config_file(path_to_config_file), settings(settings) {
 }
 
-void UserInterface::Overlay(bool* p_open)
+void UserInterface::Overlay(bool* p_open, HWND hwnd)
 {
     const float DISTANCE = 10.0f;
     static int corner = 0;
@@ -30,6 +30,7 @@ void UserInterface::Overlay(bool* p_open)
     }
     ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+    SetWindowLongPtr(hwnd, GWL_EXSTYLE, GetWindowLongPtr(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT); // make clickthrough (entire window) // TODO make it remove clickthrough when not needed
     if (corner != -1)
         window_flags |= ImGuiWindowFlags_NoMove;
     if (ImGui::Begin("Example: Simple overlay", p_open, window_flags))
@@ -54,7 +55,8 @@ void UserInterface::Overlay(bool* p_open)
     ImGui::End();
 }
 
-void UserInterface::Config(){
+void UserInterface::Config(HWND hwnd){
+    SetWindowLongPtr(hwnd, GWL_EXSTYLE, GetWindowLongPtr(hwnd, GWL_EXSTYLE) | ~WS_EX_TRANSPARENT); // make clickthrough (entire window) // TODO make it remove clickthrough when not needed
     std::vector<bool> button_clicked(limit_ptr_vector.size());
     std::vector<std::string> String;
     int line_of_button_clicked = -1;
@@ -260,10 +262,9 @@ int UserInterface::run_gui(){
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.FrameRounding = 0.0f;
 		style.WindowPadding = ImVec2(15.0f, 5.0f);
-		bool show_app_simple_overlay = false;
-		if (show_app_simple_overlay)      UserInterface::Overlay(&show_app_simple_overlay);
+		if (show_overlay)      UserInterface::Overlay(&show_overlay, hwnd);
 
-        UserInterface::Config();
+        if (show_config) UserInterface::Config(hwnd);
 
         
 

@@ -19,6 +19,8 @@ public:
     int run_gui();
     static UserInterface* instance;
     static HotkeyManager* hotkeyInstance;
+	bool show_overlay = false;
+    bool show_config = false;
 
 private:
     static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -36,8 +38,8 @@ private:
 	void ResetDeviceWGL();
     wchar_t* path_to_config_file;
     Settings* settings;
-    void Overlay(bool* p_open);
-    void Config();
+    void Overlay(bool* p_open, HWND hwnd);
+    void Config(HWND hwnd);
 };
 
 
