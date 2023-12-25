@@ -17,13 +17,60 @@ UserInterface::UserInterface(std::vector<limit*> limit_ptr_vector, wchar_t* path
     : limit_ptr_vector(limit_ptr_vector), path_to_config_file(path_to_config_file), settings(settings) {
 }
 
+void UserInterface::Overlay(bool* p_open)
+{
+    const float DISTANCE = 10.0f;
+    static int corner = 0;
+    ImGuiIO& io = ImGui::GetIO();
+    if (corner != -1)
+    {
+        ImVec2 window_pos = ImVec2((corner & 1) ? io.DisplaySize.x - DISTANCE : DISTANCE, (corner & 2) ? io.DisplaySize.y - DISTANCE : DISTANCE);
+        ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
+        ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+    }
+    ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+    if (corner != -1)
+        window_flags |= ImGuiWindowFlags_NoMove;
+    if (ImGui::Begin("Example: Simple overlay", p_open, window_flags))
+    {
+        ImGui::Text("Simple overlay\n" "in the corner of the screen.\n" "(right-click to change position)");
+        ImGui::Separator();
+        if (ImGui::IsMousePosValid())
+            ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
+        else
+            ImGui::Text("Mouse Position: <invalid>");
+        if (ImGui::BeginPopupContextWindow())
+        {
+            if (ImGui::MenuItem("Custom",       NULL, corner == -1)) corner = -1;
+            if (ImGui::MenuItem("Top-left",     NULL, corner == 0)) corner = 0;
+            if (ImGui::MenuItem("Top-right",    NULL, corner == 1)) corner = 1;
+            if (ImGui::MenuItem("Bottom-left",  NULL, corner == 2)) corner = 2;
+            if (ImGui::MenuItem("Bottom-right", NULL, corner == 3)) corner = 3;
+            if (p_open && ImGui::MenuItem("Close")) *p_open = false;
+            ImGui::EndPopup();
+        }
+    }
+    ImGui::End();
+}
+
+
 int UserInterface::run_gui(){
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
     //void (UserInterface::*ptrWndProc)(LRESULT WINAPI)
-    WNDCLASSEXW wc = { sizeof(wc), CS_OWNDC, &UserInterface::WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, L"ImGui Example", NULL };
+    WNDCLASSEXW wc = { sizeof(wc), CS_OWNDC | CS_HREDRAW | CS_VREDRAW, &UserInterface::WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, L"ImGui Example", NULL };
     ::RegisterClassExW(&wc);
-    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"klim config", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
+    RECT desktopRect;
+    HWND hDesktop = GetDesktopWindow();
+    GetWindowRect(hDesktop, &desktopRect);
+    // Calculate the pixel size
+    int screenWidth = desktopRect.right - desktopRect.left;
+	int screenHeight = desktopRect.bottom - desktopRect.top;
+    DWORD dwStyle = WS_VISIBLE | WS_OVERLAPPED | WS_POPUP | WS_BORDER;
+    HWND hwnd = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, wc.lpszClassName, L"klim config", dwStyle, 0, 0, screenWidth, screenHeight, NULL, NULL, wc.hInstance, NULL);
+
+
 
     // Initialize OpenGL
     if (!CreateDeviceWGL(hwnd, &g_MainWindow))
@@ -35,8 +82,6 @@ int UserInterface::run_gui(){
     }
     wglMakeCurrent(g_MainWindow.hDC, g_hRC);
 
-    // Show the window
-    ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
 
     // Setup Dear ImGui context
@@ -70,7 +115,7 @@ int UserInterface::run_gui(){
     //IM_ASSERT(font != NULL);
 
     // Our state
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 clear_color = ImVec4(0.0f/255.0f, 0.0f/255.0f, 0.0f/255.0f, 0.0f);
 
     // Main loop
     bool done = false;
@@ -107,13 +152,16 @@ int UserInterface::run_gui(){
             static int counter = 0;
             glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
             bool use_work_area = true; // fullscreen
-            static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
+            static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground;
             const ImGuiViewport* viewport = ImGui::GetMainViewport();
-            ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
-            ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
+            //ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
+            //ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
             ImGuiStyle& style = ImGui::GetStyle();
             style.FrameRounding = 0.0f;
             style.WindowPadding =  ImVec2(15.0f, 5.0f);
+            bool show_app_simple_overlay = false;
+            if (show_app_simple_overlay)      UserInterface::Overlay(&show_app_simple_overlay);
+            ImGui::SetNextWindowBgAlpha(0.0f);
 
             ImGui::Begin("config", NULL, flags);
 
@@ -167,6 +215,9 @@ int UserInterface::run_gui(){
                 }
 
                 ImGui::Checkbox("use overlay", &settings->use_overlay);
+
+                static float color[4] = { 0.4f, 0.7f, 0.0f, 0.5f };
+                ImGui::ColorEdit4("color", color,  ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
 
 
                 //ImGui::SetCursorPos(ImVec2(15, 250));
@@ -289,6 +340,9 @@ LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
     switch (msg)
     {
+    case WM_CREATE:
+		SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 0, LWA_COLORKEY);
+        break;
     case WM_SIZE:
         if (wParam != SIZE_MINIMIZED)
         {
@@ -310,10 +364,15 @@ LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         hotkeyInstance->KeyboardInputHandler(static_cast<int>(wParam), false);
         break;
     case WM_GETMINMAXINFO:
+        RECT desktopRect;
+        HWND hDesktop = GetDesktopWindow();
+        GetWindowRect(hDesktop, &desktopRect);
+        // Calculate the pixel size
+		int screenWidth = desktopRect.right - desktopRect.left;
+		int screenHeight = desktopRect.bottom - desktopRect.top;
         MINMAXINFO* minMaxInfo = (MINMAXINFO*)lParam;
-        minMaxInfo->ptMinTrackSize.x = minMaxInfo->ptMaxTrackSize.x = 300; // size x width
-        //minMaxInfo->ptMinTrackSize.y = minMaxInfo->ptMaxTrackSize.y = 330; // size y height
-        minMaxInfo->ptMinTrackSize.y = minMaxInfo->ptMaxTrackSize.y = 400; // size y height
+        minMaxInfo->ptMinTrackSize.x = minMaxInfo->ptMaxTrackSize.x = screenWidth; // size x width
+        minMaxInfo->ptMinTrackSize.y = minMaxInfo->ptMaxTrackSize.y = screenHeight; // size y height
         break;
     }
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
