@@ -115,7 +115,9 @@ int UserInterface::run_gui(){
     //IM_ASSERT(font != NULL);
 
     // Our state
-    ImVec4 clear_color = ImVec4(0.0f/255.0f, 0.0f/255.0f, 0.0f/255.0f, 0.0f);
+    ImVec4 clear_color = ImVec4(5.0f/255.0f, 5.0f/255.0f, 5.0f/255.0f, 0.0f);
+    //ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
 
     // Main loop
     bool done = false;
@@ -152,7 +154,7 @@ int UserInterface::run_gui(){
             static int counter = 0;
             glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
             bool use_work_area = true; // fullscreen
-            static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground;
+            static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings;
             const ImGuiViewport* viewport = ImGui::GetMainViewport();
             //ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
             //ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
@@ -161,7 +163,6 @@ int UserInterface::run_gui(){
             style.WindowPadding =  ImVec2(15.0f, 5.0f);
             bool show_app_simple_overlay = false;
             if (show_app_simple_overlay)      UserInterface::Overlay(&show_app_simple_overlay);
-            ImGui::SetNextWindowBgAlpha(0.0f);
 
             ImGui::Begin("config", NULL, flags);
 
@@ -341,7 +342,7 @@ LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     switch (msg)
     {
     case WM_CREATE:
-		SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 0, LWA_COLORKEY);
+		SetLayeredWindowAttributes(hWnd, RGB(5, 5, 5), 0, LWA_COLORKEY);
         break;
     case WM_SIZE:
         if (wParam != SIZE_MINIMIZED)
