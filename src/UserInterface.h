@@ -36,6 +36,7 @@ private:
 	void ResetDeviceWGL();
     wchar_t* path_to_config_file;
     Settings* settings;
+    void Overlay(bool* p_open);
 };
 
 
