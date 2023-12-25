@@ -120,6 +120,23 @@ int UserInterface::run_gui(){
             {
                 ImGui::SeparatorText("Hotkeys");
                 for (int i = 0; i < limit_ptr_vector.size(); i++) {
+                    std::cout << "key list size: " << limit_ptr_vector[i]->key_list.size() << std::endl;
+                    if (limit_ptr_vector[i]->key_list.size() == 0) {
+						String[i] = "blank";
+					}
+					else {
+						String[i] = "";
+                        for (int j = 0; j < limit_ptr_vector[i]->key_list.size(); j++) {
+							if (String[i] != "") {
+								String[i].append("+");
+							}
+							int scan_code = MapVirtualKey(limit_ptr_vector[i]->key_list[j], 0);
+							char name_buffer[256];
+							GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
+							String[i] += name_buffer;
+						}
+					}
+
                     ImGui::PushID(i);
                     if (ImGui::Button("Bind")) {
                         if (String[i] != in_progress) {
@@ -131,9 +148,9 @@ int UserInterface::run_gui(){
                     ImGui::SameLine();
 
                     if (ImGui::Button("Reset")) {
-                        String[i] = "blank";
+                        String[i] = "";
                         hotkeyInstance->done = true;
-                        limit_ptr_vector[i]->key_list = { undefined_key };
+                        limit_ptr_vector[i]->key_list.clear();
                         limit_ptr_vector[i]->bindingComplete = true;
                         limit_ptr_vector[i]->updateUI = true;
                     }

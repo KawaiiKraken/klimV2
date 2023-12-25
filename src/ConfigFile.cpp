@@ -5,7 +5,7 @@ void ConfigFile::WriteConfig(std::vector<limit*> limit_ptr_vector, wchar_t path_
 
 	char char_buffer[250];
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
-        if (limit_ptr_vector[i]->key_list[0] == 0x0) {
+        if (limit_ptr_vector[i]->key_list.size() == 0) {
             continue;
         }
 		size_t size;
@@ -37,9 +37,6 @@ void ConfigFile::LoadConfig( bool* use_overlay, int* font_size, COLORREF* color_
         strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
 
         limit_ptr_vector[i]->key_list = ConfigFile::jsonToVector(loaded_config[char_buffer]);
-        if (limit_ptr_vector[i]->key_list.size() == 0) {
-            limit_ptr_vector[i]->key_list.push_back(undefined_key);
-        }
     }
 
     *color_default = stol( loaded_config["color_default"].asString(), NULL, 16 );

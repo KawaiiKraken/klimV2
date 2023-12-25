@@ -55,10 +55,13 @@ int __cdecl main( int argc, char** argv ){
     }
     
     ConfigFile::SetPathToConfigFile( ( wchar_t* )L"config.txt", path_to_config_file);
-    userInterface.run_gui();
-
     bool use_overlay;
 	int font_size;
+    if (ConfigFile::FileExists(path_to_config_file)) {
+        ConfigFile::LoadConfig( &use_overlay, &font_size, &color_default, &color_on, &color_off, limit_ptr_vector, path_to_config_file);
+    }
+    userInterface.run_gui();
+
     ConfigFile::LoadConfig( &use_overlay, &font_size, &color_default, &color_on, &color_off, limit_ptr_vector, path_to_config_file);
     Helper::SetOverlayLineNumberOfLimits( limit_ptr_vector);
     Helper::InitializeOverlay( use_overlay, font_size, color_default, limit_ptr_vector);
