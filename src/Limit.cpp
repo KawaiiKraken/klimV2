@@ -51,7 +51,7 @@ void Limit::ToggleSuspend( limit* suspend, COLORREF color_on, COLORREF color_off
 
 
 void Limit::FormatHotkeyStatusWcString( wchar_t* wcString, int szWcString, limit* limit ){ 
-    if (limit->key_list.size() > 0) {
+    if (limit->key_list.size() == 0) {
         return;
     }
     wchar_t nameBuffer[256];

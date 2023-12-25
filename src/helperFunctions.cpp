@@ -1,6 +1,7 @@
 #include "helperFunctions.h"
 #include <algorithm>
 #include "Limit.h"
+#include "ConfigFile.h"
 
 void Helper::Exitapp(bool debug){
     std::wcout << "shutting down\n";
@@ -100,15 +101,15 @@ const wchar_t* Helper::GetFilename( const wchar_t *path ){
     return filename;
 }
 
-void Helper::InitializeOverlay( bool use_overlay, int font_size, COLORREF color_default, std::vector<limit*> limit_ptr_vector){
-    startOverlay( use_overlay, font_size );
+void Helper::InitializeOverlay( Settings settings, std::vector<limit*> limit_ptr_vector){
+    startOverlay( settings.use_overlay, settings.font_size );
 
     // set overlay to default state
     wchar_t* wc_string = new wchar_t[200];
     for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
         if (limit_ptr_vector[i]->overlay_line_number != -1) {
             Limit::FormatHotkeyStatusWcString(wc_string, 200, limit_ptr_vector[i]);
-            UpdateOverlayLine(wc_string, limit_ptr_vector[i]->overlay_line_number, color_default);
+            UpdateOverlayLine(wc_string, limit_ptr_vector[i]->overlay_line_number, settings.color_default);
         }
     }
     delete []wc_string;

@@ -13,8 +13,8 @@
 #include "ConfigFile.h"
 
 
-UserInterface::UserInterface(std::vector<limit*> limit_ptr_vector, wchar_t* path_to_config_file) 
-    : limit_ptr_vector(limit_ptr_vector), path_to_config_file(path_to_config_file) {
+UserInterface::UserInterface(std::vector<limit*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings) 
+    : limit_ptr_vector(limit_ptr_vector), path_to_config_file(path_to_config_file), settings(settings) {
 }
 
 int UserInterface::run_gui(){
@@ -166,10 +166,14 @@ int UserInterface::run_gui(){
                     ImGui::PopID();
                 }
 
-                ImGui::SetCursorPos(ImVec2(15, 250));
+                ImGui::Checkbox("use overlay", &settings->use_overlay);
+
+
+                //ImGui::SetCursorPos(ImVec2(15, 250));
+                ImGui::SetCursorPos(ImVec2(15, 300));
 
                 if (ImGui::Button("Save")) {
-                    ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file);
+                    ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file, settings);
                 }
 
                 ImGui::SameLine();
@@ -308,7 +312,8 @@ LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     case WM_GETMINMAXINFO:
         MINMAXINFO* minMaxInfo = (MINMAXINFO*)lParam;
         minMaxInfo->ptMinTrackSize.x = minMaxInfo->ptMaxTrackSize.x = 300; // size x width
-        minMaxInfo->ptMinTrackSize.y = minMaxInfo->ptMaxTrackSize.y = 330; // size y height
+        //minMaxInfo->ptMinTrackSize.y = minMaxInfo->ptMaxTrackSize.y = 330; // size y height
+        minMaxInfo->ptMinTrackSize.y = minMaxInfo->ptMaxTrackSize.y = 400; // size y height
         break;
     }
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);

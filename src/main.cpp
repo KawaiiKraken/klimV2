@@ -1,4 +1,5 @@
 #include "main.h"
+#include "ConfigFile.h"
 
 std::mutex mutex;
 std::mutex* mutex_ptr = &mutex;
@@ -19,11 +20,13 @@ std::vector<int> currently_pressed_keys;
 
 char combined_windivert_rules[1000];
 wchar_t path_to_config_file[MAX_PATH];
+Settings settings;
 
 HotkeyManager hotkeyManager(limit_ptr_vector);
-UserInterface userInterface(limit_ptr_vector, path_to_config_file);
+UserInterface userInterface(limit_ptr_vector, path_to_config_file, &settings);
 UserInterface* UserInterface::instance = &userInterface;
 HotkeyManager* UserInterface::hotkeyInstance = &hotkeyManager;
+
 
 
 
@@ -55,16 +58,14 @@ int __cdecl main( int argc, char** argv ){
     }
     
     ConfigFile::SetPathToConfigFile( ( wchar_t* )L"config.txt", path_to_config_file);
-    bool use_overlay;
-	int font_size;
     if (ConfigFile::FileExists(path_to_config_file)) {
-        ConfigFile::LoadConfig( &use_overlay, &font_size, &color_default, &color_on, &color_off, limit_ptr_vector, path_to_config_file);
+        ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, &settings);
     }
     userInterface.run_gui();
 
-    ConfigFile::LoadConfig( &use_overlay, &font_size, &color_default, &color_on, &color_off, limit_ptr_vector, path_to_config_file);
+    ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, &settings);
     Helper::SetOverlayLineNumberOfLimits( limit_ptr_vector);
-    Helper::InitializeOverlay( use_overlay, font_size, color_default, limit_ptr_vector);
+    Helper::InitializeOverlay( settings, limit_ptr_vector);
 
     printf( "starting hotkey thread\n" );
 
