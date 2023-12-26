@@ -102,16 +102,17 @@ void UserInterface::Config(HWND hwnd){
     int line_of_button_clicked = -1;
     const char* in_progress = "in progress..";
     for (int i = 0; i < (limit_ptr_vector.size()); i++) {
-        String.push_back("blank");
+        String.push_back("");
     }
     static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings;
 	ImGui::Begin("config", NULL, flags);
 
 	ImGui::SeparatorText("Hotkeys");
+
+    float buttonSize = 0.0f;
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
-        ImGui::PushID(i);
         if (limit_ptr_vector[i]->key_list.size() == 0) {
-            String[i] = "blank";
+            String[i] = "Bind";
         }
         else {
             String[i] = "";
@@ -126,14 +127,20 @@ void UserInterface::Config(HWND hwnd){
             }
         }
 
-        if (ImGui::Button("Bind")) {
-            if (String[i] != in_progress) {
-                button_clicked[i] = true;
-                std::cout << "button " << i << " clicked [callback]" << std::endl;
-            }
-        }
+        const char* bind = String[i].c_str();
+        ImVec2 outSize = ImGui::CalcTextSize(bind);
+        if (buttonSize < outSize.x) buttonSize = outSize.x;
+    }
 
+    for (int i = 0; i < limit_ptr_vector.size(); i++) {
+        ImGui::PushID(i);
+
+        char name[50];
+        size_t size;
+        wcstombs_s(&size, name, limit_ptr_vector[i]->name, 50);
+        ImGui::Text("%s ", name);               // Display some text (you can use a format strings too)
         ImGui::SameLine();
+        ImGui::SetCursorPosX(70);
 
         if (ImGui::Button("Reset")) {
             String[i] = "";
@@ -144,13 +151,17 @@ void UserInterface::Config(HWND hwnd){
         }
 
         ImGui::SameLine();
-        char name[50];
-        size_t size;
-        wcstombs_s(&size, name, limit_ptr_vector[i]->name, 50);
-        ImGui::Text("%s ", name);               // Display some text (you can use a format strings too)
-        ImGui::SameLine();
-        ImGui::SetCursorPosX(170);
-        ImGui::Text("[%s]", String[i].data());               // Display some text (you can use a format strings too)
+
+
+        const char* bind = String[i].c_str();
+        if (ImGui::Button(bind, ImVec2(buttonSize + 20.0f, 0.0f))) {
+            if (String[i] != in_progress) {
+                button_clicked[i] = true;
+                std::cout << "button " << i << " clicked [callback]" << std::endl;
+            }
+        }
+
+
 
         if (limit_ptr_vector[i]->bindingComplete == true && String[i] == in_progress) {
             std::cout << "updating ui.." << std::endl;
@@ -164,6 +175,9 @@ void UserInterface::Config(HWND hwnd){
                 GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
                 String[i] += name_buffer;
             }
+		    ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file, settings);
+			ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, settings);
+			Helper::SetOverlayLineNumberOfLimits( limit_ptr_vector);
         }
 
         if (button_clicked[i] == true) {
@@ -179,27 +193,22 @@ void UserInterface::Config(HWND hwnd){
         ImGui::PopID();
     }
 
-    ImGui::Checkbox("use overlay", &settings->use_overlay);
 
-	static float color[4] = { 0.4f, 0.7f, 0.0f, 0.5f };
-	ImGui::ColorEdit4("color", color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
-
-
-	//ImGui::SetCursorPos(ImVec2(15, 250));
-	ImGui::SetCursorPos(ImVec2(15, 300));
-
-	if (ImGui::Button("Save")) {
-		ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file, settings);
-        ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, settings);
-        Helper::SetOverlayLineNumberOfLimits( limit_ptr_vector);
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::Button("Exit")) {
-		//ImGui::DestroyContext();
-        show_config = false;
-        show_overlay = true;
+	//ImGui::SetCursorPos(ImVec2(100, 260));
+	if (ImGui::Button("Close")) {
+        // check if exitapp is bound
+        for (int i = 0; i < limit_ptr_vector.size(); i++) {
+            if (limit_ptr_vector[i]->name == L"exitapp") {
+                if (limit_ptr_vector[i]->key_list.size() == 0) {
+                    MessageBoxA(NULL, "bind exitapp before closing", NULL, MB_OK);
+                }
+                else {
+		            //ImGui::DestroyContext();
+					show_config = false;
+					show_overlay = true;
+                }
+            }
+        }
 	}
 
     ImGui::End();	
