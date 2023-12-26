@@ -34,7 +34,8 @@ void UserInterface::FormatHotkeyStatusWcString( char* c_string, int sz_c_str, li
         GetKeyNameText(scan_code << 16, nameBuffer, sizeof(nameBuffer) / sizeof(nameBuffer[0]));
         wcscat_s(wcString, szWcString, nameBuffer);
     }
-    wcscat_s(wcString, szWcString, L" to ");
+    //wcscat_s(wcString, szWcString, L" to ");
+    wcscat_s(wcString, szWcString, L" ");
     wcscat_s(wcString, szWcString, limit->name);
     wcscat_s(wcString, szWcString, limit->state_name);
     WideCharToMultiByte(CP_UTF8, 0, wcString, -1, c_string, sz_c_str, nullptr, nullptr);
@@ -52,7 +53,7 @@ void UserInterface::Overlay(bool* p_open, HWND hwnd)
         ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
         ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
     }
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoResize;
     SetWindowLongPtr(hwnd, GWL_EXSTYLE, GetWindowLongPtr(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT); // make clickthrough (entire window) // TODO make it remove clickthrough when not needed
     if (corner != -1)
         window_flags |= ImGuiWindowFlags_NoMove;
@@ -63,9 +64,14 @@ void UserInterface::Overlay(bool* p_open, HWND hwnd)
     //newFont->Scale = fontSize / currentFont->FontSize;
       // Push the new font
     //ImGui::PushFont(newFont);
+        // Set up ImGui style
+    ImGuiStyle& style = ImGui::GetStyle();
+    // Set background alpha (transparency)
+    style.Colors[ImGuiCol_WindowBg].w = 0.0f; 
+    style.WindowBorderSize = 0.0f;  // Set window border size to zero
 
 
-    ImGui::SetNextWindowBgAlpha(0.2f);
+
     if (ImGui::Begin("Example: Simple overlay", p_open, window_flags))
     {
 
@@ -104,7 +110,7 @@ void UserInterface::Config(HWND hwnd){
     for (int i = 0; i < (limit_ptr_vector.size()); i++) {
         String.push_back("");
     }
-    static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings;
+    static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize;
 	ImGui::Begin("config", NULL, flags);
 
 	ImGui::SeparatorText("Hotkeys");
@@ -215,6 +221,7 @@ void UserInterface::Config(HWND hwnd){
 }
 
 
+
 int UserInterface::run_gui(){
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
@@ -249,13 +256,8 @@ int UserInterface::run_gui(){
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImFontConfig config;
-    config.RasterizerMultiply = 1.5f; // Adjust the value for better antialiasing
-    try {
-        ImFont* customFont = io.Fonts->AddFontFromFileTTF("fonts/Hack-Regular.ttf", 13.0f, &config); 
-    } catch (const std::exception& e) {
-        // Log or print the exception message
-        std::cerr << e.what() << std::endl;
-    }
+    config.RasterizerMultiply = 1.0f; // Adjust the value for better antialiasing
+    ImFont* customFont = io.Fonts->AddFontFromFileTTF("fonts/Hack-Regular.ttf", 18.0f, &config); 
     ImFont* defaultFont = io.Fonts->AddFontDefault();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls
@@ -284,7 +286,7 @@ int UserInterface::run_gui(){
     //IM_ASSERT(font != NULL);
 
     // Our state
-    ImVec4 clear_color = ImVec4(5.0f/255.0f, 5.0f/255.0f, 5.0f/255.0f, 0.0f);
+    ImVec4 clear_color = ImVec4(128.0f/255.0f, 128.0f/255.0f, 128.0f/255.0f, 1.0f);
     //ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 
@@ -321,10 +323,18 @@ int UserInterface::run_gui(){
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.FrameRounding = 0.0f;
 		style.WindowPadding = ImVec2(15.0f, 5.0f);
-		if (show_overlay) UserInterface::Overlay(&show_overlay, hwnd);
 
+
+        defaultFont->FontSize = 13.0f;
         ImGui::PushFont(defaultFont);
         if (show_config)  UserInterface::Config(hwnd);
+        ImGui::PopFont();
+
+
+
+        customFont->FontSize = 13.0f;
+        ImGui::PushFont(customFont);
+		if (show_overlay) UserInterface::Overlay(&show_overlay, hwnd);
         ImGui::PopFont();
 
         
@@ -400,7 +410,7 @@ LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     switch (msg)
     {
     case WM_CREATE:
-		SetLayeredWindowAttributes(hWnd, RGB(5, 5, 5), 0, LWA_COLORKEY);
+		SetLayeredWindowAttributes(hWnd, RGB(128, 128, 128), 0, LWA_COLORKEY);
         break;
     case WM_SIZE:
         if (wParam != SIZE_MINIMIZED)
