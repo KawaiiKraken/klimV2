@@ -18,11 +18,9 @@ void SetFilterRuleString( std::vector<limit*> limit_ptr_vector, char* combined_w
     strcpy_s( combined_windivert_rules, 1000, "(udp.DstPort < 1 and udp.DstPort > 1)"); // set to rule that wont match anything
 
     for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
-        if ( strcmp( limit_ptr_vector[i]->windivert_rule, "" ) != 0 ){
-            if ( limit_ptr_vector[i]->state ){
-                strcat_s( combined_windivert_rules, 1000, limit_ptr_vector[i]->windivert_rule);
-            }
-        }
+        if ( limit_ptr_vector[i]->state ){
+			strcat_s( combined_windivert_rules, 1000, limit_ptr_vector[i]->windivert_rule);
+		}
     }
     printf( "filter: %s\n", combined_windivert_rules );
 }
