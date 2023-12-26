@@ -187,8 +187,12 @@
     <ClInclude Include="phnt\subprocesstag.h" />
     <ClInclude Include="phnt\winsta.h" />
     <ClInclude Include="src\ConfigFile.h" />
+    <ClInclude Include="src\Hack-Regular.h" />
     <ClInclude Include="src\helperFunctions.h" />
     <ClInclude Include="src\HotkeyManager.h" />
+    <ClInclude Include="src\imgui_impl_opengl3.h" />
+    <ClInclude Include="src\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="src\imgui_impl_win32.h" />
     <ClInclude Include="src\jsoncpp_header\allocator.h" />
     <ClInclude Include="src\jsoncpp_header\assertions.h" />
     <ClInclude Include="src\jsoncpp_header\config.h" />

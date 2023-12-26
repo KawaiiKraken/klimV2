@@ -148,17 +148,6 @@ void UserInterface::Config(HWND hwnd){
         ImGui::SameLine();
         ImGui::SetCursorPosX(70);
 
-        if (ImGui::Button("Reset")) {
-            String[i] = "";
-            hotkeyInstance->done = true;
-            limit_ptr_vector[i]->key_list.clear();
-            limit_ptr_vector[i]->bindingComplete = true;
-            limit_ptr_vector[i]->updateUI = true;
-        }
-
-        ImGui::SameLine();
-
-
         const char* bind = String[i].c_str();
         if (ImGui::Button(bind, ImVec2(buttonSize + 20.0f, 0.0f))) {
             if (String[i] != in_progress) {
@@ -167,7 +156,15 @@ void UserInterface::Config(HWND hwnd){
             }
         }
 
+        ImGui::SameLine();
 
+        if (ImGui::Button("Reset")) {
+            String[i] = "";
+            hotkeyInstance->done = true;
+            limit_ptr_vector[i]->key_list.clear();
+            limit_ptr_vector[i]->bindingComplete = true;
+            limit_ptr_vector[i]->updateUI = true;
+        }
 
         if (limit_ptr_vector[i]->bindingComplete == true && String[i] == in_progress) {
             std::cout << "updating ui.." << std::endl;
@@ -181,9 +178,6 @@ void UserInterface::Config(HWND hwnd){
                 GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
                 String[i] += name_buffer;
             }
-		    ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file, settings);
-			ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, settings);
-			Helper::SetOverlayLineNumberOfLimits( limit_ptr_vector);
         }
 
         if (button_clicked[i] == true) {
@@ -210,6 +204,9 @@ void UserInterface::Config(HWND hwnd){
                 }
                 else {
 		            //ImGui::DestroyContext();
+		            ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file, settings);
+					ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, settings);
+					Helper::SetOverlayLineNumberOfLimits( limit_ptr_vector);
 					show_config = false;
 					show_overlay = true;
                 }
@@ -257,7 +254,8 @@ int UserInterface::run_gui(){
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImFontConfig config;
     config.RasterizerMultiply = 1.0f; // Adjust the value for better antialiasing
-    ImFont* customFont = io.Fonts->AddFontFromFileTTF("fonts/Hack-Regular.ttf", 18.0f, &config); 
+    //ImFont* customFont = io.Fonts->AddFontFromFileTTF("Hack-Regular.ttf", 18.0f, &config); 
+    ImFont* customFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(Hack_Regular, 18.0f, &config); 
     ImFont* defaultFont = io.Fonts->AddFontDefault();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls

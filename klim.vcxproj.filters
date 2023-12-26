@@ -24,12 +24,6 @@
     <ClCompile Include="src\windivertFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\imgui_impl_opengl3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui_impl_win32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\ConfigFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -40,6 +34,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Limit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui_impl_win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui_impl_opengl3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -222,6 +222,18 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Limit.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui_impl_opengl3_loader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui_impl_opengl3.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui_impl_win32.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hack-Regular.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
