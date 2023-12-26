@@ -5,22 +5,25 @@
 
 void Helper::Exitapp(bool debug){
     std::wcout << "shutting down\n";
+    ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE );
     if ( !debug ){
-		ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE );
 		ShowWindow( GetConsoleWindow(), SW_RESTORE );
 		}
 	PostQuitMessage( 0 );
 }
 
-void Helper::TriggerHotkeys( std::vector<limit*> limit_ptr_vector, std::vector<int> currently_pressed_keys, bool debug, COLORREF color_on, COLORREF color_off, char combined_windivert_rules[1000]) {
+void Helper::TriggerHotkeys( std::vector<limit*> limit_ptr_vector, std::vector<int> currently_pressed_keys, bool debug, Settings settings, char combined_windivert_rules[1000]) {
     for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
+        if (limit_ptr_vector[i]->key_list.size() == 0) {
+            continue;
+        }
           // Sort both vectors
         std::sort(limit_ptr_vector[i]->key_list.begin(), limit_ptr_vector[i]->key_list.end());
 		std::sort(currently_pressed_keys.begin(), currently_pressed_keys.end());
         bool containsAll = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), limit_ptr_vector[i]->key_list.begin(), limit_ptr_vector[i]->key_list.end());
 
         if (containsAll) {
-	        Helper::OnTriggerHotkey(limit_ptr_vector[i], debug, color_on, color_off, limit_ptr_vector, combined_windivert_rules);
+	        Helper::OnTriggerHotkey(limit_ptr_vector[i], debug, settings.color_on, settings.color_off, limit_ptr_vector, combined_windivert_rules);
         }
     }
 }
@@ -102,14 +105,14 @@ const wchar_t* Helper::GetFilename( const wchar_t *path ){
 }
 
 void Helper::InitializeOverlay( Settings settings, std::vector<limit*> limit_ptr_vector){
-    startOverlay( settings.use_overlay, settings.font_size );
+    //startOverlay( settings.use_overlay, settings.font_size );
 
     // set overlay to default state
     wchar_t* wc_string = new wchar_t[200];
     for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
         if (limit_ptr_vector[i]->overlay_line_number != -1) {
-            Limit::FormatHotkeyStatusWcString(wc_string, 200, limit_ptr_vector[i]);
-            UpdateOverlayLine(wc_string, limit_ptr_vector[i]->overlay_line_number, settings.color_default);
+            //Limit::FormatHotkeyStatusWcString(wc_string, 200, limit_ptr_vector[i]);
+            //UpdateOverlayLine(wc_string, limit_ptr_vector[i]->overlay_line_number, settings.color_default);
         }
     }
     delete []wc_string;
