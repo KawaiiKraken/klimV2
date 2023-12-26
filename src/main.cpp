@@ -70,7 +70,7 @@ int __cdecl main( int argc, char** argv ){
         return 0;
     }
     
-    ConfigFile::SetPathToConfigFile( ( wchar_t* )L"config.txt", path_to_config_file);
+    ConfigFile::SetPathToConfigFile( ( wchar_t* )L"config.json", path_to_config_file);
     if (ConfigFile::FileExists(path_to_config_file)) {
         ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, &settings);
     }
