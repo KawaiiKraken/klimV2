@@ -40,6 +40,7 @@ void UserInterface::FormatHotkeyStatusWcString( char* c_string, int sz_c_str, li
     WideCharToMultiByte(CP_UTF8, 0, wcString, -1, c_string, sz_c_str, nullptr, nullptr);
 }
 
+
 void UserInterface::Overlay(bool* p_open, HWND hwnd)
 {
     const float DISTANCE = 10.0f;
@@ -51,13 +52,23 @@ void UserInterface::Overlay(bool* p_open, HWND hwnd)
         ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
         ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
     }
-    ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
     SetWindowLongPtr(hwnd, GWL_EXSTYLE, GetWindowLongPtr(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT); // make clickthrough (entire window) // TODO make it remove clickthrough when not needed
     if (corner != -1)
         window_flags |= ImGuiWindowFlags_NoMove;
+
+    //ImFont* currentFont = ImGui::GetFont();
+    //ImFont* newFont = io.Fonts->Fonts[0];  // Assuming you want to use the first font (default font)
+    //float fontSize = 18.0f; // Adjust the font size as needed
+    //newFont->Scale = fontSize / currentFont->FontSize;
+      // Push the new font
+    //ImGui::PushFont(newFont);
+
+
+    ImGui::SetNextWindowBgAlpha(0.2f);
     if (ImGui::Begin("Example: Simple overlay", p_open, window_flags))
     {
+
         std::vector<char[200]> char_ptr_vector(limit_ptr_vector.size());
         for (int i = 0; i < limit_ptr_vector.size(); i++) {
             UserInterface::FormatHotkeyStatusWcString(char_ptr_vector[i], 200, limit_ptr_vector[i]);
@@ -67,23 +78,20 @@ void UserInterface::Overlay(bool* p_open, HWND hwnd)
             }
             ImGui::PopID();
         }
-        ImGui::Text("Simple overlay\n" "in the corner of the screen.\n" "(right-click to change position)");
-        ImGui::Separator();
-        if (ImGui::IsMousePosValid())
-            ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
-        else
-            ImGui::Text("Mouse Position: <invalid>");
-        if (ImGui::BeginPopupContextWindow())
-        {
-            if (ImGui::MenuItem("Custom",       NULL, corner == -1)) corner = -1;
-            if (ImGui::MenuItem("Top-left",     NULL, corner == 0)) corner = 0;
-            if (ImGui::MenuItem("Top-right",    NULL, corner == 1)) corner = 1;
-            if (ImGui::MenuItem("Bottom-left",  NULL, corner == 2)) corner = 2;
-            if (ImGui::MenuItem("Bottom-right", NULL, corner == 3)) corner = 3;
-            if (p_open && ImGui::MenuItem("Close")) *p_open = false;
-            ImGui::EndPopup();
-        }
+        //ImGui::Text("Simple overlay\n" "in the corner of the screen.\n" "(right-click to change position)");
+        //ImGui::Separator();
+        //if (ImGui::BeginPopupContextWindow())
+        //{
+            //if (ImGui::MenuItem("Custom",       NULL, corner == -1)) corner = -1;
+            //if (ImGui::MenuItem("Top-left",     NULL, corner == 0)) corner = 0;
+            //if (ImGui::MenuItem("Top-right",    NULL, corner == 1)) corner = 1;
+            //if (ImGui::MenuItem("Bottom-left",  NULL, corner == 2)) corner = 2;
+            //if (ImGui::MenuItem("Bottom-right", NULL, corner == 3)) corner = 3;
+            //if (p_open && ImGui::MenuItem("Close")) *p_open = false;
+            //ImGui::EndPopup();
+        //}
     }
+    //ImGui::PopFont();
     ImGui::End();
 }
 
@@ -231,6 +239,15 @@ int UserInterface::run_gui(){
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImFontConfig config;
+    config.RasterizerMultiply = 1.5f; // Adjust the value for better antialiasing
+    try {
+        ImFont* customFont = io.Fonts->AddFontFromFileTTF("fonts/Hack-Regular.ttf", 13.0f, &config); 
+    } catch (const std::exception& e) {
+        // Log or print the exception message
+        std::cerr << e.what() << std::endl;
+    }
+    ImFont* defaultFont = io.Fonts->AddFontDefault();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls
 
@@ -295,9 +312,11 @@ int UserInterface::run_gui(){
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.FrameRounding = 0.0f;
 		style.WindowPadding = ImVec2(15.0f, 5.0f);
-		if (show_overlay)      UserInterface::Overlay(&show_overlay, hwnd);
+		if (show_overlay) UserInterface::Overlay(&show_overlay, hwnd);
 
-        if (show_config) UserInterface::Config(hwnd);
+        ImGui::PushFont(defaultFont);
+        if (show_config)  UserInterface::Config(hwnd);
+        ImGui::PopFont();
 
         
 
