@@ -1,6 +1,13 @@
 #include "main.h"
 #include "ConfigFile.h"
 
+HINSTANCE hDLL, hDLL2;               
+HANDLE gDoneEvent;
+HHOOK hKeyboardHook;
+HANDLE handle = NULL;
+bool can_trigger_any_hotkey = TRUE;
+bool debug = FALSE;
+
 std::mutex mutex;
 std::mutex* mutex_ptr = &mutex;
 
@@ -28,6 +35,12 @@ UserInterface* UserInterface::instance = &userInterface;
 HotkeyManager* UserInterface::hotkeyInstance = &hotkeyManager;
 
 
+
+DWORD WINAPI run_gui_wrapper(LPVOID lpParam) {
+    UserInterface* uiinstance = static_cast<UserInterface*>(lpParam);
+    uiinstance->run_gui();
+    return 0;
+}
 
 
 int __cdecl main( int argc, char** argv ){
@@ -61,17 +74,17 @@ int __cdecl main( int argc, char** argv ){
     if (ConfigFile::FileExists(path_to_config_file)) {
         ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, &settings);
     }
-    userInterface.show_overlay = true;
-    userInterface.run_gui();
 
-    ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, &settings);
-    Helper::SetOverlayLineNumberOfLimits( limit_ptr_vector);
-    Helper::InitializeOverlay( settings, limit_ptr_vector);
+
+
+    userInterface.show_config = true;
+    DWORD dwThread;
+    HANDLE hGuiThread = CreateThread( NULL, NULL, ( LPTHREAD_START_ROUTINE )run_gui_wrapper, &userInterface, NULL, &dwThread );
+
 
     printf( "starting hotkey thread\n" );
 
-    DWORD dwThread;
-    hHotkeyThread = CreateThread( NULL, NULL, ( LPTHREAD_START_ROUTINE )HotkeyThread, ( LPVOID )NULL, NULL, &dwThread );
+    HANDLE hHotkeyThread = CreateThread( NULL, NULL, ( LPTHREAD_START_ROUTINE )HotkeyThread, ( LPVOID )NULL, NULL, &dwThread );
 
     if ( hHotkeyThread ){
         return WaitForSingleObject( hHotkeyThread, INFINITE );
@@ -114,7 +127,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         if (it == currently_pressed_keys.end()) {
             currently_pressed_keys.push_back(key);
 		}
-        Helper::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, color_on, color_off, combined_windivert_rules);
+        Helper::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, settings, combined_windivert_rules);
     }
     return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
 }
@@ -137,7 +150,7 @@ DWORD WINAPI HotkeyThread( LPVOID lpParam ){
     if ( !hInstance ){ 
         return 1; 
     }
-    hKeyboardHook = SetWindowsHookEx ( WH_KEYBOARD_LL, ( HOOKPROC ) KeyboardEvent, hInstance, NULL );
+    HHOOK hKeyboardHook = SetWindowsHookEx ( WH_KEYBOARD_LL, ( HOOKPROC ) KeyboardEvent, hInstance, NULL );
     MessageLoop();
     UnhookWindowsHookEx( hKeyboardHook );
     return 0;

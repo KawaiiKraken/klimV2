@@ -18,9 +18,6 @@
     <ClCompile Include="src\helperFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\krekens_overlay.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -213,9 +210,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\windivertFunctions.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\krekens_overlay.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\HotkeyManager.h">

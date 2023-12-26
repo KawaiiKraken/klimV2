@@ -14,7 +14,6 @@
 #include <shellapi.h>
 #include <psapi.h>
 #include "helperFunctions.h"
-#include "krekens_overlay.h"
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_win32.h"
@@ -40,14 +39,6 @@
 
 #pragma comment( lib, "ntdll.lib" )
 
-HINSTANCE hDLL, hDLL2;               
-HHOOK hKeyboardHook;
-HANDLE gDoneEvent;
-HANDLE hHotkeyThread = NULL;
-HANDLE handle = NULL;
-COLORREF color_default, color_off, color_on;
-bool can_trigger_any_hotkey = TRUE;
-bool debug = FALSE;
 
 void MessageLoop();
 void SetPathToConfigFile(wchar_t* configFileName);

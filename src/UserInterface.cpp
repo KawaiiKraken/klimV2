@@ -17,6 +17,29 @@ UserInterface::UserInterface(std::vector<limit*> limit_ptr_vector, wchar_t* path
     : limit_ptr_vector(limit_ptr_vector), path_to_config_file(path_to_config_file), settings(settings) {
 }
 
+void UserInterface::FormatHotkeyStatusWcString( char* c_string, int sz_c_str, limit* limit ){ 
+    int szWcString = 200;
+    
+    wchar_t wcString[200];
+    if (limit->key_list.size() == 0) { // this should never be true, just a safeguard
+        return;
+    }
+    wchar_t nameBuffer[256];
+    wcscpy_s(wcString, szWcString, L"");
+    for (int i = 0; i < limit->key_list.size(); i++) {
+        if (wcscmp(wcString, L"") != 0) {
+            wcscat_s(wcString, szWcString, L"+");
+        }
+        int scan_code = MapVirtualKey(limit->key_list[i], 0);
+        GetKeyNameText(scan_code << 16, nameBuffer, sizeof(nameBuffer) / sizeof(nameBuffer[0]));
+        wcscat_s(wcString, szWcString, nameBuffer);
+    }
+    wcscat_s(wcString, szWcString, L" to ");
+    wcscat_s(wcString, szWcString, limit->name);
+    wcscat_s(wcString, szWcString, limit->state_name);
+    WideCharToMultiByte(CP_UTF8, 0, wcString, -1, c_string, sz_c_str, nullptr, nullptr);
+}
+
 void UserInterface::Overlay(bool* p_open, HWND hwnd)
 {
     const float DISTANCE = 10.0f;
@@ -35,6 +58,15 @@ void UserInterface::Overlay(bool* p_open, HWND hwnd)
         window_flags |= ImGuiWindowFlags_NoMove;
     if (ImGui::Begin("Example: Simple overlay", p_open, window_flags))
     {
+        std::vector<char[200]> char_ptr_vector(limit_ptr_vector.size());
+        for (int i = 0; i < limit_ptr_vector.size(); i++) {
+            UserInterface::FormatHotkeyStatusWcString(char_ptr_vector[i], 200, limit_ptr_vector[i]);
+            ImGui::PushID(i);
+            if (strcmp(char_ptr_vector[i], "") != 0) {
+                ImGui::Text(char_ptr_vector[i]);
+            }
+            ImGui::PopID();
+        }
         ImGui::Text("Simple overlay\n" "in the corner of the screen.\n" "(right-click to change position)");
         ImGui::Separator();
         if (ImGui::IsMousePosValid())
@@ -70,7 +102,6 @@ void UserInterface::Config(HWND hwnd){
 	ImGui::SeparatorText("Hotkeys");
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
         ImGui::PushID(i);
-        std::cout << "key list size: " << limit_ptr_vector[i]->key_list.size() << std::endl;
         if (limit_ptr_vector[i]->key_list.size() == 0) {
             String[i] = "blank";
         }
@@ -151,14 +182,16 @@ void UserInterface::Config(HWND hwnd){
 
 	if (ImGui::Button("Save")) {
 		ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file, settings);
+        ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, settings);
+        Helper::SetOverlayLineNumberOfLimits( limit_ptr_vector);
 	}
 
 	ImGui::SameLine();
 
 	if (ImGui::Button("Exit")) {
-		// this only crashes the app but this is good enough for now
-		// TODO make it actually exit
-		ImGui::DestroyContext();
+		//ImGui::DestroyContext();
+        show_config = false;
+        show_overlay = true;
 	}
 
     ImGui::End();	

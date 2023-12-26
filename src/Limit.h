@@ -27,8 +27,6 @@ public:
     static void ToggleBlockingLimit( limit* limit,     COLORREF colorOn, COLORREF colorOff);
 	static void ToggleSuspend(       limit* suspend,   COLORREF colorOn, COLORREF colorOff);
 	static void ToggleWholeGameLimit(limit* lim_game,  COLORREF colorOn, COLORREF colorOff);
-    static void FormatHotkeyStatusWcString(wchar_t* wcString, int szWcString, limit* limit);
-
 private:
     static void SuspendProcess(DWORD pid, bool suspend);
 };
