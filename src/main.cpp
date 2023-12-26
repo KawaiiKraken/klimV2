@@ -78,7 +78,9 @@ int __cdecl main( int argc, char** argv ){
 
 
     userInterface.show_config = true;
+    userInterface.show_overlay= false;
     DWORD dwThread;
+    printf( "starting ui thread\n" );
     HANDLE hGuiThread = CreateThread( NULL, NULL, ( LPTHREAD_START_ROUTINE )run_gui_wrapper, &userInterface, NULL, &dwThread );
 
 
@@ -106,7 +108,6 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         KBDLLHOOKSTRUCT hooked_key =  *( ( KBDLLHOOKSTRUCT* )lParam );
 
         int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
-        std::cout << "key recv: " << key << std::endl;
 
 
 		// Check if the vector contains the target element
