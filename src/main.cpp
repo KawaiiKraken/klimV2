@@ -128,7 +128,9 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         if (it == currently_pressed_keys.end()) {
             currently_pressed_keys.push_back(key);
 		}
-        Helper::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, settings, combined_windivert_rules);
+        if (!userInterface.show_config) {
+            Helper::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, settings, combined_windivert_rules);
+        }
     }
     return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
 }
