@@ -38,12 +38,7 @@ for support join our server at the [thrallway](https://thrallway.com)
 # compiling from source
 ```
 git clone https://github.com/KawaiiKraken/klimV2
-cd klimV2
-git submodule update --init --recursive
 ```
-open sln in visual studio, hit build
-
-some notes: 
-- you will have to change some <> to "" in phnt
 - you will need to install imgui and jsoncpp thru vcpkg
+- open sln in visual studio, hit build
 
