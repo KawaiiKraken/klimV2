@@ -6,19 +6,14 @@ for support join our server at the [thrallway](https://thrallway.com)
 # features
 - lims: 3074DL, 3074UL, 27kDL, 27UL, 30kDL, 7500DL, whole game 800b/s DL
 - game pauser
-- customizable hotkeys
+- config ui
 - undetected
 - limits without a delay 
-- overlay (with toggle to switch to a separate window which you can even close)
+- overlay 
 ![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/example_screenshot.png "My Config")
  
 # installation
 - download [lastest release](https://github.com/KawaiiKraken/klimV2/releases/latest)
-- run exe 
-- set up hotkeys
-- close settings window
-- limit as much as you want
-it's literally that easy
 
 # how to use
 - [netlimiter bible](https://docs.google.com/document/d/1CuFbJ4KlbSMqf22lVap2yiSMHxLWRJpiMO1eIIpgtJQ)
@@ -30,7 +25,6 @@ it's literally that easy
 - whole game limit: [NetQosPolicy](https://learn.microsoft.com/en-us/powershell/module/netqos/)
   
 # known issues
-- the mod seasonal monochromatic maestro can cause desync to be permanent 
 - whole game limit requires windows pro
 
 # how to contribute
@@ -39,6 +33,7 @@ it's literally that easy
 - report bugs via a github issue or at the [thrallway](https://thrallway.com)
 - clone this repo and make a pull request with your changes
 - idk buy me an expansion or smth if you really like this project
+- kofi soonTM
 
 # compiling from source
 ```
@@ -50,5 +45,5 @@ open sln in visual studio, hit build
 
 some notes: 
 - you will have to change some <> to "" in phnt
-- you may also have to include/link the windows sdk 
+- you will need to install imgui and jsoncpp thru vcpkg
 
