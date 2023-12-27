@@ -40,6 +40,8 @@ private:
     Settings* settings;
     void Overlay(bool* p_open, HWND hwnd);
     void Config(HWND hwnd);
+    ImVec2 overlayWindowPos;
+    ImVec2 overlayWindowSize;
 };
 // font base64, i will find a better way for this at some point... prob
 const char Hack_Regular[243650+1] =

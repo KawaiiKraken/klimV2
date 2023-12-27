@@ -111,7 +111,8 @@ void UserInterface::Config(HWND hwnd){
     for (int i = 0; i < (limit_ptr_vector.size()); i++) {
         String.push_back("");
     }
-    static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize;
+    static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::Begin("config", NULL, flags);
 
 	ImGui::SeparatorText("Hotkeys");
@@ -237,8 +238,9 @@ int UserInterface::run_gui(){
     // Calculate the pixel size
     int screenWidth = desktopRect.right - desktopRect.left;
 	int screenHeight = desktopRect.bottom - desktopRect.top;
-    DWORD dwStyle = WS_VISIBLE | WS_OVERLAPPED | WS_POPUP | WS_BORDER;
-    HWND hwnd = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, wc.lpszClassName, L"klim config", dwStyle, 0, 0, screenWidth, screenHeight, NULL, NULL, wc.hInstance, NULL);
+    DWORD dwStyle = WS_VISIBLE | WS_OVERLAPPED | WS_POPUP;
+    //HWND hwnd = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, wc.lpszClassName, L"klim config", dwStyle, 0, 0, screenWidth, screenHeight, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, wc.lpszClassName, L"klim config", dwStyle, 0, 0, 250, 350, NULL, NULL, wc.hInstance, NULL);
 
 
 
@@ -435,17 +437,6 @@ LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         break;
     case WM_KEYUP:
         hotkeyInstance->KeyboardInputHandler(static_cast<int>(wParam), false);
-        break;
-    case WM_GETMINMAXINFO:
-        RECT desktopRect;
-        HWND hDesktop = GetDesktopWindow();
-        GetWindowRect(hDesktop, &desktopRect);
-        // Calculate the pixel size
-		int screenWidth = desktopRect.right - desktopRect.left;
-		int screenHeight = desktopRect.bottom - desktopRect.top;
-        MINMAXINFO* minMaxInfo = (MINMAXINFO*)lParam;
-        minMaxInfo->ptMinTrackSize.x = minMaxInfo->ptMaxTrackSize.x = screenWidth; // size x width
-        minMaxInfo->ptMinTrackSize.y = minMaxInfo->ptMaxTrackSize.y = screenHeight; // size y height
         break;
     }
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
