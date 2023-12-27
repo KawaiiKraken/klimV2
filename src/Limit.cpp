@@ -1,29 +1,18 @@
 #include "Limit.h"
+#include "ConfigFile.h"
 
+void Limit::ToggleWholeGameLimit( std::atomic<limit>* lim_game, Settings settings){
+    limit temp_limit = lim_game->load();
+    temp_limit.state = !temp_limit.state;
+    lim_game->store(temp_limit);
 
-void Limit::ToggleBlockingLimit( limit* limit, COLORREF color_on, COLORREF color_off ){
-    limit->ToggleState();
-
-    COLORREF color = limit->state ? color_on : color_off;
-    wchar_t* wcstring = new wchar_t[200];
-    //FormatHotkeyStatusWcString( wcstring, 200, limit);
-    //UpdateOverlayLine( wcstring, limit->overlay_line_number, color );
-    delete []wcstring;
-}
-
-
-
-
-void Limit::ToggleWholeGameLimit( limit* lim_game, COLORREF color_on, COLORREF color_off ){
-    lim_game->ToggleState();
-
-    if ( lim_game->state ){
+    if ( temp_limit.state ){
         ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 0.801KB", NULL, SW_HIDE );
     } else {
         ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE );
     }
 
-    COLORREF color = lim_game->state ? color_on : color_off;
+    COLORREF color = temp_limit.state ? settings.color_on : settings.color_off;
     wchar_t* wcstring = new wchar_t[200];
     //FormatHotkeyStatusWcString( wcstring, 200, lim_game );
     //UpdateOverlayLine( wcstring, lim_game->overlay_line_number, color);
@@ -32,7 +21,7 @@ void Limit::ToggleWholeGameLimit( limit* lim_game, COLORREF color_on, COLORREF c
 
 
 
-void Limit::ToggleSuspend( limit* suspend, COLORREF color_on, COLORREF color_off ){
+void Limit::ToggleSuspend( std::atomic<limit>* suspend, Settings settings){
     if ( !Helper::D2Active() ){ // prevents from pausing random stuff if running with debug
         MessageBox(NULL, L"failed to pause...\nd2 is not the active window", NULL, MB_OK | MB_ICONWARNING);
         return;
@@ -40,10 +29,12 @@ void Limit::ToggleSuspend( limit* suspend, COLORREF color_on, COLORREF color_off
 
     DWORD pid = 0;
     GetWindowThreadProcessId( GetForegroundWindow(), &pid );
-    suspend->state ? SuspendProcess( pid, false ) : SuspendProcess( pid, true );
+    suspend->load().state ? SuspendProcess( pid, false ) : SuspendProcess( pid, true );
 
-    suspend->ToggleState();
-    COLORREF color = suspend->state ? color_on : color_off;
+    limit temp_limit = suspend->load();
+    temp_limit.state = !temp_limit.state;
+    suspend->store(temp_limit);
+    COLORREF color = temp_limit.state ? settings.color_on : settings.color_off;
     wchar_t* wcstring = new wchar_t[200];
     //FormatHotkeyStatusWcString( wcstring, 200, suspend );
     //UpdateOverlayLine( wcstring, suspend->overlay_line_number, color );

@@ -11,16 +11,16 @@ bool debug = FALSE;
 std::mutex mutex;
 std::mutex* mutex_ptr = &mutex;
 
-limit lim_3074(    ( wchar_t* )L"3074" ); 
-limit lim_3074_ul( ( wchar_t* )L"3074UL" );
-limit lim_27k(     ( wchar_t* )L"27k" ); 
-limit lim_27k_ul(  ( wchar_t* )L"27kUL" ); 
-limit lim_30k(     ( wchar_t* )L"30k" ); 
-limit lim_7k(      ( wchar_t* )L"7k" ); 
-limit lim_game(    ( wchar_t* )L"game" ); 
-limit suspend(     ( wchar_t* )L"suspend" ); 
-limit exitapp(     ( wchar_t* )L"exitapp" ); 
-std::vector<limit*> limit_ptr_vector = { &lim_3074, &lim_3074_ul, &lim_27k, &lim_27k_ul, &lim_30k, &lim_7k, &lim_game, &suspend, &exitapp };
+std::atomic<limit> lim_3074("3074"); 
+std::atomic<limit> lim_3074_ul("3074UL");
+std::atomic<limit> lim_27k("27k"); 
+std::atomic<limit> lim_27k_ul("27kUL"); 
+std::atomic<limit> lim_30k("30k"); 
+std::atomic<limit> lim_7k("7k"); 
+std::atomic<limit> lim_game("game"); 
+std::atomic<limit> suspend("suspend"); 
+std::atomic<limit> exitapp("exitapp"); 
+const std::vector<std::atomic<limit>*> limit_ptr_vector = { &lim_3074, &lim_3074_ul, &lim_27k, &lim_27k_ul, &lim_30k, &lim_7k, &lim_game, &suspend, &exitapp };
 
 typedef void (*KeyboardEventCallback)(int, bool);
 std::vector<int> currently_pressed_keys;
@@ -44,12 +44,25 @@ DWORD WINAPI run_gui_wrapper(LPVOID lpParam) {
 
 
 int __cdecl main( int argc, char** argv ){
-    strcpy_s( lim_3074.windivert_rule,    sizeof( lim_3074.windivert_rule ),    " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)" ); 
-	strcpy_s( lim_3074_ul.windivert_rule, sizeof( lim_3074_ul.windivert_rule ), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)" ); 
-	strcpy_s( lim_27k.windivert_rule,     sizeof( lim_27k.windivert_rule ),     " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)" ); 
-	strcpy_s( lim_27k_ul.windivert_rule,  sizeof( lim_27k_ul.windivert_rule ),  " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)" ); 
-	strcpy_s( lim_30k.windivert_rule,     sizeof( lim_30k.windivert_rule ),     " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)" ); 
-	strcpy_s( lim_7k.windivert_rule,      sizeof( lim_7k.windivert_rule ),      " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)" ); 
+    std::cout << std::is_trivially_copyable<limit>::value << std::is_copy_constructible<limit>::value << std::is_move_constructible<limit>::value << std::is_copy_assignable<limit>::value << std::is_move_assignable<limit>::value << std::endl;
+    limit temp_limit = lim_3074.load();
+    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
+    lim_3074.store(temp_limit);
+    temp_limit = lim_3074_ul.load();
+    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
+    lim_3074_ul.store(temp_limit);
+    temp_limit = lim_27k.load();
+    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
+    lim_27k.store(temp_limit);
+    temp_limit = lim_27k_ul.load();
+    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)");
+    lim_27k_ul.store(temp_limit);
+    temp_limit = lim_30k.load();
+    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
+    lim_30k.store(temp_limit);
+    temp_limit = lim_7k.load();
+    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
+    lim_7k.store(temp_limit);
 
     if ( argv[1] != NULL ){
         if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){

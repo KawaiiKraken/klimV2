@@ -1,18 +1,23 @@
 #include "ConfigFile.h"
 
-void ConfigFile::WriteConfig(std::vector<limit*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings) {
+void ConfigFile::WriteConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings) {
     Json::Value config;
 
-	char char_buffer[250];
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
-        if (limit_ptr_vector[i]->key_list.size() == 0) {
+        limit temp_limit = limit_ptr_vector[i]->load();
+        if (temp_limit.key_list[0] == 0) {
             continue;
         }
 		size_t size;
-		wcstombs_s(&size, char_buffer, limit_ptr_vector[i]->name, 50);
-        strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
+        std::string name = temp_limit.name;
+        name.append("_key_list");
 
-        config[char_buffer] = ConfigFile::vectorToJson(limit_ptr_vector[i]->key_list);
+        std::vector<int> key_list;
+        for (int i = 0; i < temp_limit.max_key_list_size; i++) {
+            if (temp_limit.key_list[i] == 0) continue;
+            key_list.push_back(temp_limit.key_list[i]);
+        }
+        config[name] = ConfigFile::vectorToJson(key_list);
     }
 
     // random defaults for now
@@ -27,16 +32,22 @@ void ConfigFile::WriteConfig(std::vector<limit*> limit_ptr_vector, wchar_t path_
 
 
 
-void ConfigFile::LoadConfig(std::vector<limit*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings){
+void ConfigFile::LoadConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings){
     // Load the config from the JSON file
     Json::Value loaded_config = ConfigFile::LoadConfigFileFromJson( path_to_config_file );
 	char char_buffer[250];
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
 		size_t size;
-		wcstombs_s(&size, char_buffer, limit_ptr_vector[i]->name, 50);
-        strcat_s(char_buffer, sizeof(char_buffer), "_key_list");
+        std::string name = limit_ptr_vector[i]->load().name;
+        name.append("_key_list");
 
-        limit_ptr_vector[i]->key_list = ConfigFile::jsonToVector(loaded_config[char_buffer]);
+        limit temp_limit = limit_ptr_vector[i]->load();
+        std::vector<int> key_vector = ConfigFile::jsonToVector(loaded_config[name.c_str()]);
+        //temp_limit.key_list;
+        for (int i = 0; i < key_vector.size(); i++) {
+            temp_limit.key_list[i] = key_vector[i];
+        }
+        limit_ptr_vector[i]->store(temp_limit);
     }
 
     settings->color_default = stol( loaded_config["color_default"].asString(), NULL, 16 );
