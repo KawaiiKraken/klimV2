@@ -14,12 +14,12 @@ const char *err_str;
 HANDLE hWindivert = NULL;
 HANDLE hThread2 = NULL;
 
-void SetFilterRuleString( std::vector<limit*> limit_ptr_vector, char* combined_windivert_rules) {
+void SetFilterRuleString( std::vector<std::atomic<limit>*> limit_ptr_vector, char* combined_windivert_rules) {
     strcpy_s( combined_windivert_rules, 1000, "(udp.DstPort < 1 and udp.DstPort > 1)"); // set to rule that wont match anything
 
     for ( int i = 0; i < limit_ptr_vector.size(); i++ ){
-        if ( limit_ptr_vector[i]->state ){
-			strcat_s( combined_windivert_rules, 1000, limit_ptr_vector[i]->windivert_rule);
+        if ( limit_ptr_vector[i]->load().state ){
+			strcat_s( combined_windivert_rules, 1000, limit_ptr_vector[i]->load().windivert_rule);
 		}
     }
     printf( "filter: %s\n", combined_windivert_rules );

@@ -18,6 +18,6 @@ struct limit; // forward declaration
 
 unsigned long WindivertFilterThread( LPVOID lpParam );
 void UpdateFilter( char* myNetRules );
-void SetFilterRuleString(std::vector<limit*> limit_ptr_vector, char* combined_windivert_rules);
+void SetFilterRuleString(std::vector<std::atomic<limit>*> limit_ptr_vector, char* combined_windivert_rules);
 
 #endif WINDIVERTFUNCTIONS_H

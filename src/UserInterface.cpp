@@ -13,32 +13,33 @@
 #include "ConfigFile.h"
 
 
-UserInterface::UserInterface(std::vector<limit*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings) 
+UserInterface::UserInterface(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings) 
     : limit_ptr_vector(limit_ptr_vector), path_to_config_file(path_to_config_file), settings(settings) {
 }
 
-void UserInterface::FormatHotkeyStatusWcString( char* c_string, int sz_c_str, limit* limit ){ 
+void UserInterface::FormatHotkeyStatusWcString( char* c_string, int sz_c_str, std::atomic<limit>* limit ){ 
     int szWcString = 200;
     
     wchar_t wcString[200];
-    if (limit->key_list.size() == 0) { // this should never be true, just a safeguard
+    if (limit->load().key_list[0] == 0) { 
         return;
     }
     wchar_t nameBuffer[256];
     wcscpy_s(wcString, szWcString, L"");
-    for (int i = 0; i < limit->key_list.size(); i++) {
+    for (int i = 0; i < limit->load().max_key_list_size; i++) {
+        if (limit->load().key_list[i] == 0) break;
         if (wcscmp(wcString, L"") != 0) {
             wcscat_s(wcString, szWcString, L"+");
         }
-        int scan_code = MapVirtualKey(limit->key_list[i], 0);
+        int scan_code = MapVirtualKey(limit->load().key_list[i], 0);
         GetKeyNameText(scan_code << 16, nameBuffer, sizeof(nameBuffer) / sizeof(nameBuffer[0]));
         wcscat_s(wcString, szWcString, nameBuffer);
     }
     //wcscat_s(wcString, szWcString, L" to ");
     wcscat_s(wcString, szWcString, L" ");
-    wcscat_s(wcString, szWcString, limit->name);
-    wcscat_s(wcString, szWcString, limit->state_name);
-    WideCharToMultiByte(CP_UTF8, 0, wcString, -1, c_string, sz_c_str, nullptr, nullptr);
+    WideCharToMultiByte(CP_UTF8, 0, wcString, -1, c_string, 200, nullptr, nullptr);
+    strcat_s(c_string, 200, limit->load().name);
+    strcat_s(c_string, 200, limit->load().state ? "(on)" : "(off)");
 }
 
 
@@ -117,16 +118,17 @@ void UserInterface::Config(HWND hwnd){
 
     float buttonSize = 0.0f;
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
-        if (limit_ptr_vector[i]->key_list.size() == 0) {
+        if (limit_ptr_vector[i]->load().key_list[0] == 0) {
             String[i] = "Bind";
         }
         else {
             String[i] = "";
-            for (int j = 0; j < limit_ptr_vector[i]->key_list.size(); j++) {
+            for (int j = 0; j < limit_ptr_vector[i]->load().max_key_list_size; j++) {
+                if (limit_ptr_vector[i]->load().key_list[j] == 0) continue;
                 if (String[i] != "") {
                     String[i].append("+");
                 }
-                int scan_code = MapVirtualKey(limit_ptr_vector[i]->key_list[j], 0);
+                int scan_code = MapVirtualKey(limit_ptr_vector[i]->load().key_list[j], 0);
                 char name_buffer[256];
                 GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
                 String[i] += name_buffer;
@@ -143,8 +145,7 @@ void UserInterface::Config(HWND hwnd){
 
         char name[50];
         size_t size;
-        wcstombs_s(&size, name, limit_ptr_vector[i]->name, 50);
-        ImGui::Text("%s ", name);               // Display some text (you can use a format strings too)
+        ImGui::Text("%s ", limit_ptr_vector[i]->load().name);               // Display some text (you can use a format strings too)
         ImGui::SameLine();
         ImGui::SetCursorPosX(70);
 
@@ -161,19 +162,24 @@ void UserInterface::Config(HWND hwnd){
         if (ImGui::Button("Reset")) {
             String[i] = "";
             hotkeyInstance->done = true;
-            limit_ptr_vector[i]->key_list.clear();
-            limit_ptr_vector[i]->bindingComplete = true;
-            limit_ptr_vector[i]->updateUI = true;
+            limit temp_limit = limit_ptr_vector[i]->load();
+            for (int i = 0; i < temp_limit.max_key_list_size; i++) {
+                temp_limit.key_list[i] = 0;
+            }
+            temp_limit.bindingComplete = true;
+            temp_limit.updateUI = true;
+            limit_ptr_vector[i]->store(temp_limit);
         }
 
-        if (limit_ptr_vector[i]->bindingComplete == true && String[i] == in_progress) {
+        if (limit_ptr_vector[i]->load().bindingComplete == true && String[i] == in_progress) {
             std::cout << "updating ui.." << std::endl;
             String[i] = "";
-            for (int j = 0; j < limit_ptr_vector[i]->key_list.size(); j++) {
+            for (int j = 0; j < limit_ptr_vector[i]->load().max_key_list_size; j++) {
+                if (limit_ptr_vector[i]->load().key_list[0] == 0) continue;
                 if (String[i] != "") {
                     String[i].append("+");
                 }
-                int scan_code = MapVirtualKey(limit_ptr_vector[i]->key_list[j], 0);
+                int scan_code = MapVirtualKey(limit_ptr_vector[i]->load().key_list[j], 0);
                 char name_buffer[256];
                 GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
                 String[i] += name_buffer;
@@ -198,8 +204,8 @@ void UserInterface::Config(HWND hwnd){
 	if (ImGui::Button("Close")) {
         // check if exitapp is bound
         for (int i = 0; i < limit_ptr_vector.size(); i++) {
-            if (limit_ptr_vector[i]->name == L"exitapp") {
-                if (limit_ptr_vector[i]->key_list.size() == 0) {
+            if (strcmp(limit_ptr_vector[i]->load().name, "exitapp") == 0) {
+                if (limit_ptr_vector[i]->load().key_list[0] == 0) {
                     MessageBoxA(NULL, "bind exitapp before closing", NULL, MB_OK);
                 }
                 else {
@@ -255,7 +261,7 @@ int UserInterface::run_gui(){
     ImFontConfig config;
     config.RasterizerMultiply = 1.0f; // Adjust the value for better antialiasing
     //ImFont* customFont = io.Fonts->AddFontFromFileTTF("Hack-Regular.ttf", 18.0f, &config); 
-    ImFont* customFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(Hack_Regular, 18.0f, &config); 
+    ImFont* customFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(Hack_Regular, 15.0f, &config); 
     ImFont* defaultFont = io.Fonts->AddFontDefault();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls

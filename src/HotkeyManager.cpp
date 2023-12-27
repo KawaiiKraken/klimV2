@@ -1,14 +1,16 @@
 #include "HotkeyManager.h"
-HotkeyManager::HotkeyManager(std::vector<limit*> _limit_ptr_vector)
+HotkeyManager::HotkeyManager(std::vector<std::atomic<limit>*> _limit_ptr_vector)
     : _cur_line(-1), _currentHotkeyList(), done(false), _limit_ptr_vector(_limit_ptr_vector) {
 }
 void HotkeyManager::asyncBindHotkey(int i) {
     _cur_line = i;
-    if (_limit_ptr_vector[_cur_line]->bindingComplete == false) {
+    if (_limit_ptr_vector[_cur_line]->load().bindingComplete == false) {
         MessageBox(NULL, (wchar_t*)L"error hotkey is already being bound...", NULL, MB_OK);
 	    return;
     }
-    _limit_ptr_vector[_cur_line]->bindingComplete = false;
+    limit temp_limit = _limit_ptr_vector[_cur_line]->load();
+    temp_limit.bindingComplete = false;
+    _limit_ptr_vector[_cur_line]->store(temp_limit);
 
     _currentHotkeyList.clear();
 
@@ -16,9 +18,11 @@ void HotkeyManager::asyncBindHotkey(int i) {
     while (done == false) {
         Sleep(10);
     }
-	_limit_ptr_vector[_cur_line]->updateUI = true;
+    temp_limit = _limit_ptr_vector[_cur_line]->load();
+    temp_limit.updateUI = true;
     std::cout << "current size: " << _currentHotkeyList.size() << std::endl;
-	_limit_ptr_vector[_cur_line]->bindingComplete = true;
+    temp_limit.bindingComplete = true;
+    _limit_ptr_vector[_cur_line]->store(temp_limit);
     _cur_line = -1;
 
     return;
@@ -37,7 +41,11 @@ void HotkeyManager::KeyboardInputHandler(int key, bool isKeyDown) {
 	} else {
 	    std::cout << "Key Up: " << key << std::endl;
 		auto it = std::find(_currentHotkeyList.begin(), _currentHotkeyList.end(), key);
-		_limit_ptr_vector[_cur_line]->key_list = _currentHotkeyList;
+        limit temp_limit = _limit_ptr_vector[_cur_line]->load();
+        for (int i = 0; i < _currentHotkeyList.size(); i++) {
+            temp_limit.key_list[i] = _currentHotkeyList[i];
+        }
+        _limit_ptr_vector[_cur_line]->store(temp_limit);
         done = true;
 	}
 }

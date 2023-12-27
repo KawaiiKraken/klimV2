@@ -10,7 +10,7 @@
 
 class HotkeyManager {
 public:
-    HotkeyManager(std::vector<limit*> _limit_ptr_vector);
+    HotkeyManager(std::vector<std::atomic<limit>*> _limit_ptr_vector);
     void asyncBindHotkey(int i);
 	void KeyboardInputHandler(int key, bool isKeyDown);
     int done = false;
@@ -18,7 +18,7 @@ public:
 private:
     int _cur_line = -1;
     std::vector<int> _currentHotkeyList;
-    std::vector<limit*> _limit_ptr_vector;
+    std::vector<std::atomic<limit>*> _limit_ptr_vector;
     bool cancelled = false;
 };
 

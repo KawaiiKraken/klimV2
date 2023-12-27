@@ -6,27 +6,29 @@
 
 
 struct limit {
-    wchar_t* name;
-    std::vector<int> key_list;
+    char name[40];
+    int key_list[20];
+    int max_key_list_size = 20;
     bool bindingComplete = true;
     bool triggered = false;
     bool state = false;
-    wchar_t state_name[20] = {'\0'};
     int overlay_line_number = -1;
     char windivert_rule[250];
     bool updateUI = false;
-    void ToggleState() {
-        state = !state;
-        wcscpy_s(state_name, state ? (wchar_t*)L"(on)" : (wchar_t*)L"(off)");
+
+    limit() = default;
+
+    limit(const char* n) {
+        strncpy_s(name, n, sizeof(name));
+        std::fill(std::begin(key_list), std::end(key_list), 0);
+        std::fill(std::begin(windivert_rule), std::end(windivert_rule), '\0');
     }
-    limit(wchar_t* n) : name(n) {}
 };
 
 class Limit {
 public:
-    static void ToggleBlockingLimit( limit* limit,     COLORREF colorOn, COLORREF colorOff);
-	static void ToggleSuspend(       limit* suspend,   COLORREF colorOn, COLORREF colorOff);
-	static void ToggleWholeGameLimit(limit* lim_game,  COLORREF colorOn, COLORREF colorOff);
+	static void ToggleSuspend(       std::atomic<limit>* suspend,   Settings settings);
+	static void ToggleWholeGameLimit(std::atomic<limit>* lim_game,  Settings settings);
 private:
     static void SuspendProcess(DWORD pid, bool suspend);
 };
