@@ -54,7 +54,7 @@ std::mutex mutex;
 std::mutex* mutex_ptr = &mutex;
 
 std::atomic<limit> lim_3074 = limit("3074", " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
-std::atomic<limit> lim_3074_ul = limit ("3074UL", " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
+std::atomic<limit> lim_3074_ul = limit("3074UL", " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
 std::atomic<limit> lim_27k = limit("27k", " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
 std::atomic<limit> lim_27k_ul = limit("27kUL", " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)");
 std::atomic<limit> lim_30k = limit("30k", " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
@@ -85,7 +85,7 @@ DWORD WINAPI run_gui_wrapper(LPVOID lpParam) {
 }
 
 
-int __cdecl main( int argc, char** argv ){
+int __cdecl main( char** argv ){
     if ( argv[1] != NULL ){
         if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){
             printf( "debug: true\n" );
@@ -116,7 +116,7 @@ int __cdecl main( int argc, char** argv ){
     userInterface.show_overlay= false;
     DWORD dwThread;
     printf( "starting ui thread\n" );
-    HANDLE hGuiThread = CreateThread( NULL, NULL, ( LPTHREAD_START_ROUTINE )run_gui_wrapper, &userInterface, NULL, &dwThread );
+    CreateThread( NULL, NULL, ( LPTHREAD_START_ROUTINE )run_gui_wrapper, &userInterface, NULL, &dwThread );
 
 
     printf( "starting hotkey thread\n" );
@@ -133,7 +133,6 @@ int __cdecl main( int argc, char** argv ){
 		FreeLibrary( hDLL );
         return 1;
     }
-    return 0;
 }
 
 
@@ -188,7 +187,7 @@ DWORD WINAPI HotkeyThread( LPVOID lpParam ){
     if ( !hInstance ){ 
         return 1; 
     }
-    HHOOK hKeyboardHook = SetWindowsHookEx ( WH_KEYBOARD_LL, ( HOOKPROC ) KeyboardEvent, hInstance, NULL );
+    hKeyboardHook = SetWindowsHookEx ( WH_KEYBOARD_LL, ( HOOKPROC ) KeyboardEvent, hInstance, NULL );
     MessageLoop();
     UnhookWindowsHookEx( hKeyboardHook );
     return 0;

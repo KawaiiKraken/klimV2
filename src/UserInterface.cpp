@@ -11,13 +11,14 @@
 #include "UserInterface.h"
 #include "helperFunctions.h"
 #include "ConfigFile.h"
+#include "HotkeyManager.h"
 
 
 UserInterface::UserInterface(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings) 
     : limit_ptr_vector(limit_ptr_vector), path_to_config_file(path_to_config_file), settings(settings) {
 }
 
-void UserInterface::FormatHotkeyStatusWcString( char* c_string, int sz_c_str, std::atomic<limit>* limit ){ 
+void UserInterface::FormatHotkeyStatusWcString( char* c_string, std::atomic<limit>* limit ){ 
     int szWcString = 200;
     
     wchar_t wcString[200];
@@ -78,7 +79,7 @@ void UserInterface::Overlay(bool* p_open, HWND hwnd)
 
         std::vector<char[200]> char_ptr_vector(limit_ptr_vector.size());
         for (int i = 0; i < limit_ptr_vector.size(); i++) {
-            UserInterface::FormatHotkeyStatusWcString(char_ptr_vector[i], 200, limit_ptr_vector[i]);
+            UserInterface::FormatHotkeyStatusWcString(char_ptr_vector[i], limit_ptr_vector[i]);
             ImGui::PushID(i);
             if (strcmp(char_ptr_vector[i], "") != 0) {
                 ImGui::Text(char_ptr_vector[i]);
@@ -162,8 +163,8 @@ void UserInterface::Config(HWND hwnd){
             String[i] = "";
             hotkeyInstance->done = true;
             limit temp_limit = limit_ptr_vector[i]->load();
-            for (int i = 0; i < temp_limit.max_key_list_size; i++) {
-                temp_limit.key_list[i] = 0;
+            for (int j = 0; j < temp_limit.max_key_list_size; j++) {
+                temp_limit.key_list[j] = 0;
             }
             temp_limit.bindingComplete = true;
             temp_limit.updateUI = true;
@@ -234,14 +235,15 @@ int UserInterface::run_gui(){
     HWND hDesktop = GetDesktopWindow();
     GetWindowRect(hDesktop, &desktopRect);
     // Calculate the pixel size
-    int screenWidth = desktopRect.right - desktopRect.left;
-	int screenHeight = desktopRect.bottom - desktopRect.top;
+    //int screenWidth = desktopRect.right - desktopRect.left;
+	//int screenHeight = desktopRect.bottom - desktopRect.top;
     DWORD dwStyle = WS_VISIBLE | WS_OVERLAPPED | WS_POPUP;
     //HWND hwnd = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, wc.lpszClassName, L"klim config", dwStyle, 0, 0, screenWidth, screenHeight, NULL, NULL, wc.hInstance, NULL);
     HWND hwnd = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, wc.lpszClassName, L"klim config", dwStyle, 0, 0, 250, 350, NULL, NULL, wc.hInstance, NULL);
 
 
 
+	WGL_WindowData   g_MainWindow;
     // Initialize OpenGL
     if (!CreateDeviceWGL(hwnd, &g_MainWindow))
     {
@@ -320,10 +322,6 @@ int UserInterface::run_gui(){
         static float f = 0.0f;
 		static int counter = 0;
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		bool use_work_area = true; // fullscreen
-		const ImGuiViewport* viewport = ImGui::GetMainViewport();
-		//ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
-		//ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.FrameRounding = 0.0f;
 		style.WindowPadding = ImVec2(15.0f, 5.0f);

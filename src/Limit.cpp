@@ -1,5 +1,6 @@
 #include "Limit.h"
 #include "ConfigFile.h"
+#include "helperFunctions.h"
 
 void Limit::ToggleWholeGameLimit( std::atomic<limit>* lim_game, Settings settings){
     limit temp_limit = lim_game->load();

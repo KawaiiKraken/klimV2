@@ -3,8 +3,10 @@
 #include <windows.h>
 #include <tchar.h>
 #include <psapi.h>
+#pragma warning (disable: 4201 4471 4324)
 #include "../phnt/phnt_windows.h"
 #include "../phnt/phnt.h"
+#pragma warning (default: 4201 4471 4324)
 #include "windivertFunctions.h"
 #include <vector>
 #include <mutex>

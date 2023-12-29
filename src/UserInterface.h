@@ -6,12 +6,13 @@
 #include <string>
 #include <iostream>
 #include <thread>
-#include "HotkeyManager.h"
 
 struct Settings;
+class HotkeyManager;
 
 class UserInterface {
 public:
+
     UserInterface(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings); 
     static UserInterface* instance;
     static HotkeyManager* hotkeyInstance;
@@ -20,15 +21,14 @@ public:
     int run_gui();
 private:
     static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-    void FormatHotkeyStatusWcString(char* c_string, int sz_c_str, std::atomic<limit>* limit);
+    void FormatHotkeyStatusWcString(char* c_string, std::atomic<limit>* limit);
     std::vector<std::atomic<limit>*> limit_ptr_vector;
     // Data stored per platform window
 	struct WGL_WindowData { HDC hDC; };
     // Data
-	WGL_WindowData   g_MainWindow;
 	HGLRC            g_hRC = 0;
-    int              g_Width;
-	int              g_Height;
+    int              g_Width = 0;
+	int              g_Height = 0;
     // Forward declarations of helper functions
 	bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
 	void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
