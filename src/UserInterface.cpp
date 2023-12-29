@@ -11,7 +11,6 @@
 #include "UserInterface.h"
 #include "helperFunctions.h"
 #include "ConfigFile.h"
-#include "HotkeyManager.h"
 
 
 UserInterface::UserInterface(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings) 
@@ -212,7 +211,6 @@ void UserInterface::Config(HWND hwnd){
 		            //ImGui::DestroyContext();
 		            ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file, settings);
 					ConfigFile::LoadConfig( limit_ptr_vector, path_to_config_file, settings);
-					Helper::SetOverlayLineNumberOfLimits( limit_ptr_vector);
 					show_config = false;
 					show_overlay = true;
                 }

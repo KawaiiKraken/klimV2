@@ -14,9 +14,9 @@ void ConfigFile::WriteConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, 
         name.append("_key_list");
 
         std::vector<int> key_list;
-        for (int i = 0; i < temp_limit.max_key_list_size; i++) {
-            if (temp_limit.key_list[i] == 0) continue;
-            key_list.push_back(temp_limit.key_list[i]);
+        for (int j = 0; j < temp_limit.max_key_list_size; j++) {
+            if (temp_limit.key_list[j] == 0) continue;
+            key_list.push_back(temp_limit.key_list[j]);
         }
         config[name] = ConfigFile::vectorToJson(key_list);
     }
@@ -43,8 +43,8 @@ void ConfigFile::LoadConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, w
         limit temp_limit = limit_ptr_vector[i]->load();
         std::vector<int> key_vector = ConfigFile::jsonToVector(loaded_config[name.c_str()]);
         //temp_limit.key_list;
-        for (int i = 0; i < key_vector.size(); i++) {
-            temp_limit.key_list[i] = key_vector[i];
+        for (int j = 0; j < key_vector.size(); j++) {
+            temp_limit.key_list[j] = key_vector[j];
         }
         limit_ptr_vector[i]->store(temp_limit);
     }

@@ -1,5 +1,4 @@
 #pragma once
-#include "imgui.h"
 #include <windows.h>
 #include <GL/GL.h>
 #include <vector>

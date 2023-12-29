@@ -27,12 +27,11 @@ struct limit {
     }
 };
 
-struct Settings;
 
 class Limit {
 public:
-	static void ToggleSuspend(       std::atomic<limit>* suspend,   Settings settings);
-	static void ToggleWholeGameLimit(std::atomic<limit>* lim_game,  Settings settings);
+	static void ToggleSuspend(       std::atomic<limit>* suspend);
+	static void ToggleWholeGameLimit(std::atomic<limit>* lim_game);
 private:
     static void SuspendProcess(DWORD pid, bool suspend);
 };
