@@ -1,16 +1,14 @@
-#ifndef CONFIGFILE_H
-#define CONFIGFILE_H
 #pragma once
 
-#include "helperFunctions.h"
 #include <windows.h>
 #include <tchar.h>
 #include "jsoncpp_header\json.h"
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include "Limit.h"
 #include "jsoncpp_header/json.h"
+
+struct limit;
 
 struct Settings {
 	bool use_overlay;
@@ -35,4 +33,3 @@ private:
 	static void ColorRefToHex(COLORREF colorRef, char hexString[8]);
 };
 
-#endif CONFIGFILE_H

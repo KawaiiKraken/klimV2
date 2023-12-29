@@ -1,21 +1,22 @@
 #pragma once
 #include <windows.h>
-#include "helperFunctions.h"
 #include <vector>
+#include <atomic>
 
 
 struct limit {
     char name[40];
     int key_list[20];
     int max_key_list_size = 20;
+    char windivert_rule[250];
     bool bindingComplete = true;
     bool triggered = false;
     bool state = false;
     int overlay_line_number = -1;
-    char windivert_rule[250];
     bool updateUI = false;
 
     limit() {
+        std::fill(std::begin(name), std::end(name), '\0');
         std::fill(std::begin(windivert_rule), std::end(windivert_rule), '\0');
         std::fill(std::begin(key_list), std::end(key_list), 0);
     }
@@ -25,6 +26,8 @@ struct limit {
         strncpy_s(windivert_rule, b, sizeof(windivert_rule));
     }
 };
+
+struct Settings;
 
 class Limit {
 public:

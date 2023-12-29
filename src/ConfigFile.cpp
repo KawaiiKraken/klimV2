@@ -1,4 +1,6 @@
 #include "ConfigFile.h"
+#include "Limit.h"
+#include "helperFunctions.h"
 
 void ConfigFile::WriteConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings) {
     Json::Value config;
