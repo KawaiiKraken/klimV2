@@ -39,6 +39,6 @@ for support join our server at the [thrallway](https://thrallway.com)
 ```
 git clone https://github.com/KawaiiKraken/klimV2
 ```
-- you will need to install imgui and jsoncpp thru vcpkg
+- you will need to install imgui, opengl, and jsoncpp thru vcpkg
 - open sln in visual studio, hit build
 
