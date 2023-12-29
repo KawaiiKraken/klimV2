@@ -1,8 +1,12 @@
 #include "Limit.h"
 #include "ConfigFile.h"
 #include "helperFunctions.h"
+#pragma warning(push, 0)
+#include "../phnt/phnt_windows.h"
+#include "../phnt/phnt.h"
+#pragma warning(pop)
 
-void Limit::ToggleWholeGameLimit( std::atomic<limit>* lim_game, Settings settings){
+void Limit::ToggleWholeGameLimit( std::atomic<limit>* lim_game){
     limit temp_limit = lim_game->load();
     temp_limit.state = !temp_limit.state;
     lim_game->store(temp_limit);
@@ -12,17 +16,11 @@ void Limit::ToggleWholeGameLimit( std::atomic<limit>* lim_game, Settings setting
     } else {
         ShellExecute( NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE );
     }
-
-    COLORREF color = temp_limit.state ? settings.color_on : settings.color_off;
-    wchar_t* wcstring = new wchar_t[200];
-    //FormatHotkeyStatusWcString( wcstring, 200, lim_game );
-    //UpdateOverlayLine( wcstring, lim_game->overlay_line_number, color);
-    delete []wcstring;
 }
 
 
 
-void Limit::ToggleSuspend( std::atomic<limit>* suspend, Settings settings){
+void Limit::ToggleSuspend( std::atomic<limit>* suspend){
     if ( !Helper::D2Active() ){ // prevents from pausing random stuff if running with debug
         MessageBox(NULL, L"failed to pause...\nd2 is not the active window", NULL, MB_OK | MB_ICONWARNING);
         return;
@@ -35,11 +33,6 @@ void Limit::ToggleSuspend( std::atomic<limit>* suspend, Settings settings){
     limit temp_limit = suspend->load();
     temp_limit.state = !temp_limit.state;
     suspend->store(temp_limit);
-    COLORREF color = temp_limit.state ? settings.color_on : settings.color_off;
-    wchar_t* wcstring = new wchar_t[200];
-    //FormatHotkeyStatusWcString( wcstring, 200, suspend );
-    //UpdateOverlayLine( wcstring, suspend->overlay_line_number, color );
-    delete []wcstring;
 }
 
 

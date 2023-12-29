@@ -43,15 +43,8 @@ int __cdecl Overlay( LPTSTR );
 DWORD WINAPI HotkeyThread( LPVOID lpParm );
 __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam );
 
-HINSTANCE hDLL, hDLL2;               
-HANDLE gDoneEvent;
 HHOOK hKeyboardHook;
-HANDLE handle = NULL;
-bool can_trigger_any_hotkey = TRUE;
 bool debug = FALSE;
-
-std::mutex mutex;
-std::mutex* mutex_ptr = &mutex;
 
 std::atomic<limit> lim_3074 = limit("3074", " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
 std::atomic<limit> lim_3074_ul = limit("3074UL", " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
@@ -85,7 +78,7 @@ DWORD WINAPI run_gui_wrapper(LPVOID lpParam) {
 }
 
 
-int __cdecl main( char** argv ){
+int __cdecl main( int argc, char** argv ){
     if ( argv[1] != NULL ){
         if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){
             printf( "debug: true\n" );
@@ -130,7 +123,6 @@ int __cdecl main( char** argv ){
         if (hHotkeyThread != 0) {
             CloseHandle( hHotkeyThread );
         }
-		FreeLibrary( hDLL );
         return 1;
     }
 }
@@ -149,7 +141,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
         if (it != currently_pressed_keys.end()) {
             currently_pressed_keys.erase(it);
 		}
-        Helper::UnTriggerHotkeys(limit_ptr_vector, currently_pressed_keys);
+        HotkeyManager::UnTriggerHotkeys(limit_ptr_vector, currently_pressed_keys);
     }
 
     if  ( ( nCode == HC_ACTION ) && ( ( wParam == WM_SYSKEYDOWN ) || ( wParam == WM_KEYDOWN ) ) )      
@@ -163,7 +155,7 @@ __declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam
             currently_pressed_keys.push_back(key);
 		}
         if (!userInterface.show_config) {
-            Helper::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, settings, combined_windivert_rules);
+            HotkeyManager::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, settings, combined_windivert_rules);
         }
     }
     return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
