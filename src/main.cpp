@@ -1,5 +1,47 @@
-#include "main.h"
+#pragma once
+#define _WIN32_WINNT_WIN10 0x0A00 // Windows 10
+#define PHNT_VERSION PHNT_THRESHOLD // Windows 10
+
+
+#include <windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <tchar.h>
+#include <stdbool.h>
+#include <iostream>
+#include <wchar.h>
+#include <shellapi.h>
+#include <psapi.h>
+#include "helperFunctions.h"
+#include "imgui.h"
 #include "ConfigFile.h"
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <GL/GL.h>
+#include <tchar.h>
+#include <iostream>
+#include <vector>
+#include <future>
+#include <chrono>
+#include <condition_variable>
+#include "HotkeyManager.h"
+#include "UserInterface.h"
+#include "imgui.h"
+#include "helperFunctions.h"
+#include "Limit.h"
+#include "ConfigFile.h"
+
+#pragma comment( lib, "ntdll.lib" )
+
+
+void MessageLoop();
+void SetPathToConfigFile(wchar_t* configFileName);
+int __cdecl Overlay( LPTSTR );   
+DWORD WINAPI HotkeyThread( LPVOID lpParm );
+__declspec( dllexport ) LRESULT CALLBACK KeyboardEvent( int nCode, WPARAM wParam, LPARAM lParam );
 
 HINSTANCE hDLL, hDLL2;               
 HANDLE gDoneEvent;
@@ -11,12 +53,12 @@ bool debug = FALSE;
 std::mutex mutex;
 std::mutex* mutex_ptr = &mutex;
 
-std::atomic<limit> lim_3074("3074"); 
-std::atomic<limit> lim_3074_ul("3074UL");
-std::atomic<limit> lim_27k("27k"); 
-std::atomic<limit> lim_27k_ul("27kUL"); 
-std::atomic<limit> lim_30k("30k"); 
-std::atomic<limit> lim_7k("7k"); 
+std::atomic<limit> lim_3074 = limit("3074", " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
+std::atomic<limit> lim_3074_ul = limit ("3074UL", " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
+std::atomic<limit> lim_27k = limit("27k", " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
+std::atomic<limit> lim_27k_ul = limit("27kUL", " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)");
+std::atomic<limit> lim_30k = limit("30k", " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
+std::atomic<limit> lim_7k = limit("7k", " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
 std::atomic<limit> lim_game("game"); 
 std::atomic<limit> suspend("suspend"); 
 std::atomic<limit> exitapp("exitapp"); 
@@ -44,26 +86,6 @@ DWORD WINAPI run_gui_wrapper(LPVOID lpParam) {
 
 
 int __cdecl main( int argc, char** argv ){
-    std::cout << std::is_trivially_copyable<limit>::value << std::is_copy_constructible<limit>::value << std::is_move_constructible<limit>::value << std::is_copy_assignable<limit>::value << std::is_move_assignable<limit>::value << std::endl;
-    limit temp_limit = lim_3074.load();
-    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
-    lim_3074.store(temp_limit);
-    temp_limit = lim_3074_ul.load();
-    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
-    lim_3074_ul.store(temp_limit);
-    temp_limit = lim_27k.load();
-    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
-    lim_27k.store(temp_limit);
-    temp_limit = lim_27k_ul.load();
-    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)");
-    lim_27k_ul.store(temp_limit);
-    temp_limit = lim_30k.load();
-    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
-    lim_30k.store(temp_limit);
-    temp_limit = lim_7k.load();
-    strcpy_s(temp_limit.windivert_rule, sizeof(temp_limit.windivert_rule), " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
-    lim_7k.store(temp_limit);
-
     if ( argv[1] != NULL ){
         if ( ( strcmp( argv[1], "--debug" ) == 0 ) ){
             printf( "debug: true\n" );

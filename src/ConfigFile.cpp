@@ -8,7 +8,6 @@ void ConfigFile::WriteConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, 
         if (temp_limit.key_list[0] == 0) {
             continue;
         }
-		size_t size;
         std::string name = temp_limit.name;
         name.append("_key_list");
 
@@ -35,9 +34,7 @@ void ConfigFile::WriteConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, 
 void ConfigFile::LoadConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings){
     // Load the config from the JSON file
     Json::Value loaded_config = ConfigFile::LoadConfigFileFromJson( path_to_config_file );
-	char char_buffer[250];
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
-		size_t size;
         std::string name = limit_ptr_vector[i]->load().name;
         name.append("_key_list");
 

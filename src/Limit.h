@@ -1,5 +1,4 @@
-#ifndef LIMIT_H
-#define LIMIT_H
+#pragma once
 #include <windows.h>
 #include "helperFunctions.h"
 #include <vector>
@@ -16,12 +15,14 @@ struct limit {
     char windivert_rule[250];
     bool updateUI = false;
 
-    limit() = default;
-
-    limit(const char* n) {
-        strncpy_s(name, n, sizeof(name));
-        std::fill(std::begin(key_list), std::end(key_list), 0);
+    limit() {
         std::fill(std::begin(windivert_rule), std::end(windivert_rule), '\0');
+        std::fill(std::begin(key_list), std::end(key_list), 0);
+    }
+
+    limit(const char* n, const char* b = "") : limit() {
+        strncpy_s(name, n, sizeof(name));
+        strncpy_s(windivert_rule, b, sizeof(windivert_rule));
     }
 };
 
@@ -32,5 +33,3 @@ public:
 private:
     static void SuspendProcess(DWORD pid, bool suspend);
 };
-
-#endif LIMIT_H
