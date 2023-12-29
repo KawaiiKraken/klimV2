@@ -1,4 +1,3 @@
-// most of this code is taken directly from the windivert netfilter.exe example
 #include "windivertFunctions.h"
 #include <chrono>
 #include <vector>
@@ -58,7 +57,6 @@ unsigned long WindivertFilterThread( LPVOID lpParam ){
     HANDLE console;
     unsigned char packet[MAXBUF];
     UINT packet_len = 1500;
-    WINDIVERT_ADDRESS send_addr;
     UINT recv_len;
     UINT addr_len = sizeof(WINDIVERT_ADDRESS);
     WINDIVERT_ADDRESS recv_addr;

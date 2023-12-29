@@ -1,6 +1,6 @@
 #include "imgui.h"
-#include "imgui_impl_opengl3.h"
-#include "imgui_impl_win32.h"
+#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/imgui_impl_win32.h"
 #include <windows.h>
 #include <GL/GL.h>
 #include <vector>
@@ -144,8 +144,6 @@ void UserInterface::Config(HWND hwnd){
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
         ImGui::PushID(i);
 
-        char name[50];
-        size_t size;
         ImGui::Text("%s ", limit_ptr_vector[i]->load().name);               // Display some text (you can use a format strings too)
         ImGui::SameLine();
         ImGui::SetCursorPosX(70);

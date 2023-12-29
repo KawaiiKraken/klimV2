@@ -159,7 +159,7 @@ int Helper::OnTriggerHotkey( std::atomic<limit>* limitarg, bool debug, Settings 
             limit.state = !limit.state;
             limitarg->store(limit);
         }
-        printf( "state of %ws: %s\n", limitarg->load().name, limitarg->load().state ? "true" : "false" );
+        printf( "state of %s: %s\n", limitarg->load().name, limitarg->load().state ? "true" : "false" );
         SetFilterRuleString( limit_ptr_vector, combined_windivert_rules );
         UpdateFilter( combined_windivert_rules );
     }

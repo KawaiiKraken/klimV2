@@ -136,8 +136,8 @@
     <ClCompile Include="src\ConfigFile.cpp" />
     <ClCompile Include="src\helperFunctions.cpp" />
     <ClCompile Include="src\HotkeyManager.cpp" />
-    <ClCompile Include="src\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="src\imgui_impl_win32.cpp" />
+    <ClCompile Include="src\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="src\Limit.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\UserInterface.cpp" />
@@ -187,12 +187,11 @@
     <ClInclude Include="phnt\subprocesstag.h" />
     <ClInclude Include="phnt\winsta.h" />
     <ClInclude Include="src\ConfigFile.h" />
-    <ClInclude Include="src\Hack-Regular.h" />
     <ClInclude Include="src\helperFunctions.h" />
     <ClInclude Include="src\HotkeyManager.h" />
-    <ClInclude Include="src\imgui_impl_opengl3.h" />
-    <ClInclude Include="src\imgui_impl_opengl3_loader.h" />
-    <ClInclude Include="src\imgui_impl_win32.h" />
+    <ClInclude Include="src\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="src\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="src\imgui\imgui_impl_win32.h" />
     <ClInclude Include="src\jsoncpp_header\allocator.h" />
     <ClInclude Include="src\jsoncpp_header\assertions.h" />
     <ClInclude Include="src\jsoncpp_header\config.h" />
@@ -204,7 +203,6 @@
     <ClInclude Include="src\jsoncpp_header\version.h" />
     <ClInclude Include="src\jsoncpp_header\writer.h" />
     <ClInclude Include="src\Limit.h" />
-    <ClInclude Include="src\main.h" />
     <ClInclude Include="src\UserInterface.h" />
     <ClInclude Include="src\windivertFunctions.h" />
     <ClInclude Include="WinDivert\windivert.h" />

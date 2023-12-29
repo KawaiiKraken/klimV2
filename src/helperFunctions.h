@@ -1,5 +1,3 @@
-#ifndef HELPERFUNCTIONS_H
-#define HELPERFUNCTIONS_H
 #pragma once
 
 #include <windows.h>
@@ -11,7 +9,6 @@
 #include <vector>
 #include <mutex>
 #include <iostream>
-
 
 
 struct limit;
@@ -30,6 +27,3 @@ public:
 private:
 	static int OnTriggerHotkey(std::atomic<limit>* limit, bool debug, Settings settings, std::vector<std::atomic<struct limit>*> limit_ptr_vector, char* combined_windivert_rules);
 };
-
-
-#endif HELPERFUNCTIONS_H

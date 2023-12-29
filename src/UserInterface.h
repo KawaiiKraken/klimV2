@@ -1,8 +1,5 @@
-#ifndef USERINTERFACE_H
-#define USERINTERFACE_H
+#pragma once
 #include "imgui.h"
-#include "imgui_impl_opengl3.h"
-#include "imgui_impl_win32.h"
 #include <windows.h>
 #include <GL/GL.h>
 #include <vector>
@@ -1786,6 +1783,3 @@ const char Hack_Regular[243650+1] =
     "AKe-307_G3aiL,H%8rEH)9n-3#qZ5N`DkV78V:%6-]eA-D7#W/(.C,3<QWI3<LWA5Vt%i5+:I1MFHv9S:tmL2>lv`4GJCg2Js$xQLre=.AQa*4L(Ia4?gj.3f+@d32=xuQjL-L2Jx2M-"
     "JXo'MjNZUU<5Qt7/MnHH8`*bn-d$KH1BIh2U()H3Gg?=RcY*v7]+oM1d')m$3-0d3>s*<)#LP88&kFm/;$`41'qLO1nf_&&#Ia<-X/sYOx5TD(`5Y)YemdL2wM>I3Ds]F4.HJ+4=Er41"
     "?v_@Q?.CS->*W+Q^1.MM'r_O1GW:6&$,>>######Js1s%K>'##";
-
-
-#endif USERINTERFACE_H

@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\imgui">
+      <UniqueIdentifier>{763bcf57-b3f1-4526-bd24-10d2aedf1f2f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\helperFunctions.cpp">
@@ -36,11 +39,11 @@
     <ClCompile Include="src\Limit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\imgui_impl_win32.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="src\imgui_impl_opengl3.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\imgui\imgui_impl_win32.cpp">
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -206,9 +209,6 @@
     <ClInclude Include="src\ConfigFile.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\main.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\windivertFunctions.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -224,17 +224,14 @@
     <ClInclude Include="src\Limit.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\imgui_impl_opengl3_loader.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="src\imgui\imgui_impl_opengl3.h">
+      <Filter>Source Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="src\imgui_impl_opengl3.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="src\imgui\imgui_impl_opengl3_loader.h">
+      <Filter>Source Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="src\imgui_impl_win32.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Hack-Regular.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="src\imgui\imgui_impl_win32.h">
+      <Filter>Source Files\imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
