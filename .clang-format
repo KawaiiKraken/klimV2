@@ -1,0 +1,9 @@
+# Format Style Options - Created with Clang Power Tools
+---
+BasedOnStyle: WebKit
+AlignConsecutiveAssignments: Consecutive
+ColumnLimit: 180
+MaxEmptyLinesToKeep: 2
+SortIncludes: true
+SpacesInCStyleCastParentheses: true
+...
