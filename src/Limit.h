@@ -1,7 +1,7 @@
 #pragma once
-#include <windows.h>
-#include <vector>
 #include <atomic>
+#include <vector>
+#include <windows.h>
 
 
 struct limit {
@@ -9,19 +9,22 @@ struct limit {
     int key_list[20];
     int max_key_list_size = 20;
     char windivert_rule[250];
-    bool bindingComplete = true;
-    bool triggered = false;
-    bool state = false;
+    bool bindingComplete    = true;
+    bool triggered          = false;
+    bool state              = false;
     int overlay_line_number = -1;
-    bool updateUI = false;
+    bool updateUI           = false;
 
-    limit() {
+    limit()
+    {
         std::fill(std::begin(name), std::end(name), '\0');
         std::fill(std::begin(windivert_rule), std::end(windivert_rule), '\0');
         std::fill(std::begin(key_list), std::end(key_list), 0);
     }
 
-    limit(const char* n, const char* b = "") : limit() {
+    limit(const char* n, const char* b = "")
+        : limit()
+    {
         strncpy_s(name, n, sizeof(name));
         strncpy_s(windivert_rule, b, sizeof(windivert_rule));
     }
@@ -30,8 +33,9 @@ struct limit {
 
 class Limit {
 public:
-	static void ToggleSuspend(       std::atomic<limit>* suspend);
-	static void ToggleWholeGameLimit(std::atomic<limit>* lim_game);
+    static void ToggleSuspend(std::atomic<limit>* suspend);
+    static void ToggleWholeGameLimit(std::atomic<limit>* lim_game);
+
 private:
     static void SuspendProcess(DWORD pid, bool suspend);
 };
