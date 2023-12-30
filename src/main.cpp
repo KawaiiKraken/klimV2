@@ -2,6 +2,11 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
+#include "ConfigFile.h"
+#include "HotkeyManager.h"
+#include "Limit.h"
+#include "UserInterface.h"
+#include "HelperFunctions.h"
 #include "imgui.h"
 #include <iostream>
 #include <shellapi.h>
@@ -20,12 +25,6 @@
 #include <tchar.h>
 #include <vector>
 #include <windows.h>
-
-#include "ConfigFile.h"
-#include "HotkeyManager.h"
-#include "Limit.h"
-#include "UserInterface.h"
-#include "HelperFunctions.h"
 
 #pragma comment(lib, "ntdll.lib")
 

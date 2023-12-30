@@ -1,8 +1,8 @@
-#include <algorithm>
 #include "HotkeyManager.h"
 #include "ConfigFile.h"
 #include "HelperFunctions.h"
 #include "WinDivertFunctions.h"
+#include <algorithm>
 
 HotkeyManager::HotkeyManager(const std::vector<std::atomic<Limit>*>& limit_ptr_vector)
     : done(false), _cur_line(-1), _current_hotkey_list(), _limit_ptr_vector(limit_ptr_vector) {}

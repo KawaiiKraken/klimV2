@@ -1,7 +1,7 @@
-#include <Windows.h>
 #include "HelperFunctions.h"
 #include "Limit.h"
 #include "ConfigFile.h"
+#include <Windows.h>
 
 #define _WIN32_WINNT_WIN10 0x0A00 // Windows 10
 

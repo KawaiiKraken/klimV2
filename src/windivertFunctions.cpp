@@ -1,3 +1,5 @@
+#include "WinDivertFunctions.h"
+#include "Limit.h"
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
@@ -5,9 +7,6 @@
 #include <thread>
 #include <vector>
 #include <winsock.h>
-
-#include "WinDivertFunctions.h"
-#include "Limit.h"
 
 INT16 priority = 1000;
 const char* err_str;
