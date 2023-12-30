@@ -2,6 +2,7 @@
 #include "ConfigFile.h"
 #include "HelperFunctions.h"
 #include "WinDivertFunctions.h"
+#include <iostream>
 #include <algorithm>
 
 namespace Klim
@@ -134,25 +135,27 @@ namespace Klim
 
     void HotkeyManager::OnTriggerHotkey(std::atomic<Limit>* limit_arg, const bool debug, const std::vector<std::atomic<Limit>*>& limit_ptr_vector, char* combined_windivert_rules)
     {
-        if (strcmp(limit_arg->load().name, "exitapp") == 0)
+        if (limit_arg->load().type == exit_app)
         {
             Helper::ExitApp(debug);
         }
+
         if (!(Helper::D2Active() || debug))
         {
             std::cout << "hotkey ignored: d2 is not the active window and debug mode is not on\n";
             return;
         }
+
         if (!limit_arg->load().triggered)
         {
             Limit limit = limit_arg->load();
             limit.triggered = true;
             limit_arg->store(limit);
-            if (strcmp(limit_arg->load().name, "game") == 0)
+            if (limit_arg->load().type == limit_full_game)
             {
                 Limit::ToggleWholeGameLimit(limit_arg);
             }
-            else if (strcmp(limit_arg->load().name, "suspend") == 0)
+            else if (limit_arg->load().type == suspend_game)
             {
                 Limit::ToggleSuspend(limit_arg);
             }

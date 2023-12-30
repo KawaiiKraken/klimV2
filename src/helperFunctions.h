@@ -1,15 +1,15 @@
 #pragma once
-
-#include <iostream>
-#include <mutex>
+#include <string>
 #include <vector>
-#include <windows.h>
 
 namespace Klim
 {
+
     class Helper
     {
         public:
+            static std::vector<std::string> StringSplit(const std::string& string, const std::string& delimiter);
+
             static bool D2Active();
             static bool RunningAsAdmin();
             static void ExitApp(bool debug);

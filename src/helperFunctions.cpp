@@ -1,12 +1,27 @@
 #include "HelperFunctions.h"
 #include "ConfigFile.h"
-#include "Limit.h"
-#include <Windows.h>
-#include <algorithm>
+#include <windows.h>
 #include <psapi.h>
+#include <iostream>
 
 namespace Klim
 {
+    std::vector<std::string> Helper::StringSplit(const std::string& string, const std::string& delimiter)
+    {
+        size_t pos_start = 0, pos_end, delimiter_length = delimiter.length();
+        std::vector<std::string> res;
+
+        while ((pos_end = string.find(delimiter, pos_start)) != std::string::npos)
+        {
+            std::string token = string.substr(pos_start, pos_end - pos_start);
+            pos_start = pos_end + delimiter_length;
+            res.push_back(token);
+        }
+
+        res.push_back(string.substr(pos_start));
+        return res;
+    }
+
     void Helper::ExitApp(const bool debug)
     {
         std::cout << "shutting down\n";

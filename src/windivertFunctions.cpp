@@ -1,12 +1,12 @@
 #include "WinDivertFunctions.h"
 #include "Limit.h"
-#include <algorithm>
-#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <thread>
 #include <vector>
-#include <winsock.h>
+
+// #include <chrono>
+// #include <winsock.h>
 
 namespace Klim
 {

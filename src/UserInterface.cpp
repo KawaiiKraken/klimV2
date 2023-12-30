@@ -25,15 +25,17 @@ namespace Klim
 
     void UserInterface::FormatHotkeyStatusWcString(char* c_string, const std::atomic<Limit>* limit_ptr)
     {
-        constexpr int wc_string_size = 200;
-
-        wchar_t wc_string[wc_string_size];
+        // No keybinds set 
         if (limit_ptr->load().key_list[0] == 0)
         {
             return;
         }
 
-        wcscpy_s(wc_string, wc_string_size, L"");
+        constexpr int wc_string_size = 200;
+        wchar_t hotkey_state_string[wc_string_size];
+
+        wcscpy_s(hotkey_state_string, wc_string_size, L"");
+
         for (int i = 0; i < limit_ptr->load().max_key_list_size; i++)
         {
             wchar_t name_buffer[256];
@@ -42,19 +44,23 @@ namespace Klim
                 break;
             }
 
-            if (wcscmp(wc_string, L"") != 0)
+            if (wcscmp(hotkey_state_string, L"") != 0)
             {
-                wcscat_s(wc_string, wc_string_size, L"+");
+                wcscat_s(hotkey_state_string, wc_string_size, L"+");
             }
 
             const int scan_code = MapVirtualKey(limit_ptr->load().key_list[i], 0);
             GetKeyNameText(scan_code << 16, name_buffer, std::size(name_buffer));
-            wcscat_s(wc_string, wc_string_size, name_buffer);
+            wcscat_s(hotkey_state_string, wc_string_size, name_buffer);
         }
 
-        wcscat_s(wc_string, wc_string_size, L" ");
-        WideCharToMultiByte(CP_UTF8, 0, wc_string, -1, c_string, 200, nullptr, nullptr);
+        wcscat_s(hotkey_state_string, wc_string_size, L" ");
+
+        WideCharToMultiByte(CP_UTF8, 0, hotkey_state_string, -1, c_string, 200, nullptr, nullptr);
         strcat_s(c_string, 200, limit_ptr->load().name);
+
+
+        strcat_s(c_string, 200, " ");
         strcat_s(c_string, 200, limit_ptr->load().state ? "(on)" : "(off)");
     }
 
@@ -93,10 +99,11 @@ namespace Klim
             for (size_t i = 0; i < _limit_ptr_vector.size(); i++)
             {
                 FormatHotkeyStatusWcString(char_ptr_vector[i], _limit_ptr_vector[i]);
-                ImGui::PushID(i);
+                ImGui::PushID(static_cast<int>(i));
                 if (strcmp(char_ptr_vector[i], "") != 0)
                 {
-                    ImGui::Text("%s", char_ptr_vector[i]);
+                    std::vector<std::string> split = Helper::StringSplit(std::string(char_ptr_vector[i]), " ");
+                    ImGui::Text("%s %s %s", split[2].c_str(), split[0].c_str(), split[1].c_str());
                 }
 
                 ImGui::PopID();
@@ -235,14 +242,15 @@ namespace Klim
             // check if exit app is bound
             for (std::atomic<Limit>*& limit_ptr : _limit_ptr_vector)
             {
-                if (strcmp(limit_ptr->load().name, "exitapp") == 0)
+                if (strcmp(limit_ptr->load().name, Limit::TypeToString(exit_app)) == 0)
                 {
                     if (limit_ptr->load().key_list[0] == 0)
                     {
-                        MessageBoxA(nullptr, "bind exitapp before closing", nullptr, MB_OK);
+                        MessageBoxA(nullptr, "bind Exit App before closing", nullptr, MB_OK);
                     }
                     else
                     {
+
                         // ImGui::DestroyContext();
                         ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings);
                         ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);

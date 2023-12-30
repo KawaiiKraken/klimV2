@@ -2,6 +2,9 @@
 #include "HelperFunctions.h"
 #include "Limit.h"
 
+
+#include <iostream>
+
 namespace Klim
 {
     void ConfigFile::WriteConfig(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], const Settings* settings)
