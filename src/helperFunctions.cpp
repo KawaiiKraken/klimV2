@@ -1,9 +1,10 @@
-#include <algorithm>
-#include <psapi.h>
-#include <Windows.h>
 #include "HelperFunctions.h"
 #include "ConfigFile.h"
 #include "Limit.h"
+#include <algorithm>
+#include <psapi.h>
+#include <Windows.h>
+
 
 void Helper::ExitApp(bool debug)
 {

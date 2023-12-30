@@ -1,9 +1,8 @@
 #pragma once
 
+#include "../WinDivert/windivert.h"
 #include <iostream>
 #include <vector>
-
-#include "../WinDivert/windivert.h"
 
 #define ntohs(x) WinDivertHelperNtohs(x)
 #define ntohl(x) WinDivertHelperNtohl(x)

@@ -1,3 +1,10 @@
+#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/imgui_impl_win32.h"
+#include "Limit.h"
+#include "UserInterface.h"
+#include "HotkeyManager.h"
+#include "HelperFunctions.h"
+#include "ConfigFile.h"
 #include <windows.h>
 #include <GL/GL.h>
 #include <iostream>
@@ -5,14 +12,6 @@
 #include <thread>
 #include <vector>
 
-#include "imgui/imgui_impl_opengl3.h"
-#include "imgui/imgui_impl_win32.h"
-
-#include "Limit.h"
-#include "UserInterface.h"
-#include "HotkeyManager.h"
-#include "HelperFunctions.h"
-#include "ConfigFile.h"
 
 UserInterface::UserInterface(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings)
     : _limit_ptr_vector(limit_ptr_vector), _path_to_config_file(path_to_config_file), _settings(settings) {}
