@@ -4,7 +4,7 @@
 #endif
 
 #include "ConfigFile.h"
-#include "helperFunctions.h"
+#include "HelperFunctions.h"
 #include "imgui.h"
 #include <iostream>
 #include <shellapi.h>
@@ -19,7 +19,6 @@
 #include "HotkeyManager.h"
 #include "Limit.h"
 #include "UserInterface.h"
-#include "helperFunctions.h"
 #include "imgui.h"
 #include <chrono>
 #include <condition_variable>
@@ -30,7 +29,6 @@
 #include <windows.h>
 
 #pragma comment(lib, "ntdll.lib")
-
 
 void MessageLoop();
 void SetPathToConfigFile(wchar_t* configFileName);

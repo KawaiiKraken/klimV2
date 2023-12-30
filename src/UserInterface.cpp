@@ -3,7 +3,7 @@
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_win32.h"
 #include "HotkeyManager.h"
-#include "helperFunctions.h"
+#include "HelperFunctions.h"
 #include "ConfigFile.h"
 #include <GL/GL.h>
 #include <iostream>

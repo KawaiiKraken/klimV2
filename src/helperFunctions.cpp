@@ -1,4 +1,4 @@
-#include "helperFunctions.h"
+#include "HelperFunctions.h"
 #include "ConfigFile.h"
 #include "Limit.h"
 #include <algorithm>

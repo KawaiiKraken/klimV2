@@ -1,11 +1,10 @@
 #include <Windows.h>
 
-#include "helperFunctions.h"
+#include "HelperFunctions.h"
 #include "Limit.h"
 #include "ConfigFile.h"
 
 #define _WIN32_WINNT_WIN10 0x0A00 // Windows 10
-
 
 void Limit::ToggleWholeGameLimit(std::atomic<Limit>* lim_game)
 {
