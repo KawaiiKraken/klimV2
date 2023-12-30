@@ -8,7 +8,7 @@
 void Helper::ExitApp(bool debug)
 {
     std::cout << "shutting down" << std::endl;
-    ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
+    ShellExecute(nullptr, nullptr, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", nullptr, SW_HIDE);
     if (!debug) 
     {
         ShowWindow(GetConsoleWindow(), SW_RESTORE);
@@ -25,7 +25,7 @@ bool Helper::D2Active()
     GetWindowThreadProcessId(GetForegroundWindow(), &dw_proc_id);
 
     HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dw_proc_id);
-    GetModuleFileNameEx(hProc, NULL, buffer, MAX_PATH);
+    GetModuleFileNameEx(hProc, nullptr, buffer, MAX_PATH);
     CloseHandle(hProc);
 
     const wchar_t* filename = GetFileName(buffer);
@@ -43,7 +43,7 @@ bool Helper::D2Active()
 bool Helper::RunningAsAdmin()
 {
     bool fRet     = false;
-    HANDLE hToken = NULL;
+    HANDLE hToken = nullptr;
     if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) 
     {
         TOKEN_ELEVATION elevation;
@@ -64,7 +64,7 @@ bool Helper::RunningAsAdmin()
 const wchar_t* Helper::GetFileName(const wchar_t* path)
 {
     const wchar_t* filename = wcsrchr(path, '\\');
-    if (filename == NULL) 
+    if (filename == nullptr) 
     {
         filename = path;
     }

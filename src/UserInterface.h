@@ -11,7 +11,8 @@ struct Settings;
 class HotkeyManager;
 class Limit;
 
-class UserInterface {
+class UserInterface
+{
     public:
         UserInterface(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings);
         static UserInterface* ui_instance;
@@ -24,10 +25,13 @@ class UserInterface {
         static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
         void FormatHotkeyStatusWcString(char* c_string, std::atomic<Limit>* limit);
         std::vector<std::atomic<Limit>*> limit_ptr_vector;
+
         // Data stored per platform window
-        struct WGL_WindowData {
+        struct WGL_WindowData
+        {
             HDC hDC;
         };
+
         // Data
         HGLRC g_hRC  = 0;
         int g_Width  = 0;
@@ -42,6 +46,7 @@ class UserInterface {
         ImVec2 overlayWindowPos;
         ImVec2 overlayWindowSize;
 };
+
 // font in base85, i will find a better way for this at some point... prob
 const char Hack_Regular[243650 + 1]
     = "7])#######+-[ZV'/###I),##bw9hLQXH##j$1S:t@rT.6g+/_+CWv5qDxF>:rS$K;m68[<@uu#l[n42;,G/0t.>>#N7Tj0s@>V9;#ovp@;NP]aPUV$aNV=B3Jn8E:g;A+*;jl&>2XGH"
