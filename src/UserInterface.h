@@ -7,45 +7,49 @@
 #include <windows.h>
 #include <imgui.h>
 
-struct Settings;
-class HotkeyManager;
-class Limit;
-
-class UserInterface
+namespace Klim
 {
-    public:
-        UserInterface(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings);
-        static UserInterface* ui_instance;
-        static HotkeyManager* hk_instance;
-        bool show_overlay = false;
-        bool show_config  = false;
-        int RunGui();
+    struct Settings;
+    class HotkeyManager;
+    class Limit;
 
-    private:
-        static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-        static void FormatHotkeyStatusWcString(char* c_string, const std::atomic<Limit>* limit_ptr);
-        std::vector<std::atomic<Limit>*> _limit_ptr_vector;
+    class UserInterface
+    {
+        public:
+            UserInterface(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings);
+            static UserInterface* ui_instance;
+            static HotkeyManager* hk_instance;
+            bool show_overlay = false;
+            bool show_config = false;
+            int RunGui();
 
-        // Data stored per platform window
-        struct WGL_WindowData
-        {
-            HDC device_context_handle;
-        };
+        private:
+            static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+            static void FormatHotkeyStatusWcString(char* c_string, const std::atomic<Limit>* limit_ptr);
+            std::vector<std::atomic<Limit>*> _limit_ptr_vector;
 
-        // Data
-        HGLRC _g_render_context_handle = nullptr;
-        int _g_width  = 0;
-        int _g_height = 0;
-        // Forward declarations of helper functions
-        bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
-        static void CleanupDeviceWGL(HWND hWnd, const WGL_WindowData* data);
-        wchar_t* _path_to_config_file;
-        Settings* _settings;
-        void Overlay(bool* p_open, HWND window_handle) const;
-        void Config(HWND window_handle);
-        ImVec2 _overlay_window_pos;
-        ImVec2 _overlay_window_size;
-};
+            // Data stored per platform window
+            struct WGL_WindowData
+            {
+                HDC device_context_handle;
+            };
+
+            // Data
+            HGLRC _g_render_context_handle = nullptr;
+            int _g_width = 0;
+            int _g_height = 0;
+            // Forward declarations of helper functions
+            bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
+            static void CleanupDeviceWGL(HWND hWnd, const WGL_WindowData* data);
+            wchar_t* _path_to_config_file;
+            Settings* _settings;
+            void Overlay(bool* p_open, HWND window_handle) const;
+            void Config(HWND window_handle);
+            ImVec2 _overlay_window_pos;
+            ImVec2 _overlay_window_size;
+    };
+}
+
 
 // font in base85, i will find a better way for this at some point... prob
 const char Hack_Regular[243650 + 1]

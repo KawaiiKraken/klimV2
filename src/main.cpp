@@ -37,32 +37,32 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, L
 HHOOK hKeyboardHook;
 bool debug = FALSE;
 
-std::atomic<Limit> limit_3074_dl = Limit("3074", " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
-std::atomic<Limit> limit_3074_ul = Limit("3074UL", " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
-std::atomic<Limit> limit_27k_dl = Limit("27k", " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
-std::atomic<Limit> limit_27k_ul = Limit("27kUL", " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)");
-std::atomic<Limit> limit_30k = Limit("30k", " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
-std::atomic<Limit> limit_7k = Limit("7k", " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
-std::atomic<Limit> lim_game("game");
-std::atomic<Limit> suspend("suspend");
-std::atomic<Limit> exit_app("exitapp");
-const std::vector<std::atomic<Limit>*> limit_ptr_vector = { &limit_3074_dl, &limit_3074_ul, &limit_27k_dl, &limit_27k_ul, &limit_30k, &limit_7k, &lim_game, &suspend, &exit_app };
+std::atomic<Klim::Limit> limit_3074_dl = Klim::Limit("3074", " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
+std::atomic<Klim::Limit> limit_3074_ul = Klim::Limit("3074UL", " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
+std::atomic<Klim::Limit> limit_27k_dl = Klim::Limit("27k", " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
+std::atomic<Klim::Limit> limit_27k_ul = Klim::Limit("27kUL", " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)");
+std::atomic<Klim::Limit> limit_30k = Klim::Limit("30k", " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
+std::atomic<Klim::Limit> limit_7k = Klim::Limit("7k", " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
+std::atomic<Klim::Limit> lim_game("game");
+std::atomic<Klim::Limit> suspend("suspend");
+std::atomic<Klim::Limit> exit_app("exitapp");
+const std::vector<std::atomic<Klim::Limit>*> limit_ptr_vector = { &limit_3074_dl, &limit_3074_ul, &limit_27k_dl, &limit_27k_ul, &limit_30k, &limit_7k, &lim_game, &suspend, &exit_app };
 
 typedef void (*KeyboardEventCallback)(int, bool);
 std::vector<int> currently_pressed_keys;
 
 char combined_windivert_rules[1000];
 wchar_t path_to_config_file[MAX_PATH];
-Settings settings;
+Klim::Settings settings;
 
-HotkeyManager hotkey_manager(limit_ptr_vector);
-UserInterface user_interface(limit_ptr_vector, path_to_config_file, &settings);
-UserInterface* UserInterface::ui_instance = &user_interface;
-HotkeyManager* UserInterface::hk_instance = &hotkey_manager;
+Klim::HotkeyManager hotkey_manager(limit_ptr_vector);
+Klim::UserInterface user_interface(limit_ptr_vector, path_to_config_file, &settings);
+Klim::UserInterface* Klim::UserInterface::ui_instance = &user_interface;
+Klim::HotkeyManager* Klim::UserInterface::hk_instance = &hotkey_manager;
 
 DWORD WINAPI RunGuiWrapper(LPVOID lpParam)
 {
-    UserInterface* ui_instance = static_cast<UserInterface*>(lpParam);
+    Klim::UserInterface* ui_instance = static_cast<Klim::UserInterface*>(lpParam);
     ui_instance->RunGui();
     return 0;
 }
@@ -89,16 +89,16 @@ int main(int argc, char* argv[])
         ShowWindow(GetConsoleWindow(), SW_HIDE);
     }
 
-    if (!Helper::RunningAsAdmin()) 
+    if (!Klim::Helper::RunningAsAdmin()) 
     {
         MessageBox(nullptr, L"ERROR: not running as admin", L"ERROR", MB_ICONERROR | MB_DEFBUTTON2);
         return 0;
     }
 
-    ConfigFile::SetPathToConfigFile(L"config.json", path_to_config_file);
-    if (ConfigFile::FileExists(path_to_config_file)) 
+    Klim::ConfigFile::SetPathToConfigFile(L"config.json", path_to_config_file);
+    if (Klim::ConfigFile::FileExists(path_to_config_file)) 
     {
-        ConfigFile::LoadConfig(limit_ptr_vector, path_to_config_file, &settings);
+        Klim::ConfigFile::LoadConfig(limit_ptr_vector, path_to_config_file, &settings);
     }
 
     user_interface.show_config  = true;
@@ -137,7 +137,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, L
             currently_pressed_keys.erase(iterator);
         }
 
-        HotkeyManager::UnTriggerHotkeys(limit_ptr_vector, currently_pressed_keys);
+        Klim::HotkeyManager::UnTriggerHotkeys(limit_ptr_vector, currently_pressed_keys);
     }
 
     if (nCode == HC_ACTION && ((wParam == WM_SYSKEYDOWN) || (wParam == WM_KEYDOWN))) 
@@ -152,7 +152,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, L
         }
         if (!user_interface.show_config) 
         {
-            HotkeyManager::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, combined_windivert_rules);
+            Klim::HotkeyManager::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, combined_windivert_rules);
         }
     }
 
