@@ -1,41 +1,49 @@
+#include "UserInterface.h"
+#include "ConfigFile.h"
+#include "HelperFunctions.h"
+#include "HotkeyManager.h"
+#include "Limit.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_win32.h"
-#include "Limit.h"
-#include "UserInterface.h"
-#include "HotkeyManager.h"
-#include "HelperFunctions.h"
-#include "ConfigFile.h"
-#include <windows.h>
 #include <GL/GL.h>
 #include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
+#include <windows.h>
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace Klim
 {
     UserInterface::UserInterface(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings)
-        : _limit_ptr_vector(limit_ptr_vector), _path_to_config_file(path_to_config_file), _settings(settings) {}
+        : _limit_ptr_vector(limit_ptr_vector)
+        , _path_to_config_file(path_to_config_file)
+        , _settings(settings)
+    {
+    }
 
     void UserInterface::FormatHotkeyStatusWcString(char* c_string, const std::atomic<Limit>* limit_ptr)
     {
         constexpr int wc_string_size = 200;
 
         wchar_t wc_string[wc_string_size];
-        if (limit_ptr->load().key_list[0] == 0) {
+        if (limit_ptr->load().key_list[0] == 0)
+        {
             return;
         }
 
         wcscpy_s(wc_string, wc_string_size, L"");
-        for (int i = 0; i < limit_ptr->load().max_key_list_size; i++) {
+        for (int i = 0; i < limit_ptr->load().max_key_list_size; i++)
+        {
             wchar_t name_buffer[256];
-            if (limit_ptr->load().key_list[i] == 0) {
+            if (limit_ptr->load().key_list[i] == 0)
+            {
                 break;
             }
 
-            if (wcscmp(wc_string, L"") != 0) {
+            if (wcscmp(wc_string, L"") != 0)
+            {
                 wcscat_s(wc_string, wc_string_size, L"+");
             }
 
@@ -55,7 +63,8 @@ namespace Klim
         static int corner = 0;
         const ImGuiIO& io = ImGui::GetIO();
 
-        if (corner != -1) {
+        if (corner != -1)
+        {
             constexpr float distance = 10.0f;
             const ImVec2 window_pos = ImVec2((corner & 1) ? io.DisplaySize.x - distance : distance, (corner & 2) ? io.DisplaySize.y - distance : distance);
             const ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
@@ -67,7 +76,8 @@ namespace Klim
         // make click-through (entire window)
         // TODO make it remove click-through when not needed
         SetWindowLongPtr(window_handle, GWL_EXSTYLE, GetWindowLongPtr(window_handle, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
-        if (corner != -1) {
+        if (corner != -1)
+        {
             window_flags |= ImGuiWindowFlags_NoMove;
         }
 
@@ -77,12 +87,15 @@ namespace Klim
         style.Colors[ImGuiCol_WindowBg].w = 0.0f;
         style.WindowBorderSize = 0.0f;
 
-        if (ImGui::Begin("Overlay", p_open, window_flags)) {
+        if (ImGui::Begin("Overlay", p_open, window_flags))
+        {
             std::vector<char[200]> char_ptr_vector(_limit_ptr_vector.size());
-            for (size_t i = 0; i < _limit_ptr_vector.size(); i++) {
+            for (size_t i = 0; i < _limit_ptr_vector.size(); i++)
+            {
                 FormatHotkeyStatusWcString(char_ptr_vector[i], _limit_ptr_vector[i]);
                 ImGui::PushID(i);
-                if (strcmp(char_ptr_vector[i], "") != 0) {
+                if (strcmp(char_ptr_vector[i], "") != 0)
+                {
                     ImGui::Text("%s", char_ptr_vector[i]);
                 }
 
@@ -101,7 +114,8 @@ namespace Klim
         std::vector<std::string> string_vector(_limit_ptr_vector.size());
         int line_of_button_clicked = -1;
 
-        for (size_t i = 0; i < _limit_ptr_vector.size(); i++) {
+        for (size_t i = 0; i < _limit_ptr_vector.size(); i++)
+        {
             string_vector.emplace_back("");
         }
 
@@ -112,16 +126,23 @@ namespace Klim
         ImGui::SeparatorText("Hotkeys");
 
         float button_size = 0.0f;
-        for (size_t i = 0; i < _limit_ptr_vector.size(); i++) {
-            if (_limit_ptr_vector[i]->load().key_list[0] == 0) {
+        for (size_t i = 0; i < _limit_ptr_vector.size(); i++)
+        {
+            if (_limit_ptr_vector[i]->load().key_list[0] == 0)
+            {
                 string_vector[i] = "Bind";
-            } else {
+            }
+            else
+            {
                 string_vector[i] = "";
-                for (int j = 0; j < _limit_ptr_vector[i]->load().max_key_list_size; j++) {
-                    if (_limit_ptr_vector[i]->load().key_list[j] == 0) {
+                for (int j = 0; j < _limit_ptr_vector[i]->load().max_key_list_size; j++)
+                {
+                    if (_limit_ptr_vector[i]->load().key_list[j] == 0)
+                    {
                         continue;
                     }
-                    if (!string_vector[i].empty()) {
+                    if (!string_vector[i].empty())
+                    {
                         string_vector[i].append("+");
                     }
 
@@ -134,12 +155,14 @@ namespace Klim
 
             const char* bind = string_vector[i].c_str();
             const ImVec2 out_size = ImGui::CalcTextSize(bind);
-            if (button_size < out_size.x) {
+            if (button_size < out_size.x)
+            {
                 button_size = out_size.x;
             }
         }
 
-        for (size_t i = 0; i < _limit_ptr_vector.size(); i++) {
+        for (size_t i = 0; i < _limit_ptr_vector.size(); i++)
+        {
             const char* in_progress = "in progress..";
             ImGui::PushID(i);
 
@@ -148,8 +171,10 @@ namespace Klim
             ImGui::SetCursorPosX(70);
 
             const char* bind = string_vector[i].c_str();
-            if (ImGui::Button(bind, ImVec2(button_size + 20.0f, 0.0f))) {
-                if (string_vector[i] != in_progress) {
+            if (ImGui::Button(bind, ImVec2(button_size + 20.0f, 0.0f)))
+            {
+                if (string_vector[i] != in_progress)
+                {
                     button_clicked[i] = true;
                     std::cout << "button " << i << " clicked [callback]\n";
                 }
@@ -157,11 +182,13 @@ namespace Klim
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Reset")) {
+            if (ImGui::Button("Reset"))
+            {
                 string_vector[i] = "";
                 hk_instance->done = true;
                 Limit temp_limit = _limit_ptr_vector[i]->load();
-                for (int j = 0; j < temp_limit.max_key_list_size; j++) {
+                for (int j = 0; j < temp_limit.max_key_list_size; j++)
+                {
                     temp_limit.key_list[j] = 0;
                 }
                 temp_limit.binding_complete = true;
@@ -169,14 +196,18 @@ namespace Klim
                 _limit_ptr_vector[i]->store(temp_limit);
             }
 
-            if (_limit_ptr_vector[i]->load().binding_complete == true && string_vector[i] == in_progress) {
+            if (_limit_ptr_vector[i]->load().binding_complete == true && string_vector[i] == in_progress)
+            {
                 std::cout << "updating ui...\n";
                 string_vector[i] = "";
-                for (int j = 0; j < _limit_ptr_vector[i]->load().max_key_list_size; j++) {
-                    if (_limit_ptr_vector[i]->load().key_list[0] == 0) {
+                for (int j = 0; j < _limit_ptr_vector[i]->load().max_key_list_size; j++)
+                {
+                    if (_limit_ptr_vector[i]->load().key_list[0] == 0)
+                    {
                         continue;
                     }
-                    if (!string_vector[i].empty()) {
+                    if (!string_vector[i].empty())
+                    {
                         string_vector[i].append("+");
                     }
 
@@ -187,7 +218,8 @@ namespace Klim
                 }
             }
 
-            if (button_clicked[i] == true) {
+            if (button_clicked[i] == true)
+            {
                 std::cout << "button " << i << " clicked [registered]\n";
                 string_vector[i] = in_progress;
                 button_clicked[i] = false;
@@ -198,13 +230,19 @@ namespace Klim
             ImGui::PopID();
         }
 
-        if (ImGui::Button("Close")) {
+        if (ImGui::Button("Close"))
+        {
             // check if exit app is bound
-            for (std::atomic<Limit>*& limit_ptr : _limit_ptr_vector) {
-                if (strcmp(limit_ptr->load().name, "exitapp") == 0) {
-                    if (limit_ptr->load().key_list[0] == 0) {
+            for (std::atomic<Limit>*& limit_ptr : _limit_ptr_vector)
+            {
+                if (strcmp(limit_ptr->load().name, "exitapp") == 0)
+                {
+                    if (limit_ptr->load().key_list[0] == 0)
+                    {
                         MessageBoxA(nullptr, "bind exitapp before closing", nullptr, MB_OK);
-                    } else {
+                    }
+                    else
+                    {
                         // ImGui::DestroyContext();
                         ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings);
                         ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);
@@ -234,7 +272,8 @@ namespace Klim
 
         // Initialize OpenGL
         WGL_WindowData g_main_window;
-        if (!CreateDeviceWGL(window_handle, &g_main_window)) {
+        if (!CreateDeviceWGL(window_handle, &g_main_window))
+        {
             CleanupDeviceWGL(window_handle, &g_main_window);
             DestroyWindow(window_handle);
             UnregisterClassW(wc.lpszClassName, wc.hInstance);
@@ -270,19 +309,23 @@ namespace Klim
 
         // Main loop
         bool done = false;
-        while (!done) {
+        while (!done)
+        {
             // Poll and handle messages (inputs, window resize, etc.)
             // See the WndProc() function below for our to dispatch events to the Win32 backend.
             MSG msg;
-            while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE)) {
+            while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
+            {
                 TranslateMessage(&msg);
                 ::DispatchMessage(&msg);
 
-                if (msg.message == WM_QUIT) {
+                if (msg.message == WM_QUIT)
+                {
                     done = true;
                 }
             }
-            if (done) {
+            if (done)
+            {
                 break;
             }
 
@@ -299,14 +342,16 @@ namespace Klim
 
             default_font->FontSize = 13.0f;
             ImGui::PushFont(default_font);
-            if (show_config) {
+            if (show_config)
+            {
                 Config(window_handle);
             }
             ImGui::PopFont();
 
             custom_font->FontSize = 13.0f;
             ImGui::PushFont(custom_font);
-            if (show_overlay) {
+            if (show_overlay)
+            {
                 Overlay(&show_overlay, window_handle);
             }
             ImGui::PopFont();
@@ -348,17 +393,20 @@ namespace Klim
         pfd.cColorBits = 32;
 
         const int pf = ChoosePixelFormat(hDc, &pfd);
-        if (pf == 0) {
+        if (pf == 0)
+        {
             return false;
         }
-        if (SetPixelFormat(hDc, pf, &pfd) == FALSE) {
+        if (SetPixelFormat(hDc, pf, &pfd) == FALSE)
+        {
             return false;
         }
 
         ReleaseDC(hWnd, hDc);
 
         data->device_context_handle = GetDC(hWnd);
-        if (!_g_render_context_handle) {
+        if (!_g_render_context_handle)
+        {
             _g_render_context_handle = wglCreateContext(data->device_context_handle);
         }
 
@@ -380,35 +428,40 @@ namespace Klim
 
     LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
-        if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam)) {
+        if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+        {
             return true;
         }
 
-        switch (msg) {
-        case WM_CREATE:
-            SetLayeredWindowAttributes(hWnd, RGB(128, 128, 128), 0, LWA_COLORKEY);
-            break;
-        case WM_SIZE:
-            if (wParam != SIZE_MINIMIZED) {
-                ui_instance->_g_width = LOWORD(lParam);
-                ui_instance->_g_height = HIWORD(lParam);
-            }
-            return 0;
-        case WM_SYSCOMMAND:
-            if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+        switch (msg)
+        {
+            case WM_CREATE:
+                SetLayeredWindowAttributes(hWnd, RGB(128, 128, 128), 0, LWA_COLORKEY);
+                break;
+            case WM_SIZE:
+                if (wParam != SIZE_MINIMIZED)
+                {
+                    ui_instance->_g_width = LOWORD(lParam);
+                    ui_instance->_g_height = HIWORD(lParam);
+                }
                 return 0;
-            break;
-        case WM_DESTROY:
-            ::PostQuitMessage(0);
-            return 0;
-        case WM_KEYDOWN:
-            hk_instance->KeyboardInputHandler(static_cast<int>(wParam), true);
-            break;
-        case WM_KEYUP:
-            hk_instance->KeyboardInputHandler(static_cast<int>(wParam), false);
-            break;
-        default:
-            break;
+            case WM_SYSCOMMAND:
+                if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+                {
+                    return 0;
+                }
+                break;
+            case WM_DESTROY:
+                ::PostQuitMessage(0);
+                return 0;
+            case WM_KEYDOWN:
+                hk_instance->KeyboardInputHandler(static_cast<int>(wParam), true);
+                break;
+            case WM_KEYUP:
+                hk_instance->KeyboardInputHandler(static_cast<int>(wParam), false);
+                break;
+            default:
+                break;
         }
 
         return ::DefWindowProcW(hWnd, msg, wParam, lParam);

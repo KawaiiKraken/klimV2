@@ -3,11 +3,14 @@
 #endif
 
 #include "ConfigFile.h"
+#include "HelperFunctions.h"
 #include "HotkeyManager.h"
 #include "Limit.h"
 #include "UserInterface.h"
-#include "HelperFunctions.h"
 #include "imgui.h"
+#include <chrono>
+#include <condition_variable>
+#include <future>
 #include <iostream>
 #include <shellapi.h>
 #include <stdbool.h>
@@ -15,15 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <tchar.h>
-#include <wchar.h>
-#include <windows.h>
-#include "imgui.h"
-#include <chrono>
-#include <condition_variable>
-#include <future>
-#include <iostream>
-#include <tchar.h>
 #include <vector>
+#include <wchar.h>
 #include <windows.h>
 
 #pragma comment(lib, "ntdll.lib")
@@ -71,12 +67,12 @@ int main(int argc, char* argv[])
 {
     if (argc > 1)
     {
-        if (strcmp(argv[1], "--debug") == 0) 
+        if (strcmp(argv[1], "--debug") == 0)
         {
             std::cout << "debug: true\n";
             debug = true;
         }
-        else 
+        else
         {
             std::cout << "error: invalid argument...\n"
                       << "options:\n"
@@ -84,24 +80,24 @@ int main(int argc, char* argv[])
             return 0;
         }
     }
-    else 
+    else
     {
         ShowWindow(GetConsoleWindow(), SW_HIDE);
     }
 
-    if (!Klim::Helper::RunningAsAdmin()) 
+    if (!Klim::Helper::RunningAsAdmin())
     {
         MessageBox(nullptr, L"ERROR: not running as admin", L"ERROR", MB_ICONERROR | MB_DEFBUTTON2);
         return 0;
     }
 
     Klim::ConfigFile::SetPathToConfigFile(L"config.json", path_to_config_file);
-    if (Klim::ConfigFile::FileExists(path_to_config_file)) 
+    if (Klim::ConfigFile::FileExists(path_to_config_file))
     {
         Klim::ConfigFile::LoadConfig(limit_ptr_vector, path_to_config_file, &settings);
     }
 
-    user_interface.show_config  = true;
+    user_interface.show_config = true;
     user_interface.show_overlay = false;
 
     DWORD dw_thread;
@@ -112,12 +108,12 @@ int main(int argc, char* argv[])
 
     const HANDLE h_hotkey_thread = CreateThread(nullptr, NULL, HotkeyThread, nullptr, NULL, &dw_thread);
 
-    if (h_hotkey_thread) 
+    if (h_hotkey_thread)
     {
         return WaitForSingleObject(h_hotkey_thread, INFINITE);
     }
 
-    if (h_hotkey_thread != nullptr) 
+    if (h_hotkey_thread != nullptr)
     {
         CloseHandle(h_hotkey_thread);
     }
@@ -128,11 +124,11 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, L
 {
     if (nCode == HC_ACTION && (wParam == WM_SYSKEYUP || wParam == WM_KEYUP))
     {
-        const KBDLLHOOKSTRUCT hooked_key = *reinterpret_cast<KBDLLHOOKSTRUCT*>( lParam );
+        const KBDLLHOOKSTRUCT hooked_key = *reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
 
         const int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
         const std::vector<int>::iterator iterator = std::find(currently_pressed_keys.begin(), currently_pressed_keys.end(), key);
-        if (iterator != currently_pressed_keys.end()) 
+        if (iterator != currently_pressed_keys.end())
         {
             currently_pressed_keys.erase(iterator);
         }
@@ -140,17 +136,17 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, L
         Klim::HotkeyManager::UnTriggerHotkeys(limit_ptr_vector, currently_pressed_keys);
     }
 
-    if (nCode == HC_ACTION && ((wParam == WM_SYSKEYDOWN) || (wParam == WM_KEYDOWN))) 
+    if (nCode == HC_ACTION && ((wParam == WM_SYSKEYDOWN) || (wParam == WM_KEYDOWN)))
     {
-        const KBDLLHOOKSTRUCT hooked_key = *reinterpret_cast<KBDLLHOOKSTRUCT*>( lParam );
+        const KBDLLHOOKSTRUCT hooked_key = *reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
 
         const int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
         const std::vector<int>::iterator iterator = std::find(currently_pressed_keys.begin(), currently_pressed_keys.end(), key);
-        if (iterator == currently_pressed_keys.end()) 
+        if (iterator == currently_pressed_keys.end())
         {
             currently_pressed_keys.push_back(key);
         }
-        if (!user_interface.show_config) 
+        if (!user_interface.show_config)
         {
             Klim::HotkeyManager::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, combined_windivert_rules);
         }
@@ -162,7 +158,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, L
 void MessageLoop()
 {
     MSG message;
-    while (GetMessage(&message, nullptr, 0, 0)) 
+    while (GetMessage(&message, nullptr, 0, 0))
     {
         TranslateMessage(&message);
         DispatchMessage(&message);
@@ -172,11 +168,11 @@ void MessageLoop()
 DWORD WINAPI HotkeyThread(LPVOID lpParam)
 {
     HINSTANCE h_instance = GetModuleHandle(nullptr);
-    if (!h_instance) 
+    if (!h_instance)
     {
-        h_instance = LoadLibrary(static_cast<LPCWSTR>( lpParam ));
+        h_instance = LoadLibrary(static_cast<LPCWSTR>(lpParam));
     }
-    if (!h_instance) 
+    if (!h_instance)
     {
         return 1;
     }

@@ -9,7 +9,7 @@
 
 namespace Klim
 {
-    struct Settings;
+    class Settings;
 
     class HotkeyManager
     {

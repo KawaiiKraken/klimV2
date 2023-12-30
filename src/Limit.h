@@ -39,4 +39,3 @@ namespace Klim
             static void SuspendProcess(DWORD pid, bool suspend);
     };
 }
-
