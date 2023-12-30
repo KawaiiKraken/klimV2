@@ -1,16 +1,16 @@
+#include <windows.h>
 #include "UserInterface.h"
-#include "ConfigFile.h"
-#include "HotkeyManager.h"
-#include "helperFunctions.h"
-#include "imgui.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_win32.h"
+#include "HotkeyManager.h"
+#include "helperFunctions.h"
+#include "ConfigFile.h"
 #include <GL/GL.h>
 #include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
-#include <windows.h>
+#include "Limit.h"
 
 
 UserInterface::UserInterface(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings)

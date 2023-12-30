@@ -22,7 +22,7 @@ void SetFilterRuleString(std::vector<std::atomic<limit>*> limit_ptr_vector, char
             strcat_s(combined_windivert_rules, 1000, limit_ptr_vector[i]->load().windivert_rule);
         }
     }
-    printf("filter: %s\n", combined_windivert_rules);
+    std::cout << "filter: " << combined_windivert_rules << std::endl;
 }
 
 
@@ -30,25 +30,25 @@ void UpdateFilter(char* ptrCombinedWindivertRules)
 {
     char combinedWindivertRules[1000];
     strcpy_s(combinedWindivertRules, sizeof(combinedWindivertRules), ptrCombinedWindivertRules);
-    printf("filter: %s\n", combinedWindivertRules);
+    std::cout << "filter: " << combinedWindivertRules << std::endl;
     if (hWindivert != NULL) {
-        printf("deleting old filter\n");
+        std::cout << "deleting old filter" << std::endl;
         if (!WinDivertClose(hWindivert)) {
-            fprintf(stderr, "error: failed to open the WinDivert device (%lu)\n", GetLastError());
+            std::cout <<  "error! failed to open the WinDivert device: " <<  GetLastError() << std::endl;
         }
     }
-    printf("creating new filter\n");
+    std::cout << "creating new filter" << std::endl;
     hWindivert = WinDivertOpen(combinedWindivertRules, WINDIVERT_LAYER_NETWORK, priority, 0);
     if (hWindivert == INVALID_HANDLE_VALUE) {
         if (GetLastError() == ERROR_INVALID_PARAMETER && !WinDivertHelperCompileFilter(ptrCombinedWindivertRules, WINDIVERT_LAYER_NETWORK, NULL, 0, &err_str, NULL)) {
-            fprintf(stderr, "error: invalid filter \"%s\"\n", err_str);
+            std::cout << "error! invalid filter: " << err_str << std::endl;
             exit(EXIT_FAILURE);
         }
-        fprintf(stderr, "error: failed to open the WinDivert device (%lu)\n", GetLastError());
+        std::cout << "error! failed to open the WinDivert device: " << GetLastError() << std::endl;
         exit(EXIT_FAILURE);
     }
     if (hThread2 == NULL) {
-        printf("starting hotkey thread\n");
+        std::cout << "starting hotkey thread" << std::endl;
         hThread2 = CreateThread(NULL, 0, ( LPTHREAD_START_ROUTINE )WindivertFilterThread, NULL, 0, NULL);
     }
 }
@@ -80,45 +80,36 @@ unsigned long WindivertFilterThread(LPVOID lpParam)
 
         // Dump packet info..
         SetConsoleTextAttribute(console, FOREGROUND_RED);
-        fputs("BLOCK ", stdout);
+        std::cout << "BLOCK ";
         SetConsoleTextAttribute(console, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 
         if (tcp_header != NULL) {
-            printf("tcp.SrcPort=%u tcp.DstPort=%u tcp.Flags=", ntohs(tcp_header->SrcPort), ntohs(tcp_header->DstPort));
-            if (tcp_header->Fin) {
-                fputs("[FIN]", stdout);
-            }
-            if (tcp_header->Rst) {
-                fputs("[RST]", stdout);
-            }
-            if (tcp_header->Urg) {
-                fputs("[URG]", stdout);
-            }
-            if (tcp_header->Syn) {
-                fputs("[SYN]", stdout);
-            }
-            if (tcp_header->Psh) {
-                fputs("[PSH]", stdout);
-            }
+            std::cout << "tcp.SrcPort=" << ntohs(tcp_header->SrcPort) << " tcp.DstPort=" << ntohs(tcp_header->DstPort) << std::endl;
+
+            std::cout << " tcp.Flags=";
+            if (tcp_header->Fin)  std::cout << "[FIN]";
+            if (tcp_header->Rst)  std::cout << "[RST]";
+            if (tcp_header->Urg)  std::cout << "[URG]";
+            if (tcp_header->Syn)  std::cout << "[SYN]";
+            if (tcp_header->Psh)  std::cout << "[PSH] ";
+            if (tcp_header->Ack)  std::cout << "[ACK]";
+            std::cout << ' ';
+
             if (tcp_header->Ack) {
-                fputs("[ACK]", stdout);
+                std::cout << "AckNum=" << ntohl(tcp_header->AckNum);
             }
-            putchar(' ');
-            if (tcp_header->Ack) {
-                printf("AckNum=%d", ntohl(tcp_header->AckNum));
-            }
-            printf(" SeqNum=%d", ntohl(tcp_header->SeqNum));
-            printf(" size=%d", payload_len);
+            std::cout << " SeqNum=" << ntohl(tcp_header->SeqNum);
+            std::cout << " size=" << payload_len;
         }
         if (udp_header != NULL) {
-            printf("udp.SrcPort=%u udp.DstPort=%u ", ntohs(udp_header->SrcPort), ntohs(udp_header->DstPort));
+            std::cout << "udp.SrcPort=" << ntohs(udp_header->SrcPort) << " udp.DstPort=" << ntohs(udp_header->DstPort);
         }
-        putchar('\n');
+        std::cout << std::endl;
         if (tcp_header != NULL && ntohs(tcp_header->SrcPort) == 7500 && !tcp_header->Fin && !tcp_header->Psh) {
             if (!WinDivertSendEx(hWindivert, packet, recv_len, NULL, 0, &recv_addr, addr_len, NULL)) {
-                fprintf(stderr, "\nwarning: failed to reinject packet (%d)", GetLastError());
+                std::cout << std::endl << "warning! failed to reinject packet: " <<  GetLastError();
             } else {
-                printf("\nreinjected ack packet");
+                std::cout << std::endl << "reinjected ack packet";
             }
         }
     }

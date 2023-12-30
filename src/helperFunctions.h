@@ -2,8 +2,6 @@
 
 #include <iostream>
 #include <mutex>
-#include <psapi.h>
-#include <tchar.h>
 #include <vector>
 #include <windows.h>
 
