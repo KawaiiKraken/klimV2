@@ -1,5 +1,4 @@
-#ifndef HOTKEYMANAGER_H
-#define HOTKEYMANAGER_H
+#pragma once
 #include "Limit.h"
 #include <Windows.h>
 #include <chrono>
@@ -25,6 +24,3 @@ private:
     std::vector<std::atomic<Limit>*> _limit_ptr_vector;
     bool cancelled = false;
 };
-
-
-#endif HOTKEYMANAGER_H

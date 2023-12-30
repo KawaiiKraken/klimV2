@@ -1,7 +1,7 @@
 #include "HotkeyManager.h"
 #include "ConfigFile.h"
-#include "helperFunctions.h"
-#include "windivertFunctions.h"
+#include "HelperFunctions.h"
+#include "WinDivertFunctions.h"
 #include <algorithm>
 
 HotkeyManager::HotkeyManager(std::vector<std::atomic<Limit>*> _limit_ptr_vector)
