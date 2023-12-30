@@ -115,7 +115,9 @@ namespace Klim
 
     void UserInterface::Config(const HWND window_handle)
     {
-        SetWindowLongPtr(window_handle, GWL_EXSTYLE, GetWindowLongPtr(window_handle, GWL_EXSTYLE) | ~WS_EX_TRANSPARENT); // make clickthrough (entire window) // TODO make it remove clickthrough when not needed
+        // make click-through (entire window) 
+        // TODO make it remove click-through when not needed
+        SetWindowLongPtr(window_handle, GWL_EXSTYLE, GetWindowLongPtr(window_handle, GWL_EXSTYLE) | ~WS_EX_TRANSPARENT);
 
         std::vector<bool> button_clicked(_limit_ptr_vector.size());
         std::vector<std::string> string_vector(_limit_ptr_vector.size());
@@ -128,7 +130,9 @@ namespace Klim
 
         static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
         ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::Begin("config", nullptr, flags);
+        ImGui::SetNextWindowSize(ImVec2(250, 350));
+
+        ImGui::Begin("Config", nullptr, flags);
 
         ImGui::SeparatorText("Hotkeys");
 
@@ -170,12 +174,13 @@ namespace Klim
 
         for (size_t i = 0; i < _limit_ptr_vector.size(); i++)
         {
-            const char* in_progress = "in progress..";
-            ImGui::PushID(i);
+            const char* in_progress = "in progress...";
+            ImGui::PushID(static_cast<int>(i));
 
             ImGui::Text("%s ", _limit_ptr_vector[i]->load().name); // Display some text (you can use a format strings too)
             ImGui::SameLine();
-            ImGui::SetCursorPosX(70);
+            // ImGui::SetCursorPosX(70);
+            ImGui::SetCursorPosX(115);
 
             const char* bind = string_vector[i].c_str();
             if (ImGui::Button(bind, ImVec2(button_size + 20.0f, 0.0f)))
@@ -250,8 +255,6 @@ namespace Klim
                     }
                     else
                     {
-
-                        // ImGui::DestroyContext();
                         ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings);
                         ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);
                         show_config = false;
@@ -275,8 +278,7 @@ namespace Klim
         GetWindowRect(desktop_window_handle, &desktop_rect);
 
         constexpr DWORD dw_style = WS_VISIBLE | WS_OVERLAPPED | WS_POPUP;
-        const HWND window_handle = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, wc.lpszClassName, L"klim config", dw_style, 0, 0, 250, 350, nullptr, nullptr, wc.hInstance, nullptr);
-
+        const HWND window_handle = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, wc.lpszClassName, L"klim config", dw_style, 0, 0, 1000, 1000, nullptr, nullptr, wc.hInstance, nullptr);
 
         // Initialize OpenGL
         WGL_WindowData g_main_window;
@@ -300,7 +302,7 @@ namespace Klim
         ImFontConfig config;
         config.RasterizerMultiply = 1.0f; // Adjust the value for better antialiasing
 
-        ImFont* custom_font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(Hack_Regular, 15.0f, &config);
+        ImFont* custom_font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(Hack_Regular, 18.0f, &config);
         ImFont* default_font = io.Fonts->AddFontDefault();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable GamePad Controls
@@ -348,7 +350,7 @@ namespace Klim
             style.WindowPadding = ImVec2(15.0f, 5.0f);
 
 
-            default_font->FontSize = 13.0f;
+            default_font->FontSize = 18.0f;
             ImGui::PushFont(default_font);
             if (show_config)
             {
@@ -356,14 +358,13 @@ namespace Klim
             }
             ImGui::PopFont();
 
-            custom_font->FontSize = 13.0f;
+            custom_font->FontSize = 18.0f;
             ImGui::PushFont(custom_font);
             if (show_overlay)
             {
                 Overlay(&show_overlay, window_handle);
             }
             ImGui::PopFont();
-
 
             // Rendering
             ImGui::Render();
