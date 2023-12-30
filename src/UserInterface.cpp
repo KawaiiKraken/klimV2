@@ -14,28 +14,32 @@
 
 
 UserInterface::UserInterface(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings)
-    : limit_ptr_vector(limit_ptr_vector)
-    , path_to_config_file(path_to_config_file)
-    , settings(settings)
-{
-}
+    : limit_ptr_vector(limit_ptr_vector), path_to_config_file(path_to_config_file), settings(settings) {}
 
 void UserInterface::FormatHotkeyStatusWcString(char* c_string, std::atomic<Limit>* limit)
 {
     int szWcString = 200;
 
     wchar_t wcString[200];
-    if (limit->load().key_list[0] == 0) {
+    if (limit->load().key_list[0] == 0) 
+    {
         return;
     }
+
     wchar_t nameBuffer[256];
     wcscpy_s(wcString, szWcString, L"");
-    for (int i = 0; i < limit->load().max_key_list_size; i++) {
-        if (limit->load().key_list[i] == 0)
+    for (int i = 0; i < limit->load().max_key_list_size; i++) 
+    {
+        if (limit->load().key_list[i] == 0) 
+        {
             break;
-        if (wcscmp(wcString, L"") != 0) {
+        }
+
+        if (wcscmp(wcString, L"") != 0) 
+        {
             wcscat_s(wcString, szWcString, L"+");
         }
+
         int scan_code = MapVirtualKey(limit->load().key_list[i], 0);
         GetKeyNameText(scan_code << 16, nameBuffer, sizeof(nameBuffer) / sizeof(nameBuffer[0]));
         wcscat_s(wcString, szWcString, nameBuffer);
@@ -51,19 +55,23 @@ void UserInterface::FormatHotkeyStatusWcString(char* c_string, std::atomic<Limit
 void UserInterface::Overlay(bool* p_open, HWND hwnd)
 {
     const float DISTANCE = 10.0f;
-    static int corner    = 0;
-    ImGuiIO& io          = ImGui::GetIO();
-    if (corner != -1) {
+    static int corner = 0;
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (corner != -1) 
+    {
         ImVec2 window_pos       = ImVec2((corner & 1) ? io.DisplaySize.x - DISTANCE : DISTANCE, (corner & 2) ? io.DisplaySize.y - DISTANCE : DISTANCE);
         ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
         ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
     }
+
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing
         | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoResize;
-    SetWindowLongPtr(
-        hwnd, GWL_EXSTYLE, GetWindowLongPtr(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT); // make clickthrough (entire window) // TODO make it remove clickthrough when not needed
-    if (corner != -1)
+    SetWindowLongPtr(hwnd, GWL_EXSTYLE, GetWindowLongPtr(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT); // make clickthrough (entire window) // TODO make it remove clickthrough when not needed
+    if (corner != -1) 
+    {
         window_flags |= ImGuiWindowFlags_NoMove;
+    }
 
     // ImFont* currentFont = ImGui::GetFont();
     // ImFont* newFont = io.Fonts->Fonts[0];  // Assuming you want to use the first font (default font)
@@ -78,13 +86,16 @@ void UserInterface::Overlay(bool* p_open, HWND hwnd)
     style.WindowBorderSize            = 0.0f; // Set window border size to zero
 
 
-    if (ImGui::Begin("Example: Simple overlay", p_open, window_flags)) {
+    if (ImGui::Begin("Example: Simple overlay", p_open, window_flags)) 
+    {
 
         std::vector<char[200]> char_ptr_vector(limit_ptr_vector.size());
-        for (int i = 0; i < limit_ptr_vector.size(); i++) {
+        for (int i = 0; i < limit_ptr_vector.size(); i++) 
+        {
             UserInterface::FormatHotkeyStatusWcString(char_ptr_vector[i], limit_ptr_vector[i]);
             ImGui::PushID(i);
-            if (strcmp(char_ptr_vector[i], "") != 0) {
+            if (strcmp(char_ptr_vector[i], "") != 0) 
+            {
                 ImGui::Text(char_ptr_vector[i]);
             }
             ImGui::PopID();
@@ -108,13 +119,13 @@ void UserInterface::Overlay(bool* p_open, HWND hwnd)
 
 void UserInterface::Config(HWND hwnd)
 {
-    SetWindowLongPtr(
-        hwnd, GWL_EXSTYLE, GetWindowLongPtr(hwnd, GWL_EXSTYLE) | ~WS_EX_TRANSPARENT); // make clickthrough (entire window) // TODO make it remove clickthrough when not needed
+    SetWindowLongPtr(hwnd, GWL_EXSTYLE, GetWindowLongPtr(hwnd, GWL_EXSTYLE) | ~WS_EX_TRANSPARENT); // make clickthrough (entire window) // TODO make it remove clickthrough when not needed
     std::vector<bool> button_clicked(limit_ptr_vector.size());
     std::vector<std::string> String;
     int line_of_button_clicked = -1;
     const char* in_progress    = "in progress..";
-    for (int i = 0; i < (limit_ptr_vector.size()); i++) {
+    for (int i = 0; i < (limit_ptr_vector.size()); i++) 
+    {
         String.push_back("");
     }
     static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
@@ -124,17 +135,26 @@ void UserInterface::Config(HWND hwnd)
     ImGui::SeparatorText("Hotkeys");
 
     float buttonSize = 0.0f;
-    for (int i = 0; i < limit_ptr_vector.size(); i++) {
-        if (limit_ptr_vector[i]->load().key_list[0] == 0) {
+    for (int i = 0; i < limit_ptr_vector.size(); i++) 
+    {
+        if (limit_ptr_vector[i]->load().key_list[0] == 0) 
+        {
             String[i] = "Bind";
-        } else {
+        }
+        else 
+        {
             String[i] = "";
-            for (int j = 0; j < limit_ptr_vector[i]->load().max_key_list_size; j++) {
-                if (limit_ptr_vector[i]->load().key_list[j] == 0)
+            for (int j = 0; j < limit_ptr_vector[i]->load().max_key_list_size; j++) 
+            {
+                if (limit_ptr_vector[i]->load().key_list[j] == 0) 
+                {
                     continue;
-                if (String[i] != "") {
+                }
+                if (String[i] != "") 
+                {
                     String[i].append("+");
                 }
+
                 int scan_code = MapVirtualKey(limit_ptr_vector[i]->load().key_list[j], 0);
                 char name_buffer[256];
                 GetKeyNameTextA(scan_code << 16, name_buffer, sizeof(name_buffer) / sizeof(name_buffer[0]));
@@ -145,10 +165,13 @@ void UserInterface::Config(HWND hwnd)
         const char* bind = String[i].c_str();
         ImVec2 outSize   = ImGui::CalcTextSize(bind);
         if (buttonSize < outSize.x)
+        {
             buttonSize = outSize.x;
+        }
     }
 
-    for (int i = 0; i < limit_ptr_vector.size(); i++) {
+    for (int i = 0; i < limit_ptr_vector.size(); i++) 
+    {
         ImGui::PushID(i);
 
         ImGui::Text("%s ", limit_ptr_vector[i]->load().name); // Display some text (you can use a format strings too)
@@ -156,8 +179,10 @@ void UserInterface::Config(HWND hwnd)
         ImGui::SetCursorPosX(70);
 
         const char* bind = String[i].c_str();
-        if (ImGui::Button(bind, ImVec2(buttonSize + 20.0f, 0.0f))) {
-            if (String[i] != in_progress) {
+        if (ImGui::Button(bind, ImVec2(buttonSize + 20.0f, 0.0f))) 
+        {
+            if (String[i] != in_progress) 
+            {
                 button_clicked[i] = true;
                 std::cout << "button " << i << " clicked [callback]" << std::endl;
             }
@@ -165,11 +190,13 @@ void UserInterface::Config(HWND hwnd)
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Reset")) {
+        if (ImGui::Button("Reset")) 
+        {
             String[i]            = "";
-            hotkeyInstance->done = true;
+            hk_instance->done = true;
             Limit temp_limit = limit_ptr_vector[i]->load();
-            for (int j = 0; j < temp_limit.max_key_list_size; j++) {
+            for (int j = 0; j < temp_limit.max_key_list_size; j++) 
+            {
                 temp_limit.key_list[j] = 0;
             }
             temp_limit.bindingComplete = true;
@@ -177,13 +204,18 @@ void UserInterface::Config(HWND hwnd)
             limit_ptr_vector[i]->store(temp_limit);
         }
 
-        if (limit_ptr_vector[i]->load().bindingComplete == true && String[i] == in_progress) {
+        if (limit_ptr_vector[i]->load().bindingComplete == true && String[i] == in_progress) 
+        {
             std::cout << "updating ui.." << std::endl;
             String[i] = "";
-            for (int j = 0; j < limit_ptr_vector[i]->load().max_key_list_size; j++) {
-                if (limit_ptr_vector[i]->load().key_list[0] == 0)
+            for (int j = 0; j < limit_ptr_vector[i]->load().max_key_list_size; j++) 
+            {
+                if (limit_ptr_vector[i]->load().key_list[0] == 0) 
+                {
                     continue;
-                if (String[i] != "") {
+                }
+                if (String[i] != "") 
+                {
                     String[i].append("+");
                 }
                 int scan_code = MapVirtualKey(limit_ptr_vector[i]->load().key_list[j], 0);
@@ -193,12 +225,13 @@ void UserInterface::Config(HWND hwnd)
             }
         }
 
-        if (button_clicked[i] == true) {
+        if (button_clicked[i] == true) 
+        {
             std::cout << "button " << i << " clicked [registered]" << std::endl;
             String[i]              = in_progress;
             button_clicked[i]      = false;
             line_of_button_clicked = i;
-            std::thread([&]() { hotkeyInstance->asyncBindHotkey(line_of_button_clicked); }).detach();
+            std::thread([&]() { hk_instance->AsyncBindHotkey(line_of_button_clicked); }).detach();
         }
 
         ImGui::PopID();
@@ -206,13 +239,19 @@ void UserInterface::Config(HWND hwnd)
 
 
     // ImGui::SetCursorPos(ImVec2(100, 260));
-    if (ImGui::Button("Close")) {
+    if (ImGui::Button("Close")) 
+    {
         // check if exitapp is bound
-        for (int i = 0; i < limit_ptr_vector.size(); i++) {
-            if (strcmp(limit_ptr_vector[i]->load().name, "exitapp") == 0) {
-                if (limit_ptr_vector[i]->load().key_list[0] == 0) {
+        for (int i = 0; i < limit_ptr_vector.size(); i++) 
+        {
+            if (strcmp(limit_ptr_vector[i]->load().name, "exitapp") == 0) 
+            {
+                if (limit_ptr_vector[i]->load().key_list[0] == 0) 
+                {
                     MessageBoxA(NULL, "bind exitapp before closing", NULL, MB_OK);
-                } else {
+                }
+                else 
+                {
                     // ImGui::DestroyContext();
                     ConfigFile::WriteConfig(limit_ptr_vector, path_to_config_file, settings);
                     ConfigFile::LoadConfig(limit_ptr_vector, path_to_config_file, settings);
@@ -227,7 +266,7 @@ void UserInterface::Config(HWND hwnd)
 }
 
 
-int UserInterface::run_gui()
+int UserInterface::RunGui()
 {
     // Create application window
     // ImGui_ImplWin32_EnableDpiAwareness();
@@ -248,7 +287,8 @@ int UserInterface::run_gui()
 
     WGL_WindowData g_MainWindow;
     // Initialize OpenGL
-    if (!CreateDeviceWGL(hwnd, &g_MainWindow)) {
+    if (!CreateDeviceWGL(hwnd, &g_MainWindow)) 
+    {
         CleanupDeviceWGL(hwnd, &g_MainWindow);
         ::DestroyWindow(hwnd);
         ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
@@ -302,18 +342,24 @@ int UserInterface::run_gui()
 
     // Main loop
     bool done = false;
-    while (!done) {
+    while (!done) 
+    {
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
         MSG msg;
-        while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE)) {
+        while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE)) 
+        {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
-            if (msg.message == WM_QUIT)
+            if (msg.message == WM_QUIT) 
+            {
                 done = true;
+            }
         }
-        if (done)
+        if (done) 
+        {
             break;
+        }
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -331,15 +377,19 @@ int UserInterface::run_gui()
 
         defaultFont->FontSize = 13.0f;
         ImGui::PushFont(defaultFont);
-        if (show_config)
+        if (show_config) 
+        {
             UserInterface::Config(hwnd);
+        }
         ImGui::PopFont();
 
 
         customFont->FontSize = 13.0f;
         ImGui::PushFont(customFont);
-        if (show_overlay)
+        if (show_overlay) 
+        {
             UserInterface::Overlay(&show_overlay, hwnd);
+        }
         ImGui::PopFont();
 
 
@@ -379,15 +429,22 @@ bool UserInterface::CreateDeviceWGL(HWND hWnd, WGL_WindowData* data)
     pfd.cColorBits            = 32;
 
     const int pf = ::ChoosePixelFormat(hDc, &pfd);
-    if (pf == 0)
+    if (pf == 0) 
+    {
         return false;
-    if (::SetPixelFormat(hDc, pf, &pfd) == FALSE)
+    }
+    if (::SetPixelFormat(hDc, pf, &pfd) == FALSE) 
+    {
         return false;
+    }
+
     ::ReleaseDC(hWnd, hDc);
 
     data->hDC = ::GetDC(hWnd);
-    if (!g_hRC)
+    if (!g_hRC) 
+    {
         g_hRC = wglCreateContext(data->hDC);
+    }
     return true;
 }
 
@@ -406,34 +463,36 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
 // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
 
-LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam)) {
         return true;
+    }
 
     switch (msg) {
-    case WM_CREATE:
-        SetLayeredWindowAttributes(hWnd, RGB(128, 128, 128), 0, LWA_COLORKEY);
-        break;
-    case WM_SIZE:
-        if (wParam != SIZE_MINIMIZED) {
-            instance->g_Width  = LOWORD(lParam);
-            instance->g_Height = HIWORD(lParam);
-        }
-        return 0;
-    case WM_SYSCOMMAND:
-        if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+        case WM_CREATE:
+            SetLayeredWindowAttributes(hWnd, RGB(128, 128, 128), 0, LWA_COLORKEY);
+            break;
+        case WM_SIZE:
+            if (wParam != SIZE_MINIMIZED) {
+                ui_instance->g_Width  = LOWORD(lParam);
+                ui_instance->g_Height = HIWORD(lParam);
+            }
             return 0;
-        break;
-    case WM_DESTROY:
-        ::PostQuitMessage(0);
-        return 0;
-    case WM_KEYDOWN:
-        hotkeyInstance->KeyboardInputHandler(static_cast<int>(wParam), true);
-        break;
-    case WM_KEYUP:
-        hotkeyInstance->KeyboardInputHandler(static_cast<int>(wParam), false);
-        break;
+        case WM_SYSCOMMAND:
+            if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+                return 0;
+            break;
+        case WM_DESTROY:
+            ::PostQuitMessage(0);
+            return 0;
+        case WM_KEYDOWN:
+            hk_instance->KeyboardInputHandler(static_cast<int>(wParam), true);
+            break;
+        case WM_KEYUP:
+            hk_instance->KeyboardInputHandler(static_cast<int>(wParam), false);
+            break;
+        default:
+            break;
     }
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }

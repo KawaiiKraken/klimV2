@@ -12,35 +12,35 @@ class HotkeyManager;
 class Limit;
 
 class UserInterface {
-public:
-    UserInterface(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings);
-    static UserInterface* instance;
-    static HotkeyManager* hotkeyInstance;
-    bool show_overlay = false;
-    bool show_config  = false;
-    int run_gui();
+    public:
+        UserInterface(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings);
+        static UserInterface* ui_instance;
+        static HotkeyManager* hk_instance;
+        bool show_overlay = false;
+        bool show_config  = false;
+        int RunGui();
 
-private:
-    static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-    void FormatHotkeyStatusWcString(char* c_string, std::atomic<Limit>* limit);
-    std::vector<std::atomic<Limit>*> limit_ptr_vector;
-    // Data stored per platform window
-    struct WGL_WindowData {
-        HDC hDC;
-    };
-    // Data
-    HGLRC g_hRC  = 0;
-    int g_Width  = 0;
-    int g_Height = 0;
-    // Forward declarations of helper functions
-    bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
-    void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
-    wchar_t* path_to_config_file;
-    Settings* settings;
-    void Overlay(bool* p_open, HWND hwnd);
-    void Config(HWND hwnd);
-    ImVec2 overlayWindowPos;
-    ImVec2 overlayWindowSize;
+    private:
+        static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+        void FormatHotkeyStatusWcString(char* c_string, std::atomic<Limit>* limit);
+        std::vector<std::atomic<Limit>*> limit_ptr_vector;
+        // Data stored per platform window
+        struct WGL_WindowData {
+            HDC hDC;
+        };
+        // Data
+        HGLRC g_hRC  = 0;
+        int g_Width  = 0;
+        int g_Height = 0;
+        // Forward declarations of helper functions
+        bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
+        void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
+        wchar_t* path_to_config_file;
+        Settings* settings;
+        void Overlay(bool* p_open, HWND hwnd);
+        void Config(HWND hwnd);
+        ImVec2 overlayWindowPos;
+        ImVec2 overlayWindowSize;
 };
 // font in base85, i will find a better way for this at some point... prob
 const char Hack_Regular[243650 + 1]

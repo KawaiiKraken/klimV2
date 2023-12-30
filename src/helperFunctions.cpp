@@ -5,11 +5,12 @@
 #include <psapi.h>
 #include <Windows.h>
 
-void Helper::Exitapp(bool debug)
+void Helper::ExitApp(bool debug)
 {
     std::cout << "shutting down" << std::endl;
     ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
-    if (!debug) {
+    if (!debug) 
+    {
         ShowWindow(GetConsoleWindow(), SW_RESTORE);
     }
     PostQuitMessage(0);
@@ -27,14 +28,15 @@ bool Helper::D2Active()
     GetModuleFileNameEx(hProc, NULL, buffer, MAX_PATH);
     CloseHandle(hProc);
 
-    const wchar_t* filename = GetFilename(buffer);
+    const wchar_t* filename = GetFileName(buffer);
     std::cout << "active window filename: " << filename << std::endl;
 
-    if (wcscmp(filename, L"destiny2.exe") == 0) {
+    if (wcscmp(filename, L"destiny2.exe") == 0) 
+    {
         return true;
-    } else {
-        return false;
     }
+
+    return false;
 }
 
 
@@ -42,26 +44,33 @@ bool Helper::RunningAsAdmin()
 {
     bool fRet     = false;
     HANDLE hToken = NULL;
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) 
+    {
         TOKEN_ELEVATION elevation;
         DWORD cbSize = sizeof(TOKEN_ELEVATION);
-        if (GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &cbSize)) {
+        if (GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &cbSize)) 
+        {
             fRet = elevation.TokenIsElevated;
         }
     }
-    if (hToken) {
+    if (hToken) 
+    {
         CloseHandle(hToken);
     }
     return fRet;
 }
 
 
-const wchar_t* Helper::GetFilename(const wchar_t* path)
+const wchar_t* Helper::GetFileName(const wchar_t* path)
 {
     const wchar_t* filename = wcsrchr(path, '\\');
-    if (filename == NULL)
+    if (filename == NULL) 
+    {
         filename = path;
-    else
+    }
+    else 
+    {
         filename++;
+    }
     return filename;
 }
