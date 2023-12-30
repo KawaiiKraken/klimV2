@@ -5,11 +5,14 @@
 #include <vector>
 #include <windows.h>
 
-class Helper
+namespace Klim
 {
-    public:
-        static bool D2Active();
-        static bool RunningAsAdmin();
-        static void ExitApp(bool debug);
-        static const wchar_t* GetFileName(const wchar_t* path);
-};
+    class Helper
+    {
+        public:
+            static bool D2Active();
+            static bool RunningAsAdmin();
+            static void ExitApp(bool debug);
+            static const wchar_t* GetFileName(const wchar_t* path);
+    };
+}
