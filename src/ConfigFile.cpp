@@ -2,8 +2,7 @@
 #include "Limit.h"
 #include "HelperFunctions.h"
 
-void ConfigFile::WriteConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings)
-{
+void ConfigFile::WriteConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings) {
     Json::Value config;
 
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
@@ -16,11 +15,12 @@ void ConfigFile::WriteConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, 
 
         std::vector<int> key_list;
         for (int j = 0; j < temp_limit.max_key_list_size; j++) {
-            if (temp_limit.key_list[j] == 0)
+            if (temp_limit.key_list[j] == 0) {
                 continue;
+            }
             key_list.push_back(temp_limit.key_list[j]);
         }
-        config[name] = ConfigFile::vectorToJson(key_list);
+        config[name] = ConfigFile::VectorToJson(key_list);
     }
 
     // random defaults for now
@@ -34,8 +34,7 @@ void ConfigFile::WriteConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, 
 }
 
 
-void ConfigFile::LoadConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings)
-{
+void ConfigFile::LoadConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings) {
     // Load the config from the JSON file
     Json::Value loaded_config = ConfigFile::LoadConfigFileFromJson(path_to_config_file);
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
@@ -43,7 +42,7 @@ void ConfigFile::LoadConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, w
         name.append("_key_list");
 
         Limit temp_limit = limit_ptr_vector[i]->load();
-        std::vector<int> key_vector = ConfigFile::jsonToVector(loaded_config[name.c_str()]);
+        std::vector<int> key_vector = ConfigFile::JsonToVector(loaded_config[name.c_str()]);
         // temp_limit.key_list;
         for (int j = 0; j < key_vector.size(); j++) {
             temp_limit.key_list[j] = key_vector[j];
@@ -60,14 +59,12 @@ void ConfigFile::LoadConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, w
 }
 
 
-bool ConfigFile::FileExists(LPCTSTR szPath)
-{
+bool ConfigFile::FileExists(LPCTSTR szPath) {
     DWORD dwAttrib = GetFileAttributes(szPath);
     return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-Json::Value ConfigFile::LoadConfigFileFromJson(wchar_t* filepath)
-{
+Json::Value ConfigFile::LoadConfigFileFromJson(wchar_t* filepath) {
     Json::Value json_data;
     std::ifstream config_file(filepath, std::ifstream::binary);
 
@@ -89,11 +86,9 @@ Json::Value ConfigFile::LoadConfigFileFromJson(wchar_t* filepath)
 }
 
 // TODO make it overwrite the file
-void ConfigFile::StoreConfigToJson(wchar_t* file_path, const Json::Value& config_data)
-{
+void ConfigFile::StoreConfigToJson(wchar_t* file_path, const Json::Value& config_data) {
     std::cout << "creating new config file" << std::endl;
-    HANDLE hFile
-        = CreateFileW(( LPCTSTR )file_path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileW(( LPCTSTR )file_path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hFile == INVALID_HANDLE_VALUE) {
         std::cerr << "Error opening file for writing" << std::endl;
@@ -109,8 +104,7 @@ void ConfigFile::StoreConfigToJson(wchar_t* file_path, const Json::Value& config
     CloseHandle(hFile);
 }
 
-Json::Value ConfigFile::vectorToJson(const std::vector<int>& vec)
-{
+Json::Value ConfigFile::VectorToJson(const std::vector<int>& vec) {
     Json::Value jsonVec;
 
     for (const auto& element : vec) {
@@ -120,11 +114,11 @@ Json::Value ConfigFile::vectorToJson(const std::vector<int>& vec)
     return jsonVec;
 }
 
-std::vector<int> ConfigFile::jsonToVector(const Json::Value& jsonVec)
-{
+std::vector<int> ConfigFile::JsonToVector(const Json::Value& jsonVec) {
     std::vector<int> vec;
 
-    for (const auto& element : jsonVec) {
+    for (const auto& element : jsonVec) 
+    {
         vec.push_back(element.asInt());
     }
 
@@ -132,11 +126,10 @@ std::vector<int> ConfigFile::jsonToVector(const Json::Value& jsonVec)
 }
 
 
-void ConfigFile::SetPathToConfigFile(wchar_t* config_filename, wchar_t* path_to_config_file)
-{
+void ConfigFile::SetPathToConfigFile(wchar_t* config_filename, wchar_t* path_to_config_file) {
     wchar_t file_path_self[MAX_PATH], folder_path_self[MAX_PATH];
     GetModuleFileName(NULL, file_path_self, MAX_PATH);
-    wcsncpy_s(folder_path_self, MAX_PATH, file_path_self, (wcslen(file_path_self) - wcslen(Helper::GetFilename(file_path_self))));
+    wcsncpy_s(folder_path_self, MAX_PATH, file_path_self, (wcslen(file_path_self) - wcslen(Helper::GetFileName(file_path_self))));
     wchar_t filename[MAX_PATH], file_path[MAX_PATH];
     wcscpy_s(filename, MAX_PATH, config_filename);
     wcscpy_s(file_path, MAX_PATH, folder_path_self);

@@ -12,11 +12,12 @@ void Limit::ToggleWholeGameLimit(std::atomic<Limit>* lim_game)
     temp_limit.state = !temp_limit.state;
     lim_game->store(temp_limit);
 
-    if (temp_limit.state) {
-        ShellExecute(NULL, NULL, L"powershell.exe",
-            L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 0.801KB", NULL,
-            SW_HIDE);
-    } else {
+    if (temp_limit.state) 
+    {
+        ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 0.801KB", NULL, SW_HIDE);
+    }
+    else
+    {
         ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
     }
 }
@@ -24,7 +25,9 @@ void Limit::ToggleWholeGameLimit(std::atomic<Limit>* lim_game)
 
 void Limit::ToggleSuspend(std::atomic<Limit>* suspend)
 {
-    if (!Helper::D2Active()) { // prevents from pausing random stuff if running with debug
+    // prevents from pausing random stuff if running with debug
+    if (!Helper::D2Active()) 
+    {
         MessageBox(NULL, L"failed to pause...\nd2 is not the active window", NULL, MB_OK | MB_ICONWARNING);
         return;
     }
@@ -41,28 +44,32 @@ void Limit::ToggleSuspend(std::atomic<Limit>* suspend)
 
 void Limit::SuspendProcess(DWORD pid, bool suspend)
 {
-    if (pid == 0) {
+    if (pid == 0) 
+    {
         return;
     }
 
     HANDLE hProc = OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid);
 
-    if (hProc == NULL) {
+    if (hProc == NULL) 
+    {
         return;
     }
 
-    typedef LONG (NTAPI *NtSuspendProcess)(IN HANDLE ProcessHandle );
-    typedef LONG (NTAPI *NtResumeProcess)(IN HANDLE ProcessHandle );
+    typedef LONG (NTAPI *NtSuspendProcess)(IN HANDLE ProcessHandle);
+    typedef LONG (NTAPI *NtResumeProcess)(IN HANDLE ProcessHandle);
 
-    if (suspend) {
+    if (suspend) 
+    {
         std::cout << "suspending process" << std::endl;
-        NtSuspendProcess pfn_NtSuspendProcess = (NtSuspendProcess)GetProcAddress(
-					GetModuleHandleA( "ntdll" ), "NtSuspendProcess" );
+        NtSuspendProcess pfn_NtSuspendProcess = (NtSuspendProcess)GetProcAddress(GetModuleHandleA("ntdll"), "NtSuspendProcess");
         pfn_NtSuspendProcess(hProc);
-    } else {
+    }
+    else 
+    {
         std::cout << "resuming process" << std::endl;
-        	NtResumeProcess pfn_NtResumeProcess = (NtResumeProcess)GetProcAddress(
-		GetModuleHandleA( "ntdll" ), "NtResumeProcess" );
+
+        NtResumeProcess pfn_NtResumeProcess = (NtResumeProcess)GetProcAddress(GetModuleHandleA("ntdll"), "NtResumeProcess" );
         pfn_NtResumeProcess(hProc);
     }
 
