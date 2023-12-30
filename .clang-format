@@ -7,12 +7,17 @@ ColumnLimit: 250
 MaxEmptyLinesToKeep: 2
 SortIncludes: true
 SpacesInCStyleCastParentheses: false
+BreakBeforeBraces: Custom
+NamespaceIndentation: All
+IndentCaseLabels: true
+IndentAccessModifiers: true
 BraceWrapping:
   AfterControlStatement: Always
   AfterNamespace: true
   AfterEnum: true
   AfterFunction: true
   AfterStruct: true
+  AfterClass: true
   AfterUnion: true
   BeforeElse: true
   BeforeCatch: true

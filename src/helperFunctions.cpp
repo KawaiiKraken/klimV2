@@ -1,22 +1,22 @@
 #include "HelperFunctions.h"
 #include "ConfigFile.h"
 #include "Limit.h"
+#include <Windows.h>
 #include <algorithm>
 #include <psapi.h>
-#include <Windows.h>
 
 namespace Klim
 {
-    void Helper::ExitApp(bool debug)
+    void Helper::ExitApp(const bool debug)
     {
         std::cout << "shutting down\n";
         ShellExecute(nullptr, nullptr, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", nullptr, SW_HIDE);
-        if (!debug) {
+        if (!debug)
+        {
             ShowWindow(GetConsoleWindow(), SW_RESTORE);
         }
         PostQuitMessage(0);
     }
-
 
     bool Helper::D2Active()
     {
@@ -32,7 +32,8 @@ namespace Klim
         const wchar_t* filename = GetFileName(buffer);
         std::cout << "active window filename: " << filename << "\n";
 
-        if (wcscmp(filename, L"destiny2.exe") == 0) {
+        if (wcscmp(filename, L"destiny2.exe") == 0)
+        {
             return true;
         }
 
@@ -44,14 +45,17 @@ namespace Klim
     {
         bool is_admin = false;
         HANDLE token_handle = nullptr;
-        if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token_handle)) {
+        if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token_handle))
+        {
             TOKEN_ELEVATION elevation;
             DWORD cb_size = sizeof(TOKEN_ELEVATION);
-            if (GetTokenInformation(token_handle, TokenElevation, &elevation, sizeof(elevation), &cb_size)) {
+            if (GetTokenInformation(token_handle, TokenElevation, &elevation, sizeof(elevation), &cb_size))
+            {
                 is_admin = elevation.TokenIsElevated;
             }
         }
-        if (token_handle) {
+        if (token_handle)
+        {
             CloseHandle(token_handle);
         }
         return is_admin;
@@ -61,9 +65,12 @@ namespace Klim
     const wchar_t* Helper::GetFileName(const wchar_t* path)
     {
         const wchar_t* filename = wcsrchr(path, '\\');
-        if (filename == nullptr) {
+        if (filename == nullptr)
+        {
             filename = path;
-        } else {
+        }
+        else
+        {
             filename++;
         }
         return filename;
