@@ -14,11 +14,11 @@ void Limit::ToggleWholeGameLimit(std::atomic<Limit>* lim_game)
 
     if (temp_limit.state) 
     {
-        ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 0.801KB", NULL, SW_HIDE);
+        ShellExecute(nullptr, nullptr, L"powershell.exe", L"-ExecutionPolicy bypass -noe -c New-NetQosPolicy -Name 'Destiny2-Limit' -AppPathNameMatchCondition 'destiny2.exe' -ThrottleRateActionBitsPerSecond 0.801KB", nullptr, SW_HIDE);
     }
     else
     {
-        ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
+        ShellExecute(nullptr, nullptr, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", nullptr, SW_HIDE);
     }
 }
 
@@ -28,7 +28,7 @@ void Limit::ToggleSuspend(std::atomic<Limit>* suspend)
     // prevents from pausing random stuff if running with debug
     if (!Helper::D2Active()) 
     {
-        MessageBox(NULL, L"failed to pause...\nd2 is not the active window", NULL, MB_OK | MB_ICONWARNING);
+        MessageBox(nullptr, L"failed to pause...\nd2 is not the active window", nullptr, MB_OK | MB_ICONWARNING);
         return;
     }
 
@@ -51,7 +51,7 @@ void Limit::SuspendProcess(DWORD pid, bool suspend)
 
     HANDLE hProc = OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid);
 
-    if (hProc == NULL) 
+    if (hProc == nullptr) 
     {
         return;
     }

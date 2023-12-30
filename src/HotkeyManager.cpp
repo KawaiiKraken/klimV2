@@ -12,7 +12,7 @@ void HotkeyManager::AsyncBindHotkey(int i)
     _cur_line = i;
     if (_limit_ptr_vector[_cur_line]->load().bindingComplete == false) 
     {
-        MessageBox(NULL, ( wchar_t* )L"error hotkey is already being bound...", NULL, MB_OK);
+        MessageBox(nullptr, ( wchar_t* )L"error hotkey is already being bound...", nullptr, MB_OK);
         return;
     }
     Limit temp_limit = _limit_ptr_vector[_cur_line]->load();

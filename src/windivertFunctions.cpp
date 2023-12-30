@@ -10,15 +10,17 @@
 
 INT16 priority = 1000;
 const char* err_str;
-HANDLE hWindivert = NULL;
-HANDLE hThread2   = NULL;
+HANDLE hWindivert = nullptr;
+HANDLE hThread2 = nullptr;
 
 void SetFilterRuleString(std::vector<std::atomic<Limit>*> limit_ptr_vector, char* combined_windivert_rules)
 {
     strcpy_s(combined_windivert_rules, 1000, "(udp.DstPort < 1 and udp.DstPort > 1)"); // set to rule that wont match anything
 
-    for (int i = 0; i < limit_ptr_vector.size(); i++) {
-        if (limit_ptr_vector[i]->load().state) {
+    for (int i = 0; i < limit_ptr_vector.size(); i++) 
+    {
+        if (limit_ptr_vector[i]->load().state) 
+        {
             strcat_s(combined_windivert_rules, 1000, limit_ptr_vector[i]->load().windivert_rule);
         }
     }
@@ -31,28 +33,32 @@ void UpdateFilter(char* ptrCombinedWindivertRules)
     char combinedWindivertRules[1000];
     strcpy_s(combinedWindivertRules, sizeof(combinedWindivertRules), ptrCombinedWindivertRules);
     std::cout << "filter: " << combinedWindivertRules << std::endl;
-    if (hWindivert != NULL) {
+    if (hWindivert != nullptr) 
+    {
         std::cout << "deleting old filter" << std::endl;
-        if (!WinDivertClose(hWindivert)) {
+        if (!WinDivertClose(hWindivert)) 
+        {
             std::cout <<  "error! failed to open the WinDivert device: " <<  GetLastError() << std::endl;
         }
     }
     std::cout << "creating new filter" << std::endl;
     hWindivert = WinDivertOpen(combinedWindivertRules, WINDIVERT_LAYER_NETWORK, priority, 0);
-    if (hWindivert == INVALID_HANDLE_VALUE) {
-        if (GetLastError() == ERROR_INVALID_PARAMETER && !WinDivertHelperCompileFilter(ptrCombinedWindivertRules, WINDIVERT_LAYER_NETWORK, NULL, 0, &err_str, NULL)) {
+    if (hWindivert == INVALID_HANDLE_VALUE) 
+    {
+        if (GetLastError() == ERROR_INVALID_PARAMETER && !WinDivertHelperCompileFilter(ptrCombinedWindivertRules, WINDIVERT_LAYER_NETWORK, nullptr, 0, &err_str, nullptr)) 
+        {
             std::cout << "error! invalid filter: " << err_str << std::endl;
             exit(EXIT_FAILURE);
         }
         std::cout << "error! failed to open the WinDivert device: " << GetLastError() << std::endl;
         exit(EXIT_FAILURE);
     }
-    if (hThread2 == NULL) {
+    if (hThread2 == nullptr) 
+    {
         std::cout << "starting hotkey thread" << std::endl;
-        hThread2 = CreateThread(NULL, 0, ( LPTHREAD_START_ROUTINE )WindivertFilterThread, NULL, 0, NULL);
+        hThread2 = CreateThread(nullptr, 0, ( LPTHREAD_START_ROUTINE )WindivertFilterThread, nullptr, 0, nullptr);
     }
 }
-
 
 unsigned long WindivertFilterThread(LPVOID lpParam)
 {
@@ -70,20 +76,23 @@ unsigned long WindivertFilterThread(LPVOID lpParam)
     console = GetStdHandle(STD_OUTPUT_HANDLE);
 
     // Main loop:
-    while (TRUE) {
+    while (TRUE) 
+    {
         // Read a matching packet.
-        if (!WinDivertRecvEx(hWindivert, packet, sizeof(packet), &recv_len, 0, &recv_addr, &addr_len, 0)) {
+        if (!WinDivertRecvEx(hWindivert, packet, sizeof(packet), &recv_len, 0, &recv_addr, &addr_len, nullptr)) 
+        {
             continue;
         }
 
-        WinDivertHelperParsePacket(packet, packet_len, 0, 0, 0, 0, 0, &tcp_header, &udp_header, 0, &payload_len, 0, 0);
+        WinDivertHelperParsePacket(packet, packet_len, nullptr, nullptr, nullptr, nullptr, nullptr, &tcp_header, &udp_header, nullptr, &payload_len, nullptr, nullptr);
 
         // Dump packet info..
         SetConsoleTextAttribute(console, FOREGROUND_RED);
         std::cout << "BLOCK ";
         SetConsoleTextAttribute(console, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 
-        if (tcp_header != NULL) {
+        if (tcp_header != nullptr) 
+        {
             std::cout << "tcp.SrcPort=" << ntohs(tcp_header->SrcPort) << " tcp.DstPort=" << ntohs(tcp_header->DstPort) << std::endl;
 
             std::cout << " tcp.Flags=";
@@ -95,20 +104,26 @@ unsigned long WindivertFilterThread(LPVOID lpParam)
             if (tcp_header->Ack)  std::cout << "[ACK]";
             std::cout << ' ';
 
-            if (tcp_header->Ack) {
+            if (tcp_header->Ack) 
+            {
                 std::cout << "AckNum=" << ntohl(tcp_header->AckNum);
             }
             std::cout << " SeqNum=" << ntohl(tcp_header->SeqNum);
             std::cout << " size=" << payload_len;
         }
-        if (udp_header != NULL) {
+        if (udp_header != nullptr) 
+        {
             std::cout << "udp.SrcPort=" << ntohs(udp_header->SrcPort) << " udp.DstPort=" << ntohs(udp_header->DstPort);
         }
         std::cout << std::endl;
-        if (tcp_header != NULL && ntohs(tcp_header->SrcPort) == 7500 && !tcp_header->Fin && !tcp_header->Psh) {
-            if (!WinDivertSendEx(hWindivert, packet, recv_len, NULL, 0, &recv_addr, addr_len, NULL)) {
+        if (tcp_header != nullptr && ntohs(tcp_header->SrcPort) == 7500 && !tcp_header->Fin && !tcp_header->Psh) 
+        {
+            if (!WinDivertSendEx(hWindivert, packet, recv_len, nullptr, 0, &recv_addr, addr_len, nullptr)) 
+            {
                 std::cout << std::endl << "warning! failed to reinject packet: " <<  GetLastError();
-            } else {
+            }
+            else 
+            {
                 std::cout << std::endl << "reinjected ack packet";
             }
         }

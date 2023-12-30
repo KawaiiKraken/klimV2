@@ -63,10 +63,10 @@ UserInterface* UserInterface::ui_instance       = &userInterface;
 HotkeyManager* UserInterface::hk_instance = &hotkeyManager;
 
 
-DWORD WINAPI run_gui_wrapper(LPVOID lpParam)
+DWORD WINAPI RunGuiWrapper(LPVOID lpParam)
 {
-    UserInterface* uiinstance = static_cast<UserInterface*>(lpParam);
-    uiinstance->RunGui();
+    UserInterface* ui_instance = static_cast<UserInterface*>(lpParam);
+    ui_instance->RunGui();
     return 0;
 }
 
@@ -79,7 +79,8 @@ int main(int argc, char* argv[])
         {
             std::cout << "debug: true" << std::endl;
             debug = true;
-        } else 
+        }
+        else 
         {
             std::cout << "error: invalid argument..." << std::endl
                       << "options:" << std::endl
@@ -94,7 +95,7 @@ int main(int argc, char* argv[])
 
     if (!Helper::RunningAsAdmin()) 
     {
-        MessageBox(NULL, ( LPCWSTR )L"ERROR: not running as admin", ( LPCWSTR )L"ERROR", MB_ICONERROR | MB_DEFBUTTON2);
+        MessageBox(nullptr, ( LPCWSTR )L"ERROR: not running as admin", ( LPCWSTR )L"ERROR", MB_ICONERROR | MB_DEFBUTTON2);
         return 0;
     }
 
@@ -108,11 +109,11 @@ int main(int argc, char* argv[])
     userInterface.show_overlay = false;
     DWORD dwThread;
     std::cout << "starting ui thread" << std::endl;
-    CreateThread(NULL, NULL, ( LPTHREAD_START_ROUTINE )run_gui_wrapper, &userInterface, NULL, &dwThread);
+    CreateThread(nullptr, NULL, RunGuiWrapper, &userInterface, NULL, &dwThread);
 
     std::cout << "starting hotkey thread" << std::endl;
 
-    HANDLE hHotkeyThread = CreateThread(NULL, NULL, ( LPTHREAD_START_ROUTINE )HotkeyThread, ( LPVOID )NULL, NULL, &dwThread);
+    HANDLE hHotkeyThread = CreateThread(nullptr, NULL, HotkeyThread, nullptr, NULL, &dwThread);
 
     if (hHotkeyThread) 
     {
@@ -168,7 +169,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, L
 void MessageLoop()
 {
     MSG message;
-    while (GetMessage(&message, NULL, 0, 0)) 
+    while (GetMessage(&message, nullptr, 0, 0)) 
     {
         TranslateMessage(&message);
         DispatchMessage(&message);
@@ -178,7 +179,7 @@ void MessageLoop()
 
 DWORD WINAPI HotkeyThread(LPVOID lpParam)
 {
-    HINSTANCE hInstance = GetModuleHandle(NULL);
+    HINSTANCE hInstance = GetModuleHandle(nullptr);
     if (!hInstance) 
     {
         hInstance = LoadLibrary(( LPCWSTR )lpParam);

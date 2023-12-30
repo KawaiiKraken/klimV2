@@ -88,7 +88,6 @@ void UserInterface::Overlay(bool* p_open, HWND hwnd)
 
     if (ImGui::Begin("Example: Simple overlay", p_open, window_flags)) 
     {
-
         std::vector<char[200]> char_ptr_vector(limit_ptr_vector.size());
         for (int i = 0; i < limit_ptr_vector.size(); i++) 
         {
@@ -130,7 +129,7 @@ void UserInterface::Config(HWND hwnd)
     }
     static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
     ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::Begin("config", NULL, flags);
+    ImGui::Begin("config", nullptr, flags);
 
     ImGui::SeparatorText("Hotkeys");
 
@@ -248,7 +247,7 @@ void UserInterface::Config(HWND hwnd)
             {
                 if (limit_ptr_vector[i]->load().key_list[0] == 0) 
                 {
-                    MessageBoxA(NULL, "bind exitapp before closing", NULL, MB_OK);
+                    MessageBoxA(NULL, "bind exitapp before closing", nullptr, MB_OK);
                 }
                 else 
                 {
@@ -271,7 +270,7 @@ int UserInterface::RunGui()
     // Create application window
     // ImGui_ImplWin32_EnableDpiAwareness();
     // void (UserInterface::*ptrWndProc)(LRESULT WINAPI)
-    WNDCLASSEXW wc = { sizeof(wc), CS_OWNDC | CS_HREDRAW | CS_VREDRAW, &UserInterface::WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, L"ImGui Example", NULL };
+    WNDCLASSEXW wc = { sizeof(wc), CS_OWNDC | CS_HREDRAW | CS_VREDRAW, &UserInterface::WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
     ::RegisterClassExW(&wc);
     RECT desktopRect;
     HWND hDesktop = GetDesktopWindow();
@@ -282,7 +281,7 @@ int UserInterface::RunGui()
     DWORD dwStyle = WS_VISIBLE | WS_OVERLAPPED | WS_POPUP;
     // HWND hwnd = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, wc.lpszClassName, L"klim config", dwStyle, 0, 0, screenWidth, screenHeight, NULL, NULL,
     // wc.hInstance, NULL);
-    HWND hwnd = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, wc.lpszClassName, L"klim config", dwStyle, 0, 0, 250, 350, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = ::CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, wc.lpszClassName, L"klim config", dwStyle, 0, 0, 250, 350, nullptr, nullptr, wc.hInstance, nullptr);
 
 
     WGL_WindowData g_MainWindow;
@@ -347,7 +346,7 @@ int UserInterface::RunGui()
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
         MSG msg;
-        while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE)) 
+        while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE)) 
         {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
@@ -450,7 +449,7 @@ bool UserInterface::CreateDeviceWGL(HWND hWnd, WGL_WindowData* data)
 
 void UserInterface::CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data)
 {
-    wglMakeCurrent(NULL, NULL);
+    wglMakeCurrent(nullptr, nullptr);
     ::ReleaseDC(hWnd, data->hDC);
 }
 
@@ -463,12 +462,15 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
 // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
 
-LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam)) {
+LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam)) 
+    {
         return true;
     }
 
-    switch (msg) {
+    switch (msg)
+    {
         case WM_CREATE:
             SetLayeredWindowAttributes(hWnd, RGB(128, 128, 128), 0, LWA_COLORKEY);
             break;
@@ -494,5 +496,6 @@ LRESULT WINAPI UserInterface::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         default:
             break;
     }
+
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
