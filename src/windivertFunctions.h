@@ -1,8 +1,10 @@
 #pragma once
 
 #include "../WinDivert/windivert.h"
-#include <iostream>
+#include "Limit.h"
 #include <vector>
+#include <iomanip>
+#include <thread>
 
 #define ntohs(x) WinDivertHelperNtohs(x)
 #define ntohl(x) WinDivertHelperNtohl(x)
@@ -13,8 +15,11 @@
 #define INET6_ADDRSTRLEN 45
 #define IPPROTO_ICMPV6 58
 
-struct limit;
+namespace Klim
+{
+    class Limit;
 
-unsigned long WindivertFilterThread(LPVOID lpParam);
-void UpdateFilter(char* myNetRules);
-void SetFilterRuleString(std::vector<std::atomic<limit>*> limit_ptr_vector, char* combined_windivert_rules);
+    unsigned long WinDivertFilterThread(LPVOID lpParam);
+    void UpdateFilter(char* combined_windivert_rules_ptr);
+    void SetFilterRuleString(std::vector<std::atomic<Limit>*> limit_ptr_vector, char* combined_windivert_rules);
+}

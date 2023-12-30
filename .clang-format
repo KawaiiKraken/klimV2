@@ -1,9 +1,26 @@
 # Format Style Options - Created with Clang Power Tools
 ---
 BasedOnStyle: WebKit
-AlignConsecutiveAssignments: Consecutive
-ColumnLimit: 180
+# This is neat for some things... but gets annoyingly messy for other things
+# AlignConsecutiveAssignments: Consecutive
+ColumnLimit: 250
 MaxEmptyLinesToKeep: 2
 SortIncludes: true
-SpacesInCStyleCastParentheses: true
+SpacesInCStyleCastParentheses: false
+BreakBeforeBraces: Custom
+NamespaceIndentation: All
+IndentCaseLabels: true
+IndentAccessModifiers: true
+BraceWrapping:
+  AfterControlStatement: Always
+  AfterNamespace: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterStruct: true
+  AfterClass: true
+  AfterUnion: true
+  BeforeElse: true
+  BeforeCatch: true
+  BeforeWhile: true
+  IndentBraces: false
 ...
