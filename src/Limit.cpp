@@ -7,9 +7,9 @@
 #define _WIN32_WINNT_WIN10 0x0A00 // Windows 10
 
 
-void Limit::ToggleWholeGameLimit(std::atomic<limit>* lim_game)
+void Limit::ToggleWholeGameLimit(std::atomic<Limit>* lim_game)
 {
-    limit temp_limit = lim_game->load();
+    Limit temp_limit = lim_game->load();
     temp_limit.state = !temp_limit.state;
     lim_game->store(temp_limit);
 
@@ -23,7 +23,7 @@ void Limit::ToggleWholeGameLimit(std::atomic<limit>* lim_game)
 }
 
 
-void Limit::ToggleSuspend(std::atomic<limit>* suspend)
+void Limit::ToggleSuspend(std::atomic<Limit>* suspend)
 {
     if (!Helper::D2Active()) { // prevents from pausing random stuff if running with debug
         MessageBox(NULL, L"failed to pause...\nd2 is not the active window", NULL, MB_OK | MB_ICONWARNING);
@@ -34,7 +34,7 @@ void Limit::ToggleSuspend(std::atomic<limit>* suspend)
     GetWindowThreadProcessId(GetForegroundWindow(), &pid);
     suspend->load().state ? SuspendProcess(pid, false) : SuspendProcess(pid, true);
 
-    limit temp_limit = suspend->load();
+    Limit temp_limit = suspend->load();
     temp_limit.state = !temp_limit.state;
     suspend->store(temp_limit);
 }

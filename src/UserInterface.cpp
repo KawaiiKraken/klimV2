@@ -13,14 +13,14 @@
 #include "Limit.h"
 
 
-UserInterface::UserInterface(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings)
+UserInterface::UserInterface(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings)
     : limit_ptr_vector(limit_ptr_vector)
     , path_to_config_file(path_to_config_file)
     , settings(settings)
 {
 }
 
-void UserInterface::FormatHotkeyStatusWcString(char* c_string, std::atomic<limit>* limit)
+void UserInterface::FormatHotkeyStatusWcString(char* c_string, std::atomic<Limit>* limit)
 {
     int szWcString = 200;
 
@@ -168,7 +168,7 @@ void UserInterface::Config(HWND hwnd)
         if (ImGui::Button("Reset")) {
             String[i]            = "";
             hotkeyInstance->done = true;
-            limit temp_limit     = limit_ptr_vector[i]->load();
+            Limit temp_limit = limit_ptr_vector[i]->load();
             for (int j = 0; j < temp_limit.max_key_list_size; j++) {
                 temp_limit.key_list[j] = 0;
             }

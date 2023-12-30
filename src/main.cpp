@@ -41,16 +41,16 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, L
 HHOOK hKeyboardHook;
 bool debug = FALSE;
 
-std::atomic<limit> lim_3074    = limit("3074", " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
-std::atomic<limit> lim_3074_ul = limit("3074UL", " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
-std::atomic<limit> lim_27k     = limit("27k", " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
-std::atomic<limit> lim_27k_ul  = limit("27kUL", " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)");
-std::atomic<limit> lim_30k     = limit("30k", " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
-std::atomic<limit> lim_7k      = limit("7k", " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
-std::atomic<limit> lim_game("game");
-std::atomic<limit> suspend("suspend");
-std::atomic<limit> exitapp("exitapp");
-const std::vector<std::atomic<limit>*> limit_ptr_vector = { &lim_3074, &lim_3074_ul, &lim_27k, &lim_27k_ul, &lim_30k, &lim_7k, &lim_game, &suspend, &exitapp };
+std::atomic<Limit> lim_3074    = Limit("3074", " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
+std::atomic<Limit> lim_3074_ul = Limit("3074UL", " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
+std::atomic<Limit> lim_27k     = Limit("27k", " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
+std::atomic<Limit> lim_27k_ul  = Limit("27kUL", " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)");
+std::atomic<Limit> lim_30k     = Limit("30k", " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
+std::atomic<Limit> lim_7k      = Limit("7k", " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
+std::atomic<Limit> lim_game("game");
+std::atomic<Limit> suspend("suspend");
+std::atomic<Limit> exitapp("exitapp");
+const std::vector<std::atomic<Limit>*> limit_ptr_vector = { &lim_3074, &lim_3074_ul, &lim_27k, &lim_27k_ul, &lim_30k, &lim_7k, &lim_game, &suspend, &exitapp };
 
 typedef void (*KeyboardEventCallback)(int, bool);
 std::vector<int> currently_pressed_keys;

@@ -13,7 +13,7 @@ const char* err_str;
 HANDLE hWindivert = NULL;
 HANDLE hThread2   = NULL;
 
-void SetFilterRuleString(std::vector<std::atomic<limit>*> limit_ptr_vector, char* combined_windivert_rules)
+void SetFilterRuleString(std::vector<std::atomic<Limit>*> limit_ptr_vector, char* combined_windivert_rules)
 {
     strcpy_s(combined_windivert_rules, 1000, "(udp.DstPort < 1 and udp.DstPort > 1)"); // set to rule that wont match anything
 

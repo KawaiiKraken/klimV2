@@ -9,11 +9,11 @@
 
 struct Settings;
 class HotkeyManager;
-struct limit;
+class Limit;
 
 class UserInterface {
 public:
-    UserInterface(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings);
+    UserInterface(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings);
     static UserInterface* instance;
     static HotkeyManager* hotkeyInstance;
     bool show_overlay = false;
@@ -22,8 +22,8 @@ public:
 
 private:
     static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-    void FormatHotkeyStatusWcString(char* c_string, std::atomic<limit>* limit);
-    std::vector<std::atomic<limit>*> limit_ptr_vector;
+    void FormatHotkeyStatusWcString(char* c_string, std::atomic<Limit>* limit);
+    std::vector<std::atomic<Limit>*> limit_ptr_vector;
     // Data stored per platform window
     struct WGL_WindowData {
         HDC hDC;

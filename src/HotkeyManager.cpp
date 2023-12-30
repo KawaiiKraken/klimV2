@@ -4,7 +4,7 @@
 #include "windivertFunctions.h"
 #include <algorithm>
 
-HotkeyManager::HotkeyManager(std::vector<std::atomic<limit>*> _limit_ptr_vector)
+HotkeyManager::HotkeyManager(std::vector<std::atomic<Limit>*> _limit_ptr_vector)
     : _cur_line(-1)
     , _currentHotkeyList()
     , done(false)
@@ -18,7 +18,7 @@ void HotkeyManager::asyncBindHotkey(int i)
         MessageBox(NULL, ( wchar_t* )L"error hotkey is already being bound...", NULL, MB_OK);
         return;
     }
-    limit temp_limit           = _limit_ptr_vector[_cur_line]->load();
+    Limit temp_limit = _limit_ptr_vector[_cur_line]->load();
     temp_limit.bindingComplete = false;
     _limit_ptr_vector[_cur_line]->store(temp_limit);
 
@@ -52,7 +52,7 @@ void HotkeyManager::KeyboardInputHandler(int key, bool isKeyDown)
     } else {
         std::cout << "Key Up: " << key << std::endl;
         auto it          = std::find(_currentHotkeyList.begin(), _currentHotkeyList.end(), key);
-        limit temp_limit = _limit_ptr_vector[_cur_line]->load();
+        Limit temp_limit = _limit_ptr_vector[_cur_line]->load();
         for (int i = 0; i < _currentHotkeyList.size(); i++) {
             temp_limit.key_list[i] = _currentHotkeyList[i];
         }
@@ -62,15 +62,14 @@ void HotkeyManager::KeyboardInputHandler(int key, bool isKeyDown)
 }
 
 
-void HotkeyManager::TriggerHotkeys(
-    std::vector<std::atomic<limit>*> limit_ptr_vector, std::vector<int> currently_pressed_keys, bool debug, char combined_windivert_rules[1000])
+void HotkeyManager::TriggerHotkeys(std::vector<std::atomic<Limit>*> limit_ptr_vector, std::vector<int> currently_pressed_keys, bool debug, char combined_windivert_rules[1000])
 {
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
         if (limit_ptr_vector[i]->load().key_list[0] == 0) {
             continue;
         }
         // Sort both vectors
-        limit temp_limit = limit_ptr_vector[i]->load();
+        Limit temp_limit = limit_ptr_vector[i]->load();
         std::vector<int> key_list;
         for (int j = 0; j < temp_limit.max_key_list_size; j++) {
             if (temp_limit.key_list[j] != 0) {
@@ -88,11 +87,11 @@ void HotkeyManager::TriggerHotkeys(
 }
 
 
-void HotkeyManager::UnTriggerHotkeys(std::vector<std::atomic<limit>*> limit_ptr_vector, std::vector<int> currently_pressed_keys)
+void HotkeyManager::UnTriggerHotkeys(std::vector<std::atomic<Limit>*> limit_ptr_vector, std::vector<int> currently_pressed_keys)
 {
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
         // Sort both vectors
-        limit temp_limit = limit_ptr_vector[i]->load();
+        Limit temp_limit = limit_ptr_vector[i]->load();
         std::vector<int> key_list;
         for (int j = 0; j < temp_limit.max_key_list_size; j++) {
             if (temp_limit.key_list[j] != 0) {
@@ -111,7 +110,7 @@ void HotkeyManager::UnTriggerHotkeys(std::vector<std::atomic<limit>*> limit_ptr_
 }
 
 
-void HotkeyManager::OnTriggerHotkey(std::atomic<limit>* limitarg, bool debug, std::vector<std::atomic<limit>*> limit_ptr_vector, char* combined_windivert_rules)
+void HotkeyManager::OnTriggerHotkey(std::atomic<Limit>* limitarg, bool debug, std::vector<std::atomic<Limit>*> limit_ptr_vector, char* combined_windivert_rules)
 {
     if (strcmp(limitarg->load().name, "exitapp") == 0) {
         Helper::Exitapp(debug);
@@ -121,7 +120,7 @@ void HotkeyManager::OnTriggerHotkey(std::atomic<limit>* limitarg, bool debug, st
         return;
     }
     if (!limitarg->load().triggered) {
-        limit limit     = limitarg->load();
+        Limit limit = limitarg->load();
         limit.triggered = true;
         limitarg->store(limit);
         if (strcmp(limitarg->load().name, "game") == 0) {

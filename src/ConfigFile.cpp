@@ -2,12 +2,12 @@
 #include "Limit.h"
 #include "helperFunctions.h"
 
-void ConfigFile::WriteConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings)
+void ConfigFile::WriteConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings)
 {
     Json::Value config;
 
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
-        limit temp_limit = limit_ptr_vector[i]->load();
+        Limit temp_limit = limit_ptr_vector[i]->load();
         if (temp_limit.key_list[0] == 0) {
             continue;
         }
@@ -34,7 +34,7 @@ void ConfigFile::WriteConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, 
 }
 
 
-void ConfigFile::LoadConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings)
+void ConfigFile::LoadConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings)
 {
     // Load the config from the JSON file
     Json::Value loaded_config = ConfigFile::LoadConfigFileFromJson(path_to_config_file);
@@ -42,7 +42,7 @@ void ConfigFile::LoadConfig(std::vector<std::atomic<limit>*> limit_ptr_vector, w
         std::string name = limit_ptr_vector[i]->load().name;
         name.append("_key_list");
 
-        limit temp_limit            = limit_ptr_vector[i]->load();
+        Limit temp_limit = limit_ptr_vector[i]->load();
         std::vector<int> key_vector = ConfigFile::jsonToVector(loaded_config[name.c_str()]);
         // temp_limit.key_list;
         for (int j = 0; j < key_vector.size(); j++) {
