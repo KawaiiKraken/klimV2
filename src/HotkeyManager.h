@@ -1,11 +1,8 @@
 #pragma once
 
 #include "Limit.h"
-#include <Windows.h>
-#include <chrono>
-#include <iostream>
-#include <mutex>
-#include <vector>
+// #include <mutex>
+//#include <vector>
 
 namespace Klim
 {

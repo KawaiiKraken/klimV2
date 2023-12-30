@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../WinDivert/windivert.h"
-#include <iostream>
+#include "Limit.h"
 #include <vector>
+#include <iomanip>
+#include <thread>
 
-namespace Klim
-{
 #define ntohs(x) WinDivertHelperNtohs(x)
 #define ntohl(x) WinDivertHelperNtohl(x)
 #define htons(x) WinDivertHelperHtons(x)
@@ -15,6 +15,8 @@ namespace Klim
 #define INET6_ADDRSTRLEN 45
 #define IPPROTO_ICMPV6 58
 
+namespace Klim
+{
     class Limit;
 
     unsigned long WinDivertFilterThread(LPVOID lpParam);

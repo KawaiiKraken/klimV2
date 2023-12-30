@@ -2,9 +2,7 @@
 
 #include "jsoncpp_header/json.h"
 #include <fstream>
-#include <iostream>
 #include <tchar.h>
-#include <vector>
 #include <windows.h>
 
 namespace Klim
