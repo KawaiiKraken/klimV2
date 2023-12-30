@@ -2,10 +2,12 @@
 #include "ConfigFile.h"
 #include "Limit.h"
 #include <algorithm>
+#include <psapi.h>
+#include <Windows.h>
 
 void Helper::Exitapp(bool debug)
 {
-    std::wcout << "shutting down\n";
+    std::cout << "shutting down" << std::endl;
     ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
     if (!debug) {
         ShowWindow(GetConsoleWindow(), SW_RESTORE);
@@ -26,7 +28,7 @@ bool Helper::D2Active()
     CloseHandle(hProc);
 
     const wchar_t* filename = GetFilename(buffer);
-    printf("active window filename: %ls\n", filename);
+    std::cout << "active window filename: " << filename << std::endl;
 
     if (wcscmp(filename, L"destiny2.exe") == 0) {
         return true;

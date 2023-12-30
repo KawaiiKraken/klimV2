@@ -1,10 +1,11 @@
+#include <Windows.h>
+
+#include "helperFunctions.h"
 #include "Limit.h"
 #include "ConfigFile.h"
-#include "helperFunctions.h"
-#pragma warning(push, 0)
-#include "../phnt/phnt.h"
-#include "../phnt/phnt_windows.h"
-#pragma warning(pop)
+
+#define _WIN32_WINNT_WIN10 0x0A00 // Windows 10
+
 
 void Limit::ToggleWholeGameLimit(std::atomic<limit>* lim_game)
 {
@@ -50,7 +51,21 @@ void Limit::SuspendProcess(DWORD pid, bool suspend)
     if (hProc == NULL) {
         return;
     }
-    suspend ? printf("suspending process\n") : printf("resuming process\n");
-    suspend ? NtSuspendProcess(hProc) : NtResumeProcess(hProc);
+
+    typedef LONG (NTAPI *NtSuspendProcess)(IN HANDLE ProcessHandle );
+    typedef LONG (NTAPI *NtResumeProcess)(IN HANDLE ProcessHandle );
+
+    if (suspend) {
+        std::cout << "suspending process" << std::endl;
+        NtSuspendProcess pfn_NtSuspendProcess = (NtSuspendProcess)GetProcAddress(
+					GetModuleHandleA( "ntdll" ), "NtSuspendProcess" );
+        pfn_NtSuspendProcess(hProc);
+    } else {
+        std::cout << "resuming process" << std::endl;
+        	NtResumeProcess pfn_NtResumeProcess = (NtResumeProcess)GetProcAddress(
+		GetModuleHandleA( "ntdll" ), "NtResumeProcess" );
+        pfn_NtResumeProcess(hProc);
+    }
+
     CloseHandle(hProc);
 }

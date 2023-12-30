@@ -1,13 +1,15 @@
 #pragma once
-#include <GL/GL.h>
+
 #include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
 #include <windows.h>
+#include <imgui.h>
 
 struct Settings;
 class HotkeyManager;
+struct limit;
 
 class UserInterface {
 public:
@@ -33,7 +35,6 @@ private:
     // Forward declarations of helper functions
     bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
     void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
-    void ResetDeviceWGL();
     wchar_t* path_to_config_file;
     Settings* settings;
     void Overlay(bool* p_open, HWND hwnd);
@@ -41,7 +42,7 @@ private:
     ImVec2 overlayWindowPos;
     ImVec2 overlayWindowSize;
 };
-// font base64, i will find a better way for this at some point... prob
+// font in base85, i will find a better way for this at some point... prob
 const char Hack_Regular[243650 + 1]
     = "7])#######+-[ZV'/###I),##bw9hLQXH##j$1S:t@rT.6g+/_+CWv5qDxF>:rS$K;m68[<@uu#l[n42;,G/0t.>>#N7Tj0s@>V9;#ovp@;NP]aPUV$aNV=B3Jn8E:g;A+*;jl&>2XGH"
       "YI.C,tXp%43qmC#nIk7DqE<BU+/HP/LC/2'+a(*H31P&#5aDE-[@Hi4,5LsCPl::B1`hO).<]*`b';9C.>N2Hr-q929lrLD7$Ws%+k^sL)mGoL]x$KDlbG>pL-_+MZ4L=#UOkiEdZ5w&"

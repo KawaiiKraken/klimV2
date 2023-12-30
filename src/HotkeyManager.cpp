@@ -63,7 +63,7 @@ void HotkeyManager::KeyboardInputHandler(int key, bool isKeyDown)
 
 
 void HotkeyManager::TriggerHotkeys(
-    std::vector<std::atomic<limit>*> limit_ptr_vector, std::vector<int> currently_pressed_keys, bool debug, Settings settings, char combined_windivert_rules[1000])
+    std::vector<std::atomic<limit>*> limit_ptr_vector, std::vector<int> currently_pressed_keys, bool debug, char combined_windivert_rules[1000])
 {
     for (int i = 0; i < limit_ptr_vector.size(); i++) {
         if (limit_ptr_vector[i]->load().key_list[0] == 0) {
@@ -117,7 +117,7 @@ void HotkeyManager::OnTriggerHotkey(std::atomic<limit>* limitarg, bool debug, st
         Helper::Exitapp(debug);
     }
     if (!(Helper::D2Active() || debug)) {
-        printf("hotkey ignored: d2 is not the active window and debug mode is not on");
+        std::cout << "hotkey ignored: d2 is not the active window and debug mode is not on" << std::endl;
         return;
     }
     if (!limitarg->load().triggered) {
@@ -133,7 +133,7 @@ void HotkeyManager::OnTriggerHotkey(std::atomic<limit>* limitarg, bool debug, st
             limit.state = !limit.state;
             limitarg->store(limit);
         }
-        printf("state of %s: %s\n", limitarg->load().name, limitarg->load().state ? "true" : "false");
+        std::cout << "state of " << limitarg->load().name <<  ": " << limitarg->load().state << std::endl;
         SetFilterRuleString(limit_ptr_vector, combined_windivert_rules);
         UpdateFilter(combined_windivert_rules);
     }

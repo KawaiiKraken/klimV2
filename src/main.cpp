@@ -1,13 +1,12 @@
 #pragma once
-#define _WIN32_WINNT_WIN10 0x0A00 // Windows 10
-#define PHNT_VERSION PHNT_THRESHOLD // Windows 10
-
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 
 #include "ConfigFile.h"
 #include "helperFunctions.h"
 #include "imgui.h"
 #include <iostream>
-#include <psapi.h>
 #include <shellapi.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -16,16 +15,12 @@
 #include <tchar.h>
 #include <wchar.h>
 #include <windows.h>
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
 #include "ConfigFile.h"
 #include "HotkeyManager.h"
 #include "Limit.h"
 #include "UserInterface.h"
 #include "helperFunctions.h"
 #include "imgui.h"
-#include <GL/GL.h>
 #include <chrono>
 #include <condition_variable>
 #include <future>
@@ -80,14 +75,14 @@ DWORD WINAPI run_gui_wrapper(LPVOID lpParam)
 
 int __cdecl main(int argc, char** argv)
 {
-    if (argv[1] != NULL) {
+    if (argc > 1) {
         if ((strcmp(argv[1], "--debug") == 0)) {
-            printf("debug: true\n");
+            std::cout << "debug: true" << std::endl;
             debug = true;
         } else {
-            printf("error: invalid argument...\n");
-            printf("options:\n");
-            printf("    --debug     prevents console hiding and enables hotkey trigger outside of destiny 2.\n");
+            std::cout << "error: invalid argument..." << std::endl
+                      << "options:" << std::endl
+                      << "    --debug     prevents console hiding and enables hotkey trigger outside of destiny 2." << std::endl;
             return 0;
         }
     } else {
@@ -108,11 +103,11 @@ int __cdecl main(int argc, char** argv)
     userInterface.show_config  = true;
     userInterface.show_overlay = false;
     DWORD dwThread;
-    printf("starting ui thread\n");
+    std::cout << "starting ui thread" << std::endl;
     CreateThread(NULL, NULL, ( LPTHREAD_START_ROUTINE )run_gui_wrapper, &userInterface, NULL, &dwThread);
 
 
-    printf("starting hotkey thread\n");
+    std::cout << "starting hotkey thread" << std::endl;
 
     HANDLE hHotkeyThread = CreateThread(NULL, NULL, ( LPTHREAD_START_ROUTINE )HotkeyThread, ( LPVOID )NULL, NULL, &dwThread);
 
@@ -153,7 +148,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, L
             currently_pressed_keys.push_back(key);
         }
         if (!userInterface.show_config) {
-            HotkeyManager::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, settings, combined_windivert_rules);
+            HotkeyManager::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, combined_windivert_rules);
         }
     }
     return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
