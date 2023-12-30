@@ -1,5 +1,3 @@
-#include "WinDivertFunctions.h"
-#include "Limit.h"
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
@@ -7,6 +5,9 @@
 #include <thread>
 #include <vector>
 #include <winsock.h>
+
+#include "WinDivertFunctions.h"
+#include "Limit.h"
 
 INT16 priority = 1000;
 const char* err_str;
@@ -24,76 +25,75 @@ void SetFilterRuleString(std::vector<std::atomic<Limit>*> limit_ptr_vector, char
             strcat_s(combined_windivert_rules, 1000, limit_ptr_vector[i]->load().windivert_rule);
         }
     }
-    std::cout << "filter: " << combined_windivert_rules << std::endl;
+    std::cout << "filter: " << combined_windivert_rules << "\n";
 }
 
 
-void UpdateFilter(char* ptrCombinedWindivertRules)
+void UpdateFilter(char* combined_windivert_rules_ptr)
 {
-    char combinedWindivertRules[1000];
-    strcpy_s(combinedWindivertRules, sizeof(combinedWindivertRules), ptrCombinedWindivertRules);
-    std::cout << "filter: " << combinedWindivertRules << std::endl;
+    char combined_windivert_rules[1000];
+    strcpy_s(combined_windivert_rules, sizeof(combined_windivert_rules), combined_windivert_rules_ptr);
+    std::cout << "filter: " << combined_windivert_rules << "\n";
     if (hWindivert != nullptr) 
     {
-        std::cout << "deleting old filter" << std::endl;
+        std::cout << "deleting old filter\n";
         if (!WinDivertClose(hWindivert)) 
         {
-            std::cout <<  "error! failed to open the WinDivert device: " <<  GetLastError() << std::endl;
+            std::cout <<  "error! failed to open the WinDivert device: " <<  GetLastError() << "\n";
         }
     }
-    std::cout << "creating new filter" << std::endl;
-    hWindivert = WinDivertOpen(combinedWindivertRules, WINDIVERT_LAYER_NETWORK, priority, 0);
+    std::cout << "creating new filter\n";
+    hWindivert = WinDivertOpen(combined_windivert_rules, WINDIVERT_LAYER_NETWORK, priority, 0);
     if (hWindivert == INVALID_HANDLE_VALUE) 
     {
-        if (GetLastError() == ERROR_INVALID_PARAMETER && !WinDivertHelperCompileFilter(ptrCombinedWindivertRules, WINDIVERT_LAYER_NETWORK, nullptr, 0, &err_str, nullptr)) 
+        if (GetLastError() == ERROR_INVALID_PARAMETER && !WinDivertHelperCompileFilter(combined_windivert_rules_ptr, WINDIVERT_LAYER_NETWORK, nullptr, 0, &err_str, nullptr)) 
         {
-            std::cout << "error! invalid filter: " << err_str << std::endl;
+            std::cout << "error! invalid filter: " << err_str << "\n";
             exit(EXIT_FAILURE);
         }
-        std::cout << "error! failed to open the WinDivert device: " << GetLastError() << std::endl;
+        std::cout << "error! failed to open the WinDivert device: " << GetLastError() << "\n";
         exit(EXIT_FAILURE);
     }
     if (hThread2 == nullptr) 
     {
-        std::cout << "starting hotkey thread" << std::endl;
-        hThread2 = CreateThread(nullptr, 0, ( LPTHREAD_START_ROUTINE )WindivertFilterThread, nullptr, 0, nullptr);
+        std::cout << "starting hotkey thread\n";
+        hThread2 = CreateThread(nullptr, 0, ( LPTHREAD_START_ROUTINE )WinDivertFilterThread, nullptr, 0, nullptr);
     }
 }
 
-unsigned long WindivertFilterThread(LPVOID lpParam)
+unsigned long WinDivertFilterThread(LPVOID lpParam)
 {
-    HANDLE console;
-    unsigned char packet[MAXBUF];
-    UINT packet_len = 1500;
-    UINT recv_len;
-    UINT addr_len = sizeof(WINDIVERT_ADDRESS);
-    WINDIVERT_ADDRESS recv_addr;
+    UINT receive_length;
+    UINT address_length = sizeof(WINDIVERT_ADDRESS);
+    WINDIVERT_ADDRESS receive_address;
     PWINDIVERT_TCPHDR tcp_header;
     PWINDIVERT_UDPHDR udp_header;
     UINT payload_len;
 
     // Get console for pretty colors.
-    console = GetStdHandle(STD_OUTPUT_HANDLE);
+    const HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 
     // Main loop:
     while (TRUE) 
     {
+        const UINT packet_len = 1500;
+        unsigned char packet[MAXBUF];
         // Read a matching packet.
-        if (!WinDivertRecvEx(hWindivert, packet, sizeof(packet), &recv_len, 0, &recv_addr, &addr_len, nullptr)) 
+        if (!WinDivertRecvEx(hWindivert, packet, sizeof(packet), &receive_length, 0, &receive_address, &address_length, nullptr)) 
         {
             continue;
         }
 
         WinDivertHelperParsePacket(packet, packet_len, nullptr, nullptr, nullptr, nullptr, nullptr, &tcp_header, &udp_header, nullptr, &payload_len, nullptr, nullptr);
 
-        // Dump packet info..
+        // Dump packet info...
         SetConsoleTextAttribute(console, FOREGROUND_RED);
         std::cout << "BLOCK ";
         SetConsoleTextAttribute(console, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 
         if (tcp_header != nullptr) 
         {
-            std::cout << "tcp.SrcPort=" << ntohs(tcp_header->SrcPort) << " tcp.DstPort=" << ntohs(tcp_header->DstPort) << std::endl;
+            std::cout << "tcp.SrcPort=" << ntohs(tcp_header->SrcPort) << " tcp.DstPort=" << ntohs(tcp_header->DstPort) << "\n";
 
             std::cout << " tcp.Flags=";
             if (tcp_header->Fin)  std::cout << "[FIN]";
@@ -115,16 +115,16 @@ unsigned long WindivertFilterThread(LPVOID lpParam)
         {
             std::cout << "udp.SrcPort=" << ntohs(udp_header->SrcPort) << " udp.DstPort=" << ntohs(udp_header->DstPort);
         }
-        std::cout << std::endl;
+        std::cout << "\n";
         if (tcp_header != nullptr && ntohs(tcp_header->SrcPort) == 7500 && !tcp_header->Fin && !tcp_header->Psh) 
         {
-            if (!WinDivertSendEx(hWindivert, packet, recv_len, nullptr, 0, &recv_addr, addr_len, nullptr)) 
+            if (!WinDivertSendEx(hWindivert, packet, receive_length, nullptr, 0, &receive_address, address_length, nullptr)) 
             {
-                std::cout << std::endl << "warning! failed to reinject packet: " <<  GetLastError();
+                std::cout << "\n" << "warning! failed to re-inject packet: " <<  GetLastError();
             }
             else 
             {
-                std::cout << std::endl << "reinjected ack packet";
+                std::cout << "\n" << "re-injected ack packet";
             }
         }
     }

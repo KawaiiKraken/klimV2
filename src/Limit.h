@@ -10,11 +10,11 @@ class Limit
         int key_list[20];
         int max_key_list_size = 20;
         char windivert_rule[250];
-        bool bindingComplete = true;
+        bool binding_complete = true;
         bool triggered = false;
         bool state = false;
         int overlay_line_number = -1;
-        bool updateUI = false;
+        bool update_ui = false;
 
         Limit()
         {

@@ -1,5 +1,4 @@
 #include <Windows.h>
-
 #include "HelperFunctions.h"
 #include "Limit.h"
 #include "ConfigFile.h"
@@ -42,16 +41,16 @@ void Limit::ToggleSuspend(std::atomic<Limit>* suspend)
 }
 
 
-void Limit::SuspendProcess(DWORD pid, bool suspend)
+void Limit::SuspendProcess(const DWORD pid, const bool suspend)
 {
     if (pid == 0) 
     {
         return;
     }
 
-    HANDLE hProc = OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid);
+    const HANDLE process_handle = OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid);
 
-    if (hProc == nullptr) 
+    if (process_handle == nullptr) 
     {
         return;
     }
@@ -61,17 +60,16 @@ void Limit::SuspendProcess(DWORD pid, bool suspend)
 
     if (suspend) 
     {
-        std::cout << "suspending process" << std::endl;
-        NtSuspendProcess pfn_NtSuspendProcess = (NtSuspendProcess)GetProcAddress(GetModuleHandleA("ntdll"), "NtSuspendProcess");
-        pfn_NtSuspendProcess(hProc);
+        std::cout << "suspending process\n";
+        const NtSuspendProcess pfn_NtSuspendProcess = reinterpret_cast<NtSuspendProcess>(GetProcAddress(GetModuleHandleA("ntdll"), "NtSuspendProcess"));
+        pfn_NtSuspendProcess(process_handle);
     }
     else 
     {
-        std::cout << "resuming process" << std::endl;
-
-        NtResumeProcess pfn_NtResumeProcess = (NtResumeProcess)GetProcAddress(GetModuleHandleA("ntdll"), "NtResumeProcess" );
-        pfn_NtResumeProcess(hProc);
+        std::cout << "resuming process\n";
+        const NtResumeProcess pfn_NtResumeProcess = reinterpret_cast<NtResumeProcess>(GetProcAddress(GetModuleHandleA("ntdll"), "NtResumeProcess"));
+        pfn_NtResumeProcess(process_handle);
     }
 
-    CloseHandle(hProc);
+    CloseHandle(process_handle);
 }
