@@ -14,7 +14,7 @@ class Limit;
 class UserInterface
 {
     public:
-        UserInterface(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings);
+        UserInterface(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings);
         static UserInterface* ui_instance;
         static HotkeyManager* hk_instance;
         bool show_overlay = false;
@@ -23,28 +23,28 @@ class UserInterface
 
     private:
         static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-        void FormatHotkeyStatusWcString(char* c_string, std::atomic<Limit>* limit);
-        std::vector<std::atomic<Limit>*> limit_ptr_vector;
+        static void FormatHotkeyStatusWcString(char* c_string, const std::atomic<Limit>* limit_ptr);
+        std::vector<std::atomic<Limit>*> _limit_ptr_vector;
 
         // Data stored per platform window
         struct WGL_WindowData
         {
-            HDC hDC;
+            HDC device_context_handle;
         };
 
         // Data
-        HGLRC g_hRC  = 0;
-        int g_Width  = 0;
-        int g_Height = 0;
+        HGLRC _g_render_context_handle = nullptr;
+        int _g_width  = 0;
+        int _g_height = 0;
         // Forward declarations of helper functions
         bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
-        void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
-        wchar_t* path_to_config_file;
-        Settings* settings;
-        void Overlay(bool* p_open, HWND hwnd);
-        void Config(HWND hwnd);
-        ImVec2 overlayWindowPos;
-        ImVec2 overlayWindowSize;
+        static void CleanupDeviceWGL(HWND hWnd, const WGL_WindowData* data);
+        wchar_t* _path_to_config_file;
+        Settings* _settings;
+        void Overlay(bool* p_open, HWND window_handle) const;
+        void Config(HWND window_handle);
+        ImVec2 _overlay_window_pos;
+        ImVec2 _overlay_window_size;
 };
 
 // font in base85, i will find a better way for this at some point... prob

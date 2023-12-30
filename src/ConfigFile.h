@@ -1,11 +1,11 @@
 #pragma once
 
-#include "jsoncpp_header/json.h"
 #include <fstream>
 #include <iostream>
 #include <tchar.h>
 #include <vector>
 #include <windows.h>
+#include "jsoncpp_header/json.h"
 
 class Limit;
 
@@ -22,14 +22,14 @@ struct Settings
 class ConfigFile
 {
     public:
-        static bool FileExists(LPCTSTR szPath);
+        static bool FileExists(LPCTSTR file_path);
         static Json::Value LoadConfigFileFromJson(wchar_t* filepath);
-        static void StoreConfigToJson(wchar_t* file_path, const Json::Value& config_data);
+        static void StoreConfigToJson(const wchar_t* file_path, const Json::Value& config_data);
         static Json::Value VectorToJson(const std::vector<int>& vec);
-        static std::vector<int> JsonToVector(const Json::Value& jsonVec);
-        static void WriteConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings);
+        static std::vector<int> JsonToVector(const Json::Value& json_vec);
+        static void WriteConfig(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], const Settings* settings);
         static void LoadConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings);
-        static void SetPathToConfigFile(wchar_t* config_filename, wchar_t* path_to_config_file);
+        static void SetPathToConfigFile(const wchar_t* config_filename, wchar_t* path_to_config_file);
 
     // private:
     //    static void ColorRefToHex(COLORREF colorRef, char hexString[8]);

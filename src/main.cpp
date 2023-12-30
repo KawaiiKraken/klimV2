@@ -1,10 +1,7 @@
-#pragma once
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include "ConfigFile.h"
-#include "HelperFunctions.h"
 #include "imgui.h"
 #include <iostream>
 #include <shellapi.h>
@@ -15,10 +12,6 @@
 #include <tchar.h>
 #include <wchar.h>
 #include <windows.h>
-#include "ConfigFile.h"
-#include "HotkeyManager.h"
-#include "Limit.h"
-#include "UserInterface.h"
 #include "imgui.h"
 #include <chrono>
 #include <condition_variable>
@@ -28,10 +21,16 @@
 #include <vector>
 #include <windows.h>
 
+#include "ConfigFile.h"
+#include "HotkeyManager.h"
+#include "Limit.h"
+#include "UserInterface.h"
+#include "HelperFunctions.h"
+
 #pragma comment(lib, "ntdll.lib")
 
 void MessageLoop();
-void SetPathToConfigFile(wchar_t* configFileName);
+void SetPathToConfigFile(wchar_t* config_file_name);
 int __cdecl Overlay(LPTSTR);
 DWORD WINAPI HotkeyThread(LPVOID lpParm);
 __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, LPARAM lParam);
@@ -39,16 +38,16 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, L
 HHOOK hKeyboardHook;
 bool debug = FALSE;
 
-std::atomic<Limit> lim_3074    = Limit("3074", " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
-std::atomic<Limit> lim_3074_ul = Limit("3074UL", " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
-std::atomic<Limit> lim_27k     = Limit("27k", " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
-std::atomic<Limit> lim_27k_ul  = Limit("27kUL", " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)");
-std::atomic<Limit> lim_30k     = Limit("30k", " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
-std::atomic<Limit> lim_7k      = Limit("7k", " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
+std::atomic<Limit> limit_3074_dl = Limit("3074", " or (inbound and udp.SrcPort == 3074) or (inbound and tcp.SrcPort == 3074)");
+std::atomic<Limit> limit_3074_ul = Limit("3074UL", " or (outbound and udp.DstPort == 3074) or (outbound and tcp.DstPort == 3074)");
+std::atomic<Limit> limit_27k_dl = Limit("27k", " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200) or (inbound and tcp.SrcPort >= 27015 and tcp.SrcPort <= 27200)");
+std::atomic<Limit> limit_27k_ul = Limit("27kUL", " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200) or (outbound and tcp.DstPort >= 27015 and tcp.DstPort <= 27200)");
+std::atomic<Limit> limit_30k = Limit("30k", " or (inbound and udp.SrcPort >= 30000 and udp.SrcPort <= 30009) or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)");
+std::atomic<Limit> limit_7k = Limit("7k", " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)");
 std::atomic<Limit> lim_game("game");
 std::atomic<Limit> suspend("suspend");
-std::atomic<Limit> exitapp("exitapp");
-const std::vector<std::atomic<Limit>*> limit_ptr_vector = { &lim_3074, &lim_3074_ul, &lim_27k, &lim_27k_ul, &lim_30k, &lim_7k, &lim_game, &suspend, &exitapp };
+std::atomic<Limit> exit_app("exitapp");
+const std::vector<std::atomic<Limit>*> limit_ptr_vector = { &limit_3074_dl, &limit_3074_ul, &limit_27k_dl, &limit_27k_ul, &limit_30k, &limit_7k, &lim_game, &suspend, &exit_app };
 
 typedef void (*KeyboardEventCallback)(int, bool);
 std::vector<int> currently_pressed_keys;
@@ -57,11 +56,10 @@ char combined_windivert_rules[1000];
 wchar_t path_to_config_file[MAX_PATH];
 Settings settings;
 
-HotkeyManager hotkeyManager(limit_ptr_vector);
-UserInterface userInterface(limit_ptr_vector, path_to_config_file, &settings);
-UserInterface* UserInterface::ui_instance       = &userInterface;
-HotkeyManager* UserInterface::hk_instance = &hotkeyManager;
-
+HotkeyManager hotkey_manager(limit_ptr_vector);
+UserInterface user_interface(limit_ptr_vector, path_to_config_file, &settings);
+UserInterface* UserInterface::ui_instance = &user_interface;
+HotkeyManager* UserInterface::hk_instance = &hotkey_manager;
 
 DWORD WINAPI RunGuiWrapper(LPVOID lpParam)
 {
@@ -70,21 +68,20 @@ DWORD WINAPI RunGuiWrapper(LPVOID lpParam)
     return 0;
 }
 
-
 int main(int argc, char* argv[])
 {
     if (argc > 1)
     {
-        if ((strcmp(argv[1], "--debug") == 0)) 
+        if (strcmp(argv[1], "--debug") == 0) 
         {
-            std::cout << "debug: true" << std::endl;
+            std::cout << "debug: true\n";
             debug = true;
         }
         else 
         {
-            std::cout << "error: invalid argument..." << std::endl
-                      << "options:" << std::endl
-                      << "    --debug     prevents console hiding and enables hotkey trigger outside of destiny 2." << std::endl;
+            std::cout << "error: invalid argument...\n"
+                      << "options:\n"
+                      << "    --debug     prevents console hiding and enables hotkey trigger outside of destiny 2.\n";
             return 0;
         }
     }
@@ -95,76 +92,73 @@ int main(int argc, char* argv[])
 
     if (!Helper::RunningAsAdmin()) 
     {
-        MessageBox(nullptr, ( LPCWSTR )L"ERROR: not running as admin", ( LPCWSTR )L"ERROR", MB_ICONERROR | MB_DEFBUTTON2);
+        MessageBox(nullptr, L"ERROR: not running as admin", L"ERROR", MB_ICONERROR | MB_DEFBUTTON2);
         return 0;
     }
 
-    ConfigFile::SetPathToConfigFile(( wchar_t* )L"config.json", path_to_config_file);
+    ConfigFile::SetPathToConfigFile(L"config.json", path_to_config_file);
     if (ConfigFile::FileExists(path_to_config_file)) 
     {
         ConfigFile::LoadConfig(limit_ptr_vector, path_to_config_file, &settings);
     }
 
-    userInterface.show_config  = true;
-    userInterface.show_overlay = false;
-    DWORD dwThread;
-    std::cout << "starting ui thread" << std::endl;
-    CreateThread(nullptr, NULL, RunGuiWrapper, &userInterface, NULL, &dwThread);
+    user_interface.show_config  = true;
+    user_interface.show_overlay = false;
 
-    std::cout << "starting hotkey thread" << std::endl;
+    DWORD dw_thread;
+    std::cout << "starting ui thread\n";
+    CreateThread(nullptr, NULL, RunGuiWrapper, &user_interface, NULL, &dw_thread);
 
-    HANDLE hHotkeyThread = CreateThread(nullptr, NULL, HotkeyThread, nullptr, NULL, &dwThread);
+    std::cout << "starting hotkey thread\n";
 
-    if (hHotkeyThread) 
+    const HANDLE h_hotkey_thread = CreateThread(nullptr, NULL, HotkeyThread, nullptr, NULL, &dw_thread);
+
+    if (h_hotkey_thread) 
     {
-        return WaitForSingleObject(hHotkeyThread, INFINITE);
+        return WaitForSingleObject(h_hotkey_thread, INFINITE);
     }
 
-    if (hHotkeyThread != 0) 
+    if (h_hotkey_thread != nullptr) 
     {
-        CloseHandle(hHotkeyThread);
+        CloseHandle(h_hotkey_thread);
     }
     return 1;
 }
 
-
 __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int nCode, WPARAM wParam, LPARAM lParam)
 {
-    if ((nCode == HC_ACTION) && ((wParam == WM_SYSKEYUP) || (wParam == WM_KEYUP)))
+    if (nCode == HC_ACTION && (wParam == WM_SYSKEYUP || wParam == WM_KEYUP))
     {
-        KBDLLHOOKSTRUCT hooked_key = *(( KBDLLHOOKSTRUCT* )lParam);
+        const KBDLLHOOKSTRUCT hooked_key = *reinterpret_cast<KBDLLHOOKSTRUCT*>( lParam );
 
-        int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
-
-
-        // Check if the vector contains the target element
-        auto it = std::find(currently_pressed_keys.begin(), currently_pressed_keys.end(), key);
-        if (it != currently_pressed_keys.end()) 
+        const int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
+        const std::vector<int>::iterator iterator = std::find(currently_pressed_keys.begin(), currently_pressed_keys.end(), key);
+        if (iterator != currently_pressed_keys.end()) 
         {
-            currently_pressed_keys.erase(it);
+            currently_pressed_keys.erase(iterator);
         }
+
         HotkeyManager::UnTriggerHotkeys(limit_ptr_vector, currently_pressed_keys);
     }
 
-    if ((nCode == HC_ACTION) && ((wParam == WM_SYSKEYDOWN) || (wParam == WM_KEYDOWN))) 
+    if (nCode == HC_ACTION && ((wParam == WM_SYSKEYDOWN) || (wParam == WM_KEYDOWN))) 
     {
-        KBDLLHOOKSTRUCT hooked_key = *(( KBDLLHOOKSTRUCT* )lParam);
+        const KBDLLHOOKSTRUCT hooked_key = *reinterpret_cast<KBDLLHOOKSTRUCT*>( lParam );
 
-        int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
-
-        auto it = std::find(currently_pressed_keys.begin(), currently_pressed_keys.end(), key);
-        if (it == currently_pressed_keys.end()) 
+        const int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
+        const std::vector<int>::iterator iterator = std::find(currently_pressed_keys.begin(), currently_pressed_keys.end(), key);
+        if (iterator == currently_pressed_keys.end()) 
         {
             currently_pressed_keys.push_back(key);
         }
-        if (!userInterface.show_config) 
+        if (!user_interface.show_config) 
         {
             HotkeyManager::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, combined_windivert_rules);
         }
     }
+
     return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
 }
-
 
 void MessageLoop()
 {
@@ -176,19 +170,19 @@ void MessageLoop()
     }
 }
 
-
 DWORD WINAPI HotkeyThread(LPVOID lpParam)
 {
-    HINSTANCE hInstance = GetModuleHandle(nullptr);
-    if (!hInstance) 
+    HINSTANCE h_instance = GetModuleHandle(nullptr);
+    if (!h_instance) 
     {
-        hInstance = LoadLibrary(( LPCWSTR )lpParam);
+        h_instance = LoadLibrary(static_cast<LPCWSTR>( lpParam ));
     }
-    if (!hInstance) 
+    if (!h_instance) 
     {
         return 1;
     }
-    hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, ( HOOKPROC )KeyboardEvent, hInstance, NULL);
+
+    hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardEvent, h_instance, NULL);
     MessageLoop();
     UnhookWindowsHookEx(hKeyboardHook);
     return 0;

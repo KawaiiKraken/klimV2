@@ -1,22 +1,23 @@
+#include <algorithm>
 #include "HotkeyManager.h"
 #include "ConfigFile.h"
 #include "HelperFunctions.h"
 #include "WinDivertFunctions.h"
-#include <algorithm>
 
-HotkeyManager::HotkeyManager(std::vector<std::atomic<Limit>*> _limit_ptr_vector)
-    : done(false), _cur_line(-1), _current_hotkey_list(), _limit_ptr_vector(_limit_ptr_vector) {}
+HotkeyManager::HotkeyManager(const std::vector<std::atomic<Limit>*>& limit_ptr_vector)
+    : done(false), _cur_line(-1), _current_hotkey_list(), _limit_ptr_vector(limit_ptr_vector) {}
 
-void HotkeyManager::AsyncBindHotkey(int i)
+void HotkeyManager::AsyncBindHotkey(const int i)
 {
     _cur_line = i;
-    if (_limit_ptr_vector[_cur_line]->load().bindingComplete == false) 
+    if (_limit_ptr_vector[_cur_line]->load().binding_complete == false) 
     {
-        MessageBox(nullptr, ( wchar_t* )L"error hotkey is already being bound...", nullptr, MB_OK);
+        MessageBox(nullptr, L"error hotkey is already being bound...", nullptr, MB_OK);
         return;
     }
+
     Limit temp_limit = _limit_ptr_vector[_cur_line]->load();
-    temp_limit.bindingComplete = false;
+    temp_limit.binding_complete = false;
     _limit_ptr_vector[_cur_line]->store(temp_limit);
 
     _current_hotkey_list.clear();
@@ -27,33 +28,34 @@ void HotkeyManager::AsyncBindHotkey(int i)
         Sleep(10);
     }
 
-    temp_limit          = _limit_ptr_vector[_cur_line]->load();
-    temp_limit.updateUI = true;
-    std::cout << "current size: " << _current_hotkey_list.size() << std::endl;
-    temp_limit.bindingComplete = true;
+    temp_limit = _limit_ptr_vector[_cur_line]->load();
+    temp_limit.update_ui = true;
+    std::cout << "current size: " << _current_hotkey_list.size() << "\n";
+    temp_limit.binding_complete = true;
     _limit_ptr_vector[_cur_line]->store(temp_limit);
     _cur_line = -1;
 }
 
-void HotkeyManager::KeyboardInputHandler(int key, bool isKeyDown)
+void HotkeyManager::KeyboardInputHandler(const int key, const bool is_key_down)
 {
     if (_cur_line == -1) 
     {
         return;
     }
 
-    if (isKeyDown) 
+    if (is_key_down) 
     {
-        std::cout << "Key Down: " << key << std::endl;
-        auto it = std::find(_current_hotkey_list.begin(), _current_hotkey_list.end(), key);
-        if (it == _current_hotkey_list.end()) {
+        std::cout << "Key Down: " << key << "\n";
+        const std::vector<int>::iterator iterator = std::find(_current_hotkey_list.begin(), _current_hotkey_list.end(), key);
+        if (iterator == _current_hotkey_list.end()) 
+        {
             _current_hotkey_list.push_back(key);
         }
     }
     else
     {
-        std::cout << "Key Up: " << key << std::endl;
-        auto it          = std::find(_current_hotkey_list.begin(), _current_hotkey_list.end(), key);
+        std::cout << "Key Up: " << key << "\n";
+        std::vector<int>::iterator it= std::find(_current_hotkey_list.begin(), _current_hotkey_list.end(), key);
         Limit temp_limit = _limit_ptr_vector[_cur_line]->load();
         for (int i = 0; i < _current_hotkey_list.size(); i++) 
         {
@@ -65,16 +67,17 @@ void HotkeyManager::KeyboardInputHandler(int key, bool isKeyDown)
 }
 
 
-void HotkeyManager::TriggerHotkeys(std::vector<std::atomic<Limit>*> limit_ptr_vector, std::vector<int> currently_pressed_keys, bool debug, char combined_windivert_rules[1000])
+void HotkeyManager::TriggerHotkeys(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, std::vector<int> currently_pressed_keys, const bool debug, char combined_windivert_rules[1000])
 {
-    for (int i = 0; i < limit_ptr_vector.size(); i++) 
+    for (size_t i = 0; i < limit_ptr_vector.size(); i++) 
     {
         if (limit_ptr_vector[i]->load().key_list[0] == 0) 
         {
             continue;
         }
+
         // Sort both vectors
-        Limit temp_limit = limit_ptr_vector[i]->load();
+        const Limit temp_limit = limit_ptr_vector[i]->load();
         std::vector<int> key_list;
         for (int j = 0; j < temp_limit.max_key_list_size; j++) 
         {
@@ -85,11 +88,11 @@ void HotkeyManager::TriggerHotkeys(std::vector<std::atomic<Limit>*> limit_ptr_ve
         }
         std::sort(key_list.begin(), key_list.end());
         std::sort(currently_pressed_keys.begin(), currently_pressed_keys.end());
-        bool containsAll = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), key_list.begin(), key_list.end());
+        const bool contains_all = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), key_list.begin(), key_list.end());
 
-        if (containsAll) 
+        if (contains_all) 
         {
-            HotkeyManager::OnTriggerHotkey(limit_ptr_vector[i], debug, limit_ptr_vector, combined_windivert_rules);
+            OnTriggerHotkey(limit_ptr_vector[i], debug, limit_ptr_vector, combined_windivert_rules);
         }
     }
 }
@@ -97,10 +100,10 @@ void HotkeyManager::TriggerHotkeys(std::vector<std::atomic<Limit>*> limit_ptr_ve
 
 void HotkeyManager::UnTriggerHotkeys(std::vector<std::atomic<Limit>*> limit_ptr_vector, std::vector<int> currently_pressed_keys)
 {
-    for (int i = 0; i < limit_ptr_vector.size(); i++) 
+    for (std::atomic<Limit>*& limit_ptr : limit_ptr_vector) 
     {
         // Sort both vectors
-        Limit temp_limit = limit_ptr_vector[i]->load();
+        Limit temp_limit = limit_ptr->load();
         std::vector<int> key_list;
         for (int j = 0; j < temp_limit.max_key_list_size; j++)
         {
@@ -111,49 +114,49 @@ void HotkeyManager::UnTriggerHotkeys(std::vector<std::atomic<Limit>*> limit_ptr_
         }
         std::sort(key_list.begin(), key_list.end());
         std::sort(currently_pressed_keys.begin(), currently_pressed_keys.end());
-        bool containsAll = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), key_list.begin(), key_list.end());
+        const bool contains_all = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), key_list.begin(), key_list.end());
 
-        if (!containsAll) 
+        if (!contains_all) 
         {
             temp_limit.triggered = false;
-            limit_ptr_vector[i]->store(temp_limit);
+            limit_ptr->store(temp_limit);
         }
     }
 }
 
 
-void HotkeyManager::OnTriggerHotkey(std::atomic<Limit>* limitarg, bool debug, std::vector<std::atomic<Limit>*> limit_ptr_vector, char* combined_windivert_rules)
+void HotkeyManager::OnTriggerHotkey(std::atomic<Limit>* limit_arg, const bool debug, const std::vector<std::atomic<Limit>*>& limit_ptr_vector, char* combined_windivert_rules)
 {
-    if (strcmp(limitarg->load().name, "exitapp") == 0) 
+    if (strcmp(limit_arg->load().name, "exitapp") == 0) 
     {
         Helper::ExitApp(debug);
     }
     if (!(Helper::D2Active() || debug))
     {
-        std::cout << "hotkey ignored: d2 is not the active window and debug mode is not on" << std::endl;
+        std::cout << "hotkey ignored: d2 is not the active window and debug mode is not on\n";
         return;
     }
-    if (!limitarg->load().triggered)
+    if (!limit_arg->load().triggered)
     {
-        Limit limit = limitarg->load();
+        Limit limit = limit_arg->load();
         limit.triggered = true;
-        limitarg->store(limit);
-        if (strcmp(limitarg->load().name, "game") == 0) 
+        limit_arg->store(limit);
+        if (strcmp(limit_arg->load().name, "game") == 0) 
         {
-            Limit::ToggleWholeGameLimit(limitarg);
+            Limit::ToggleWholeGameLimit(limit_arg);
         }
-        else if (strcmp(limitarg->load().name, "suspend") == 0) 
+        else if (strcmp(limit_arg->load().name, "suspend") == 0) 
         {
-            Limit::ToggleSuspend(limitarg);
+            Limit::ToggleSuspend(limit_arg);
         }
         else 
         {
-            limit       = limitarg->load();
+            limit = limit_arg->load();
             limit.state = !limit.state;
-            limitarg->store(limit);
+            limit_arg->store(limit);
         }
 
-        std::cout << "state of " << limitarg->load().name <<  ": " << limitarg->load().state << std::endl;
+        std::cout << "state of " << limit_arg->load().name <<  ": " << limit_arg->load().state << "\n";
         SetFilterRuleString(limit_ptr_vector, combined_windivert_rules);
         UpdateFilter(combined_windivert_rules);
     }

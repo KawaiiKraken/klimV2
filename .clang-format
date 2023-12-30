@@ -4,7 +4,18 @@ BasedOnStyle: WebKit
 # This is neat for some things... but gets annoyingly messy for other things
 # AlignConsecutiveAssignments: Consecutive
 ColumnLimit: 250
-MaxEmptyLinesToKeep: 1
+MaxEmptyLinesToKeep: 2
 SortIncludes: true
-SpacesInCStyleCastParentheses: true
+SpacesInCStyleCastParentheses: false
+BraceWrapping:
+  AfterControlStatement: Always
+  AfterNamespace: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeElse: true
+  BeforeCatch: true
+  BeforeWhile: true
+  IndentBraces: false
 ...
