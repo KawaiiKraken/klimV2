@@ -18,13 +18,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\helperFunctions.cpp">
+    <ClCompile Include="src\HelperFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\windivertFunctions.cpp">
+    <ClCompile Include="src\WinDivertFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ConfigFile.cpp">
@@ -209,7 +209,7 @@
     <ClInclude Include="src\ConfigFile.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\windivertFunctions.h">
+    <ClInclude Include="src\WinDivertFunctions.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\HotkeyManager.h">
@@ -218,7 +218,7 @@
     <ClInclude Include="src\UserInterface.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\helperFunctions.h">
+    <ClInclude Include="src\HelperFunctions.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Limit.h">

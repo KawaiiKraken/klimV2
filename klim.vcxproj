@@ -134,14 +134,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\ConfigFile.cpp" />
-    <ClCompile Include="src\helperFunctions.cpp" />
+    <ClCompile Include="src\HelperFunctions.cpp" />
     <ClCompile Include="src\HotkeyManager.cpp" />
     <ClCompile Include="src\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="src\Limit.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\UserInterface.cpp" />
-    <ClCompile Include="src\windivertFunctions.cpp" />
+    <ClCompile Include="src\WinDivertFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="jsoncpp_x64-windows\include\json\allocator.h" />
@@ -187,7 +187,7 @@
     <ClInclude Include="phnt\subprocesstag.h" />
     <ClInclude Include="phnt\winsta.h" />
     <ClInclude Include="src\ConfigFile.h" />
-    <ClInclude Include="src\helperFunctions.h" />
+    <ClInclude Include="src\HelperFunctions.h" />
     <ClInclude Include="src\HotkeyManager.h" />
     <ClInclude Include="src\imgui\imgui_impl_opengl3.h" />
     <ClInclude Include="src\imgui\imgui_impl_opengl3_loader.h" />
@@ -204,7 +204,7 @@
     <ClInclude Include="src\jsoncpp_header\writer.h" />
     <ClInclude Include="src\Limit.h" />
     <ClInclude Include="src\UserInterface.h" />
-    <ClInclude Include="src\windivertFunctions.h" />
+    <ClInclude Include="src\WinDivertFunctions.h" />
     <ClInclude Include="WinDivert\windivert.h" />
   </ItemGroup>
   <ItemGroup>

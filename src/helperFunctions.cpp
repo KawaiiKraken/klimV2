@@ -1,67 +1,93 @@
-#include "helperFunctions.h"
+#include "HelperFunctions.h"
 #include "ConfigFile.h"
-#include "Limit.h"
-#include <algorithm>
+#include <windows.h>
 #include <psapi.h>
-#include <Windows.h>
+#include <iostream>
 
-void Helper::Exitapp(bool debug)
+namespace Klim
 {
-    std::cout << "shutting down" << std::endl;
-    ShellExecute(NULL, NULL, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", NULL, SW_HIDE);
-    if (!debug) {
-        ShowWindow(GetConsoleWindow(), SW_RESTORE);
+    std::vector<std::string> Helper::StringSplit(const std::string& string, const std::string& delimiter)
+    {
+        size_t pos_start = 0, pos_end, delimiter_length = delimiter.length();
+        std::vector<std::string> res;
+
+        while ((pos_end = string.find(delimiter, pos_start)) != std::string::npos)
+        {
+            std::string token = string.substr(pos_start, pos_end - pos_start);
+            pos_start = pos_end + delimiter_length;
+            res.push_back(token);
+        }
+
+        res.push_back(string.substr(pos_start));
+        return res;
     }
-    PostQuitMessage(0);
-}
 
+    void Helper::ExitApp(const bool debug)
+    {
+        std::cout << "shutting down\n";
+        ShellExecute(nullptr, nullptr, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", nullptr, SW_HIDE);
+        if (!debug)
+        {
+            ShowWindow(GetConsoleWindow(), SW_RESTORE);
+        }
+        PostQuitMessage(0);
+    }
 
-bool Helper::D2Active()
-{
-    TCHAR buffer[MAX_PATH] = { 0 };
-    DWORD dw_proc_id       = 0;
+    bool Helper::D2Active()
+    {
+        TCHAR buffer[MAX_PATH] = { 0 };
+        DWORD dw_proc_id = 0;
 
-    GetWindowThreadProcessId(GetForegroundWindow(), &dw_proc_id);
+        GetWindowThreadProcessId(GetForegroundWindow(), &dw_proc_id);
 
-    HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dw_proc_id);
-    GetModuleFileNameEx(hProc, NULL, buffer, MAX_PATH);
-    CloseHandle(hProc);
+        const HANDLE process_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dw_proc_id);
+        GetModuleFileNameEx(process_handle, nullptr, buffer, MAX_PATH);
+        CloseHandle(process_handle);
 
-    const wchar_t* filename = GetFilename(buffer);
-    std::cout << "active window filename: " << filename << std::endl;
+        const wchar_t* filename = GetFileName(buffer);
+        std::cout << "active window filename: " << filename << "\n";
 
-    if (wcscmp(filename, L"destiny2.exe") == 0) {
-        return true;
-    } else {
+        if (wcscmp(filename, L"destiny2.exe") == 0)
+        {
+            return true;
+        }
+
         return false;
     }
-}
 
 
-bool Helper::RunningAsAdmin()
-{
-    bool fRet     = false;
-    HANDLE hToken = NULL;
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
-        TOKEN_ELEVATION elevation;
-        DWORD cbSize = sizeof(TOKEN_ELEVATION);
-        if (GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &cbSize)) {
-            fRet = elevation.TokenIsElevated;
+    bool Helper::RunningAsAdmin()
+    {
+        bool is_admin = false;
+        HANDLE token_handle = nullptr;
+        if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token_handle))
+        {
+            TOKEN_ELEVATION elevation;
+            DWORD cb_size = sizeof(TOKEN_ELEVATION);
+            if (GetTokenInformation(token_handle, TokenElevation, &elevation, sizeof(elevation), &cb_size))
+            {
+                is_admin = elevation.TokenIsElevated;
+            }
         }
+        if (token_handle)
+        {
+            CloseHandle(token_handle);
+        }
+        return is_admin;
     }
-    if (hToken) {
-        CloseHandle(hToken);
-    }
-    return fRet;
-}
 
 
-const wchar_t* Helper::GetFilename(const wchar_t* path)
-{
-    const wchar_t* filename = wcsrchr(path, '\\');
-    if (filename == NULL)
-        filename = path;
-    else
-        filename++;
-    return filename;
+    const wchar_t* Helper::GetFileName(const wchar_t* path)
+    {
+        const wchar_t* filename = wcsrchr(path, '\\');
+        if (filename == nullptr)
+        {
+            filename = path;
+        }
+        else
+        {
+            filename++;
+        }
+        return filename;
+    }
 }
