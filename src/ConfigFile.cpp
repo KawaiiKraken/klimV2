@@ -34,12 +34,19 @@ namespace Klim
             config[name] = VectorToJson(key_list);
         }
 
-        // random defaults for now
-        config["use_overlay"] = settings->use_overlay;
-        config["font_size"] = settings->font_size;
         config["color_default"] = "0x00FFFFFF";
         config["color_on"] = "0x000000FF";
         config["color_off"] = "0x00FFFFFF";
+
+        config["window_location"] = settings->window_location;
+        config["font_size"] = settings->font_size;
+
+        config["change_text_color"] = settings->change_text_color;
+        config["show_limit_state"] = settings->show_limit_state;
+        config["show_hotkey"] = settings->show_hotkey;
+        config["show_overlay"] = settings->show_overlay;
+        config["show_timer"] = settings->show_timer;
+        config["frosted_glass"] = settings->frosted_glass;
 
         StoreConfigToJson(path_to_config_file, config);
     }
@@ -67,8 +74,15 @@ namespace Klim
         settings->color_on = stol(loaded_config["color_on"].asString(), nullptr, 16);
         settings->color_off = stol(loaded_config["color_off"].asString(), nullptr, 16);
 
-        settings->use_overlay = loaded_config["use_overlay"].asBool();
+        settings->window_location = loaded_config["window_location"].asInt();
         settings->font_size = loaded_config["font_size"].asInt();
+
+        settings->change_text_color = loaded_config["change_text_color"].asBool();
+        settings->show_limit_state = loaded_config["show_limit_state"].asBool();
+        settings->show_hotkey = loaded_config["show_hotkey"].asBool();
+        settings->show_overlay = loaded_config["show_overlay"].asBool();
+        settings->show_timer = loaded_config["show_timer"].asBool();
+        settings->frosted_glass = loaded_config["frosted_glass"].asBool();
     }
 
     bool ConfigFile::FileExists(const LPCTSTR file_path)

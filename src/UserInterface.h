@@ -25,7 +25,7 @@ namespace Klim
 
         private:
             static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-            static void FormatHotkeyStatusWcString(char* c_string, const std::atomic<Limit>* limit_ptr);
+            void FormatHotkeyStatusWcString(char* c_string, const std::atomic<Limit>* limit_ptr);
             std::vector<std::atomic<Limit>*> _limit_ptr_vector;
 
             // Data stored per platform window
@@ -50,11 +50,10 @@ namespace Klim
             void BlurBehindHwnd(HWND hWnd, bool state);
             static void HelpMarker(const char* description);
             void SetHwndPos(HWND hwnd);
+            static ImVec4 ColorRefToImVec4(COLORREF colorRef);
             ImVec2 _window_pos;
             ImVec2 _window_size;
             ImVec2 _display_size;
-            int _window_location = 0;
-            int font_size = 18;
     };
 }
 

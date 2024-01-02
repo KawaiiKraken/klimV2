@@ -12,11 +12,17 @@ namespace Klim
     class Settings
     {
         public:
-            bool use_overlay;
-            int font_size;
             COLORREF color_default;
             COLORREF color_on;
             COLORREF color_off;
+            int window_location = 0;
+            int font_size = 18;
+            bool change_text_color = true;
+            bool show_limit_state = true;
+            bool show_hotkey = true;
+            bool show_overlay = true;
+            bool show_timer = true;
+            bool frosted_glass = true;
     };
 
 
