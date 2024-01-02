@@ -2,8 +2,8 @@
 #include "ConfigFile.h"
 #include "HelperFunctions.h"
 #include "WinDivertFunctions.h"
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 
 namespace Klim
 {
@@ -26,6 +26,10 @@ namespace Klim
 
         Limit temp_limit = _limit_ptr_vector[_cur_line]->load();
         temp_limit.binding_complete = false;
+        for (int j = 0; j < temp_limit.max_key_list_size; j++)
+        {
+            temp_limit.key_list[j] = 0;
+        }
         _limit_ptr_vector[_cur_line]->store(temp_limit);
 
         _current_hotkey_list.clear();

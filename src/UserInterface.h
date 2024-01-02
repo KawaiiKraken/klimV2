@@ -45,8 +45,16 @@ namespace Klim
             Settings* _settings;
             void Overlay(bool* p_open, HWND window_handle) const;
             void Config(HWND window_handle);
-            ImVec2 _overlay_window_pos;
-            ImVec2 _overlay_window_size;
+            void HotkeyTab();
+            void UiConfigTab(const HWND hwnd);
+            void BlurBehindHwnd(HWND hWnd, bool state);
+            static void HelpMarker(const char* description);
+            void SetHwndPos(HWND hwnd);
+            ImVec2 _window_pos;
+            ImVec2 _window_size;
+            ImVec2 _display_size;
+            int _window_location = 0;
+            int font_size = 18;
     };
 }
 
