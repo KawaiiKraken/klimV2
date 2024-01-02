@@ -1,8 +1,8 @@
 #include "HelperFunctions.h"
 #include "ConfigFile.h"
-#include <windows.h>
-#include <psapi.h>
 #include <iostream>
+#include <psapi.h>
+#include <windows.h>
 
 namespace Klim
 {
@@ -45,7 +45,7 @@ namespace Klim
         CloseHandle(process_handle);
 
         const wchar_t* filename = GetFileName(buffer);
-        std::cout << "active window filename: " << filename << "\n";
+        std::wcout << L"active window filename: " << filename << L"\n";
 
         if (wcscmp(filename, L"destiny2.exe") == 0)
         {
