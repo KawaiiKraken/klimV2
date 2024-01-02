@@ -125,9 +125,24 @@ namespace Klim
                         color = UserInterface::ColorRefToImVec4(_settings->color_default);
                     }
                     ImGui::TextColored(color, char_ptr_vector[i]);
+                    if (_settings->show_timer == true && timer_vector[i].running == true)
+                    {
+                        ImGui::SameLine();
+                        ImGui::Text("%.1f", timer_vector[i].getElapsedTime());
+                    }
                     if (overlay_window_size.x < ImGui::CalcTextSize(char_ptr_vector[i]).x + 30)
                     {
                         overlay_window_size.x = ImGui::CalcTextSize(char_ptr_vector[i]).x;
+                        if (_settings->show_timer == true && timer_vector[i].running == true)
+                        {
+                            char formattedString[50];
+                            snprintf(formattedString, sizeof(formattedString), " %.1f", timer_vector[i].getElapsedTime());
+                            overlay_window_size.x += ImGui::CalcTextSize(formattedString).x;
+                        }
+                        else
+                        {
+                            overlay_window_size.x = ImGui::CalcTextSize(char_ptr_vector[i]).x;
+                        }
                         overlay_window_size.x += 30; // TODO replace with window style padding
                     }
                     overlay_window_size.y += ImGui::CalcTextSize(char_ptr_vector[i]).y;
@@ -371,8 +386,7 @@ namespace Klim
 
             ImGui::Checkbox("Show timer", &_settings->show_timer);
             ImGui::SameLine();
-            // UserInterface::HelpMarker("Shows how long a limit has been on.");
-            UserInterface::HelpMarker("MAKE ME WORK");
+            UserInterface::HelpMarker("Shows how long a limit has been on.");
 
             ImGui::Checkbox("Frosted glass", &_settings->frosted_glass);
             ImGui::SameLine();
@@ -475,6 +489,11 @@ namespace Klim
 
         // Main loop
         bool done = false;
+        for (int i = 0; i < _limit_ptr_vector.size(); i++)
+        {
+            Timer timer;
+            timer_vector.push_back(timer);
+        }
         while (!done)
         {
             // Poll and handle messages (inputs, window resize, etc.)

@@ -4,6 +4,7 @@
 #include <iostream>
 // #include <string>
 // #include <thread>
+#include <chrono>
 #include <vector>
 #include <windows.h>
 
@@ -22,6 +23,62 @@ namespace Klim
             bool show_overlay = false;
             bool show_config = false;
             int RunGui();
+            class Timer
+            {
+                public:
+                    Timer()
+                        : running(false)
+                        , elapsedTime(0.0)
+                    {
+                    }
+
+                    void start()
+                    {
+                        if (!running)
+                        {
+                            startTime = std::chrono::high_resolution_clock::now();
+                            running = true;
+                        }
+                    }
+
+                    void stop()
+                    {
+                        if (running)
+                        {
+                            auto endTime = std::chrono::high_resolution_clock::now();
+                            auto duration = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime);
+                            elapsedTime += duration.count();
+                            running = false;
+                        }
+                    }
+
+                    void reset()
+                    {
+                        startTime = std::chrono::high_resolution_clock::now();
+                        elapsedTime = 0.0;
+                        running = false;
+                    }
+
+                    float getElapsedTime() const
+                    {
+                        if (running)
+                        {
+                            auto now = std::chrono::high_resolution_clock::now();
+                            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime);
+                            return (elapsedTime + duration.count() / 1000.0f);
+                        }
+                        else
+                        {
+                            return elapsedTime;
+                        }
+                    }
+                    bool running;
+
+                private:
+                    double elapsedTime;
+                    std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
+            };
+            std::vector<Timer> timer_vector;
 
         private:
             static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
