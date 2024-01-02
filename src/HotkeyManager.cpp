@@ -1,6 +1,7 @@
 #include "HotkeyManager.h"
 #include "ConfigFile.h"
 #include "HelperFunctions.h"
+#include "UserInterface.h"
 #include "WinDivertFunctions.h"
 #include <algorithm>
 #include <iostream>
@@ -152,6 +153,23 @@ namespace Klim
 
         if (!limit_arg->load().triggered)
         {
+            for (int i = 0; i < limit_ptr_vector.size(); i++)
+            {
+                if (strcmp(limit_arg->load().name, limit_ptr_vector[i]->load().name) == 0)
+                {
+                    if (ui_instance->timer_vector[i].running)
+                    {
+
+                        ui_instance->timer_vector[i].reset();
+                        std::cout << limit_arg->load().name << " TIMER stop\n";
+                    }
+                    else
+                    {
+                        ui_instance->timer_vector[i].start();
+                        std::cout << limit_arg->load().name << " TIMER start\n";
+                    }
+                }
+            }
             Limit limit = limit_arg->load();
             limit.triggered = true;
             limit_arg->store(limit);

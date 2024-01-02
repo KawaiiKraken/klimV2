@@ -1,9 +1,9 @@
 #pragma once
 #include <atomic>
 #include <iostream>
+#include <string>
 #include <vector>
 #include <windows.h>
-#include <string>
 
 namespace Klim
 {
@@ -50,7 +50,8 @@ namespace Klim
                 type = invalid;
             }
 
-            explicit Limit(const char* n, const char* b = "") : Limit()
+            explicit Limit(const char* n, const char* b = "")
+                : Limit()
             {
                 strncpy_s(name, n, sizeof(name));
                 strncpy_s(windivert_rule, b, sizeof(windivert_rule));

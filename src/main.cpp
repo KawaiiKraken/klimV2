@@ -7,15 +7,15 @@
 #include "HotkeyManager.h"
 #include "Limit.h"
 #include "UserInterface.h"
-//#include "imgui.h"
-//#include <chrono>
-//#include <condition_variable>
+// #include "imgui.h"
+// #include <chrono>
+// #include <condition_variable>
 #include <future>
 #include <iostream>
 #include <shellapi.h>
-//#include <stdbool.h>
-//#include <stdio.h>
-//#include <stdlib.h>
+// #include <stdbool.h>
+// #include <stdio.h>
+// #include <stdlib.h>
 #include <cstring>
 #include <tchar.h>
 #include <vector>
@@ -44,18 +44,7 @@ std::atomic<Klim::Limit> limit_full_game = Klim::Limit(Klim::Limit::TypeToString
 std::atomic<Klim::Limit> suspend = Klim::Limit(Klim::Limit::TypeToString(Klim::LimitType::suspend_game));
 std::atomic<Klim::Limit> exit_app = Klim::Limit(Klim::Limit::TypeToString(Klim::LimitType::exit_app));
 
-const std::vector<std::atomic<Klim::Limit>*> limit_ptr_vector =
-{
-    &limit_3074_dl,
-    &limit_3074_ul,
-    &limit_27k_dl,
-    &limit_27k_ul,
-    &limit_30k,
-    &limit_7k,
-    &limit_full_game,
-    &suspend,
-    &exit_app
-};
+const std::vector<std::atomic<Klim::Limit>*> limit_ptr_vector = { &limit_3074_dl, &limit_3074_ul, &limit_27k_dl, &limit_27k_ul, &limit_30k, &limit_7k, &limit_full_game, &suspend, &exit_app };
 
 typedef void (*KeyboardEventCallback)(int, bool);
 std::vector<int> currently_pressed_keys;
@@ -78,6 +67,7 @@ DWORD WINAPI RunGuiWrapper(LPVOID lpParam)
 
 int main(int argc, char* argv[])
 {
+    hotkey_manager.ui_instance = &user_interface;
     // std::cout << Klim::Limit::TypeToString(limit_full_game.load().type) << "\n";
 
     if (argc > 1)
@@ -148,7 +138,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int n_code, WPARAM w_param,
             currently_pressed_keys.erase(iterator);
         }
 
-        Klim::HotkeyManager::UnTriggerHotkeys(limit_ptr_vector, currently_pressed_keys);
+        hotkey_manager.UnTriggerHotkeys(limit_ptr_vector, currently_pressed_keys);
     }
 
     if (n_code == HC_ACTION && ((w_param == WM_SYSKEYDOWN) || (w_param == WM_KEYDOWN)))
@@ -163,7 +153,7 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardEvent(int n_code, WPARAM w_param,
         }
         if (!user_interface.show_config)
         {
-            Klim::HotkeyManager::TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, combined_windivert_rules);
+            hotkey_manager.TriggerHotkeys(limit_ptr_vector, currently_pressed_keys, debug, combined_windivert_rules);
         }
     }
 
