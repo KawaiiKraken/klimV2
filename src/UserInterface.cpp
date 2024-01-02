@@ -135,6 +135,7 @@ namespace Klim
                 }
                 ImGui::PopID();
             }
+            ui_instance->_window_size = overlay_window_size;
             ImGui::SetWindowSize(overlay_window_size);
             SetWindowPos(window_handle, 0, 0, 0, overlay_window_size.x, overlay_window_size.y, SWP_NOZORDER | SWP_NOMOVE);
             ui_instance->BlurBehindHwnd(window_handle, _settings->frosted_glass);
@@ -248,6 +249,10 @@ namespace Klim
                     string_vector[i] += name_buffer;
                 }
             }
+            if (_limit_ptr_vector[i]->load().binding_complete == false)
+            {
+                string_vector[i] = "...";
+            }
 
             const char* bind = string_vector[i].c_str();
             const ImVec2 out_size = ImGui::CalcTextSize(bind);
@@ -359,57 +364,32 @@ namespace Klim
             ImGui::Checkbox("Show Overlay", &_settings->show_overlay);
             ImGui::SameLine();
             UserInterface::HelpMarker("Show/Hide overlay.");
-            if (ImGui::IsItemDeactivatedAfterEdit()) // surely theres a better way to do this... i thought about checking if structs differ but was too dumb to figure out a programmatic implementation
-            {
-                ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-                ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-            }
 
             ImGui::Checkbox("Show hotkey", &_settings->show_hotkey);
-            if (ImGui::IsItemDeactivatedAfterEdit())
-            {
-                ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-                ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-            }
             ImGui::SameLine();
             UserInterface::HelpMarker("Shows the hotkey to trigger a limit.");
 
             ImGui::Checkbox("Show timer", &_settings->show_timer);
-            if (ImGui::IsItemDeactivatedAfterEdit())
-            {
-                ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-                ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-            }
             ImGui::SameLine();
             // UserInterface::HelpMarker("Shows how long a limit has been on.");
             UserInterface::HelpMarker("MAKE ME WORK");
 
             ImGui::Checkbox("Frosted glass", &_settings->frosted_glass);
-            if (ImGui::IsItemDeactivatedAfterEdit())
-            {
-                ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-                ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-            }
             ImGui::SameLine();
             UserInterface::HelpMarker("Frosted glass effect as background.");
 
             ImGui::Checkbox("Show limit state", &_settings->show_limit_state);
-            if (ImGui::IsItemDeactivatedAfterEdit())
-            {
-                ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-                ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-            }
             ImGui::SameLine();
             UserInterface::HelpMarker("(on)/(off) text.");
 
             ImGui::Checkbox("Change color", &_settings->change_text_color);
-            if (ImGui::IsItemDeactivatedAfterEdit())
-            {
-                ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-                ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-            }
             ImGui::SameLine();
             UserInterface::HelpMarker("Change text color based on limit state.");
+
+            ImGui::Text("Text size");
+            ImGui::SameLine();
+            UserInterface::HelpMarker("REQUIRES RESTART");
+            ImGui::InputInt("", &_settings->font_size);
         }
 
         ImGui::SeparatorText("Misc");
@@ -423,15 +403,6 @@ namespace Klim
             const char* possible_window_pos[] = { "Top Left", "Top Right", "Bottom Left", "Bottom Right" };
             ImGui::Combo("", &_settings->window_location, possible_window_pos, IM_ARRAYSIZE(possible_window_pos));
             ImGui::PopID();
-
-
-            ImGui::Text("Text size");
-            ImGui::SameLine();
-            UserInterface::HelpMarker("Currently broken");
-            ImGui::BeginDisabled();
-            ImGui::InputInt("", &_settings->font_size);
-            ImGui::EndDisabled();
-
 
             ImGui::Text("Theme");
             ImGui::SameLine();
@@ -449,7 +420,6 @@ namespace Klim
         ImVec2 work_pos(0, 0); // Use work area to avoid menu-bar/task-bar, if any!
         ImVec2 work_size(desktop_rect.right, desktop_rect.bottom);
         ImVec2 window_pos, window_pos_pivot;
-        // TODO modify offset based on window size and location
         window_pos.x = (_settings->window_location & 1) ? (work_pos.x + work_size.x - PAD - _window_size.x) : (work_pos.x + PAD);
         window_pos.y = (_settings->window_location & 2) ? (work_pos.y + work_size.y - PAD - _window_size.y) : (work_pos.y + PAD);
         window_pos_pivot.x = (_settings->window_location & 1) ? 1.0f : 0.0f;
@@ -488,15 +458,9 @@ namespace Klim
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
-        (void)io;
 
-        ImFontConfig config;
-        config.RasterizerMultiply = 1.0f; // Adjust the value for better antialiasing
-
-        ImFont* custom_font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(Hack_Regular, 18.0f, &config);
+        ImFont* custom_font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(Hack_Regular, _settings->font_size);
         ImFont* default_font = io.Fonts->AddFontDefault();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable GamePad Controls
 
         // Setup Dear ImGui style
         ImGui::StyleColorsDark();
@@ -506,7 +470,8 @@ namespace Klim
         ImGui_ImplOpenGL3_Init();
 
         // Our state
-        constexpr ImVec4 clear_color = ImVec4(128.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f);
+        // constexpr ImVec4 clear_color = ImVec4(128.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f);
+        constexpr ImVec4 clear_color = ImVec4(1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f, 1.0f);
 
         // Main loop
         bool done = false;
@@ -548,9 +513,8 @@ namespace Klim
             }
             ImGui::PopFont();
 
-            custom_font->FontSize = static_cast<float>(_settings->font_size);
+            // custom_font->FontSize = _settings->font_size;
             ImGui::PushFont(custom_font);
-            custom_font->FontSize = static_cast<float>(_settings->font_size);
             if (show_overlay)
             {
                 Overlay(&show_overlay, window_handle);
@@ -691,7 +655,8 @@ namespace Klim
         switch (msg)
         {
             case WM_CREATE:
-                SetLayeredWindowAttributes(hWnd, RGB(128, 128, 128), 0, LWA_COLORKEY);
+                // SetLayeredWindowAttributes(hWnd, RGB(128, 128, 128), 0, LWA_COLORKEY);
+                SetLayeredWindowAttributes(hWnd, RGB(1, 1, 1), 0, LWA_COLORKEY);
                 break;
             case WM_SIZE:
                 if (wParam != SIZE_MINIMIZED)
