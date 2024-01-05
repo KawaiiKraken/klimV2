@@ -332,24 +332,13 @@ namespace Klim
                     GetKeyNameTextA(scan_code << 16, name_buffer, std::size(name_buffer));
                     string_vector[i] += name_buffer;
                 }
-            }
 
-            if (button_clicked[i] == true)
-            {
-                std::cout << "button " << i << " clicked [registered]\n";
-                string_vector[i] = in_progress;
-                button_clicked[i] = false;
-                line_of_button_clicked = static_cast<int>(i); // this isn't required, but a static cast shows its intentional
-                bool can_trigger_hotkey = true;
-                for (int j = 0; j < _limit_ptr_vector.size(); j++)
+                if (button_clicked[i] == true)
                 {
-                    if (_limit_ptr_vector[j]->load().binding_complete == false)
-                    {
-                        can_trigger_hotkey = false;
-                    }
-                }
-                if (can_trigger_hotkey)
-                {
+                    std::cout << "button " << i << " clicked [registered]\n";
+                    string_vector[i] = in_progress;
+                    button_clicked[i] = false;
+                    line_of_button_clicked = static_cast<int>(i); // this isn't required, but a static cast shows its intentional
                     std::thread([&]() { hk_instance->AsyncBindHotkey(line_of_button_clicked); }).detach();
                 }
             }
