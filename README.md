@@ -1,19 +1,28 @@
-# klimV2
-krekens destiny 2 netlimiter 
+# klim v2
+kreken's destiny 2 netlimiter 
 
 for support join our server at the [thrallway](https://thrallway.com)
 
 # features
 - lims: 3074DL, 3074UL, 27kDL, 27UL, 30kDL, 7500DL, whole game 800b/s DL
 - game pauser
-- config ui
+- config gui 
 - undetected
 - limits without a delay 
 - overlay 
-![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/example_screenshot.png "My Config")
+- timers 
+- packet logs
+- hotkeys only work when d2 is focused
+
+# screenshots
+![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/hotkey_tab.png "hotkey tab")
+![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/visual_tab.png "visual tab")
+![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/overlay.png "overlay")
  
 # installation
 - download [lastest release](https://github.com/KawaiiKraken/klimV2/releases/latest)
+- unzip
+- run exe
 
 # how to use
 - [netlimiter bible](https://docs.google.com/document/d/1CuFbJ4KlbSMqf22lVap2yiSMHxLWRJpiMO1eIIpgtJQ)
@@ -26,6 +35,15 @@ for support join our server at the [thrallway](https://thrallway.com)
   
 # known issues
 - whole game limit requires windows pro
+- the overlay can be seen when screensharing for some people 
+
+# upcoming features
+- turn off hotkeys when d2 chatbox is open
+- hide overlay when d2 isnt focused
+- make overlay relative to d2 window (so that it works in windowed mode)
+- custom overlay position
+- changing binds without restarting klim
+- better lims?
 
 # how to contribute
 - give this repo a star on github
