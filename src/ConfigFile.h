@@ -18,11 +18,11 @@ namespace Klim
             int window_location = 0;
             int font_size = 18;
             bool change_text_color = true;
-            bool show_limit_state = true;
+            bool show_limit_state = false;
             bool show_hotkey = true;
             bool show_overlay = true;
             bool show_timer = true;
-            bool frosted_glass = true;
+            bool frosted_glass = false;
     };
 
 

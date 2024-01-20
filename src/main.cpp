@@ -53,8 +53,8 @@ char combined_windivert_rules[1000];
 wchar_t path_to_config_file[MAX_PATH];
 Klim::Settings settings;
 
-Klim::HotkeyManager hotkey_manager(limit_ptr_vector);
 Klim::UserInterface user_interface(limit_ptr_vector, path_to_config_file, &settings);
+Klim::HotkeyManager hotkey_manager(limit_ptr_vector, &user_interface);
 Klim::UserInterface* Klim::UserInterface::ui_instance = &user_interface;
 Klim::HotkeyManager* Klim::UserInterface::hk_instance = &hotkey_manager;
 
@@ -67,9 +67,6 @@ DWORD WINAPI RunGuiWrapper(LPVOID lpParam)
 
 int main(int argc, char* argv[])
 {
-    hotkey_manager.ui_instance = &user_interface;
-    // std::cout << Klim::Limit::TypeToString(limit_full_game.load().type) << "\n";
-
     if (argc > 1)
     {
         if (strcmp(argv[1], "--debug") == 0)

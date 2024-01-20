@@ -8,15 +8,16 @@
 
 namespace Klim
 {
-    HotkeyManager::HotkeyManager(const std::vector<std::atomic<Limit>*>& limit_ptr_vector)
+    HotkeyManager::HotkeyManager(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, UserInterface* ui_instance)
         : done(false)
         , _cur_line(-1)
         , _current_hotkey_list()
         , _limit_ptr_vector(limit_ptr_vector)
+        , ui_instance(ui_instance)
     {
     }
 
-    void HotkeyManager::AsyncBindHotkey(const int i)
+    void HotkeyManager::AsyncBindHotkey(int i)
     {
         _cur_line = i;
         if (_limit_ptr_vector[_cur_line]->load().binding_complete == false)
