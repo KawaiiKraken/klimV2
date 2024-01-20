@@ -22,6 +22,8 @@ namespace Klim
         : _limit_ptr_vector(limit_ptr_vector)
         , _path_to_config_file(path_to_config_file)
         , _settings(settings)
+        , _custom_font(nullptr)
+        , _line_of_button_clicked(-1) // this could have been a local variable but it goes out of scope and crashes the release build
     {
     }
 
@@ -31,7 +33,7 @@ namespace Klim
         color.x = (float)GetRValue(colorRef) / 255.0f;
         color.y = (float)GetGValue(colorRef) / 255.0f;
         color.z = (float)GetBValue(colorRef) / 255.0f;
-        color.w = 1.0f; // Alpha set to 1, adjust as needed
+        color.w = 1.0f; // Alpha set to 1
         return color;
     }
 
@@ -125,25 +127,17 @@ namespace Klim
                         color = UserInterface::ColorRefToImVec4(_settings->color_default);
                     }
                     ImGui::TextColored(color, char_ptr_vector[i]);
+                    char formattedString[50];
+                    strcpy_s(formattedString, sizeof(formattedString), "");
                     if (_settings->show_timer == true && timer_vector[i].running == true)
                     {
                         ImGui::SameLine();
                         ImGui::Text("%.1f", timer_vector[i].getElapsedTime());
+                        snprintf(formattedString, sizeof(formattedString), " %.1f", timer_vector[i].getElapsedTime());
                     }
-                    if (overlay_window_size.x < ImGui::CalcTextSize(char_ptr_vector[i]).x + 30)
+                    if (overlay_window_size.x < ImGui::CalcTextSize(char_ptr_vector[i]).x + ImGui::CalcTextSize(formattedString).x + 30)
                     {
-                        overlay_window_size.x = ImGui::CalcTextSize(char_ptr_vector[i]).x;
-                        if (_settings->show_timer == true && timer_vector[i].running == true)
-                        {
-                            char formattedString[50];
-                            snprintf(formattedString, sizeof(formattedString), " %.1f", timer_vector[i].getElapsedTime());
-                            overlay_window_size.x += ImGui::CalcTextSize(formattedString).x;
-                        }
-                        else
-                        {
-                            overlay_window_size.x = ImGui::CalcTextSize(char_ptr_vector[i]).x;
-                        }
-                        overlay_window_size.x += 30; // TODO replace with window style padding
+                        overlay_window_size.x = ImGui::CalcTextSize(char_ptr_vector[i]).x + ImGui::CalcTextSize(formattedString).x + 30; // TODO replace with window style padding
                     }
                     overlay_window_size.y += ImGui::CalcTextSize(char_ptr_vector[i]).y;
                     overlay_window_size.y += 10;
@@ -210,6 +204,13 @@ namespace Klim
                     else
                     {
                         ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings);
+
+                        if (_font_changed)
+                        {
+                            RestartApp();
+                        }
+
+
                         ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);
                         show_config = false;
                         if (_settings->show_overlay)
@@ -224,12 +225,36 @@ namespace Klim
         ImGui::End();
     }
 
+
+    void UserInterface::RestartApp()
+    {
+        TCHAR szPath[MAX_PATH];
+        GetModuleFileName(NULL, szPath, MAX_PATH);
+
+        STARTUPINFO si;
+        PROCESS_INFORMATION pi;
+
+        ZeroMemory(&si, sizeof(si));
+        si.cb = sizeof(si);
+        ZeroMemory(&pi, sizeof(pi));
+
+        // Create a new process
+        if (CreateProcess(szPath, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+        {
+            // Close the handles to the child process and its primary thread
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+
+            // Exit the current process
+            ExitProcess(0);
+        }
+    }
+
     void UserInterface::HotkeyTab()
     {
         std::vector<bool> button_clicked(_limit_ptr_vector.size());
         std::vector<std::string> string_vector(_limit_ptr_vector.size());
 
-        int line_of_button_clicked = -1;
 
         for (size_t i = 0; i < _limit_ptr_vector.size(); i++)
         {
@@ -292,6 +317,7 @@ namespace Klim
                 if (string_vector[i] != in_progress)
                 {
                     button_clicked[i] = true;
+                    string_vector[i] = in_progress;
                     std::cout << "button " << i << " clicked [callback]\n";
                 }
             }
@@ -338,8 +364,9 @@ namespace Klim
                     std::cout << "button " << i << " clicked [registered]\n";
                     string_vector[i] = in_progress;
                     button_clicked[i] = false;
-                    line_of_button_clicked = static_cast<int>(i); // this isn't required, but a static cast shows its intentional
-                    std::thread([&]() { hk_instance->AsyncBindHotkey(line_of_button_clicked); }).detach();
+                    // line_of_button_clicked = static_cast<int>(i); // this isn't required, but a static cast shows its intentional
+                    _line_of_button_clicked = i;
+                    std::thread([&]() { hk_instance->AsyncBindHotkey(_line_of_button_clicked); }).detach();
                 }
             }
 
@@ -391,8 +418,12 @@ namespace Klim
 
             ImGui::Text("Text size");
             ImGui::SameLine();
-            UserInterface::HelpMarker("REQUIRES RESTART");
+            UserInterface::HelpMarker("REQUIRES RESTART TO TAKE EFFECT");
             ImGui::InputInt("", &_settings->font_size);
+            if (ImGui::IsItemDeactivatedAfterEdit())
+            {
+                _font_changed = true;
+            }
         }
 
         ImGui::SeparatorText("Misc");
@@ -402,14 +433,16 @@ namespace Klim
 
 
             ImGui::Text("Window position");
-            ImGui::PushID(0xdeadbeef); // doesn't work in this case unless given an id
+            ImGui::SameLine();
+            UserInterface::HelpMarker("Both config and overlay.");
+            ImGui::PushID(0xdeadbeef); // doesn't work in this case unless given an id.. why??
             const char* possible_window_pos[] = { "Top Left", "Top Right", "Bottom Left", "Bottom Right" };
             ImGui::Combo("", &_settings->window_location, possible_window_pos, IM_ARRAYSIZE(possible_window_pos));
             ImGui::PopID();
 
-            ImGui::Text("Theme");
-            ImGui::SameLine();
-            UserInterface::HelpMarker("coming soon..?");
+            // ImGui::Text("Theme");
+            // ImGui::SameLine();
+            // UserInterface::HelpMarker("coming soon..?");
         }
     }
 
@@ -462,7 +495,7 @@ namespace Klim
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
 
-        ImFont* custom_font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(Hack_Regular, _settings->font_size);
+        _custom_font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(Hack_Regular, _settings->font_size);
         ImFont* default_font = io.Fonts->AddFontDefault();
 
         // Setup Dear ImGui style
@@ -503,6 +536,7 @@ namespace Klim
                 break;
             }
 
+
             // Start the Dear ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplWin32_NewFrame();
@@ -514,25 +548,26 @@ namespace Klim
             style.WindowPadding = ImVec2(15.0f, 5.0f);
 
 
-            ImGui::PushFont(default_font);
             if (show_config)
             {
+                ImGui::PushFont(default_font);
                 Config(window_handle);
+                ImGui::PopFont();
             }
-            ImGui::PopFont();
 
             // custom_font->FontSize = _settings->font_size;
-            ImGui::PushFont(custom_font);
             if (show_overlay)
             {
+                ImGui::PushFont(_custom_font);
                 Overlay(&show_overlay, window_handle);
+                ImGui::PopFont();
             }
-            ImGui::PopFont();
 
             UserInterface::SetHwndPos(window_handle);
 
             // Rendering
             ImGui::Render();
+
 
             glViewport(0, 0, _g_width, _g_height);
             glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);

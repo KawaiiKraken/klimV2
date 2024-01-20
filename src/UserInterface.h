@@ -69,7 +69,7 @@ namespace Klim
                         }
                         else
                         {
-                            return elapsedTime;
+                            return elapsedTime / 1000.0f;
                         }
                     }
                     bool running;
@@ -105,12 +105,16 @@ namespace Klim
             void HotkeyTab();
             void UiConfigTab(const HWND hwnd);
             void BlurBehindHwnd(HWND hWnd, bool state);
+            void RestartApp();
             static void HelpMarker(const char* description);
             void SetHwndPos(HWND hwnd);
             static ImVec4 ColorRefToImVec4(COLORREF colorRef);
             ImVec2 _window_pos;
             ImVec2 _window_size;
             ImVec2 _display_size;
+            ImFont* _custom_font;
+            bool _font_changed = false;
+            int _line_of_button_clicked;
     };
 }
 

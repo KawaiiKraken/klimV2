@@ -127,13 +127,11 @@ namespace Klim
             {
                 if (!WinDivertSendEx(hWindivert, packet, receive_length, nullptr, 0, &receive_address, address_length, nullptr))
                 {
-                    std::cout << "\n"
-                              << "warning! failed to re-inject packet: " << GetLastError();
+                    std::cout << "warning! failed to re-inject packet: " << GetLastError() << "\n";
                 }
                 else
                 {
-                    std::cout << "\n"
-                              << "re-injected ack packet";
+                    std::cout << "re-injected ack packet\n";
                 }
             }
         }
