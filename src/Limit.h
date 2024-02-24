@@ -72,6 +72,7 @@ namespace Klim
             static const char* TypeToRule(LimitType type);
             static LimitType StringToType(const char* str);
             static std::atomic<Limit>* GetLimitPtrByType(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, LimitType limit);
+            bool reinject = false;
 
         private:
             static void SuspendProcess(DWORD pid, bool suspend);
