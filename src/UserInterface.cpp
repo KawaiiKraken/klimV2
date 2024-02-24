@@ -404,9 +404,11 @@ namespace Klim
             ImGui::SameLine();
             UserInterface::HelpMarker("Shows how long a limit has been on.");
 
+            /*
             ImGui::Checkbox("Frosted glass", &_settings->frosted_glass);
             ImGui::SameLine();
             UserInterface::HelpMarker("Frosted glass effect as background.");
+            */
 
             ImGui::Checkbox("Show limit state", &_settings->show_limit_state);
             ImGui::SameLine();
