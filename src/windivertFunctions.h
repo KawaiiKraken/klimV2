@@ -48,5 +48,12 @@ namespace Klim
             std::vector<std::atomic<Limit>*> _limit_ptr_vector;
             UserInterface* _ui_instance;
             HANDLE console;
+            bool Is27kDL(packet_data* packet);
+            bool Is27kUL(packet_data* packet);
+            bool Is3074DL(packet_data* packet);
+            bool Is3074UL(packet_data* packet);
+            bool Is30kDL(packet_data* packet);
+            bool Is7500DL(packet_data* packet);
+            bool should_reinject(packet_data* packet);
     };
 }

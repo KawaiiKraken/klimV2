@@ -36,20 +36,23 @@ namespace Klim
         {
             if (limit_ptr_vector[i]->load().state)
             {
+                Limit limit = limit_ptr_vector[i]->load();
+                limit.block = true;
+                limit_ptr_vector[i]->store(limit);
                 strcat_s(combined_windivert_rules, 1000, limit_ptr_vector[i]->load().windivert_rule);
             }
+            else
+            {
+                Limit limit = limit_ptr_vector[i]->load();
+                limit.block = false;
+                limit_ptr_vector[i]->store(limit);
+            }
         }
-        std::cout << "filter: " << combined_windivert_rules << "\n";
-
         if (strcmp(combined_windivert_rules, "(udp.DstPort < 1 and udp.DstPort > 1)") == 0)
         {
-            // TODO make it work for all limits separately
             reinject = true;
         }
-        else
-        {
-            reinject = false;
-        }
+        std::cout << "filter: " << combined_windivert_rules << "\n";
     }
 
 
@@ -130,68 +133,86 @@ namespace Klim
         std::cout << "\n";
     }
 
+
+    // this is really jank i need to rework this
+    bool WinDivertShit::should_reinject(packet_data* packet)
+    {
+        if (Is3074DL(packet))
+        {
+            if (!Limit::GetLimitPtrByType(_limit_ptr_vector, Klim::limit_3074_dl)->load().block)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
     void WinDivertShit::ReinjectAll(std::vector<packet_data>* packet_buffer)
     {
         UINT address_length = sizeof(WINDIVERT_ADDRESS);
+        bool printed_start = false;
         if (packet_buffer->size() != 0)
         {
-            std::cout << "reinjecting packets (" << packet_buffer->size() << ")... ";
             for (int i = 0; i < packet_buffer->size(); i++)
             {
                 packet_data packet_data = (*packet_buffer)[i];
-                if (!WinDivertSendEx(hWindivert, packet_data.packet, sizeof(packet_data.packet), nullptr, 0, &packet_data.receive_address, address_length, nullptr))
+                if (should_reinject(&packet_data) || reinject)
                 {
-                    if (GetLastError() != 6) // expected error so i just dont output debug for it
+                    if (!printed_start)
                     {
-                        std::cout << "warning! failed to re-inject buffer packet: " << GetLastError() << " retrying...\n";
+                        std::cout << "reinjecting packets (" << packet_buffer->size() << ")... ";
+                        printed_start = true;
                     }
-                    i -= 1;
-                }
-                else
-                {
-                    std::cout << packet_data.receive_length << " ";
+
+                    if (!WinDivertSendEx(hWindivert, packet_data.packet, sizeof(packet_data.packet), nullptr, 0, &packet_data.receive_address, address_length, nullptr))
+                    {
+                        if (GetLastError() != 6) // expected error so no need for debug output
+                        {
+                            std::cout << "warning! failed to re-inject buffer packet: " << GetLastError() << " retrying...\n";
+                        }
+                    }
+                    else
+                    {
+                        std::cout << packet_data.receive_length << " ";
+                        packet_buffer->erase(packet_buffer->begin() + i);
+                    }
+                    i -= 1; // either index is erased or its an error, either way need to roll back
                 }
             }
-            std::cout << "\nall blocked packets reinjected\n";
             reinject = false;
-            packet_buffer->clear();
         }
     }
 
+    bool WinDivertShit::Is27kDL(packet_data* packet) { return packet->udp_header != nullptr && ntohs(packet->udp_header->SrcPort) >= 27015 && ntohs(packet->udp_header->SrcPort) <= 27200; };
+    bool WinDivertShit::Is27kUL(packet_data* packet) { return packet->udp_header != nullptr && ntohs(packet->udp_header->DstPort) >= 27015 && ntohs(packet->udp_header->DstPort) <= 27200; };
+    bool WinDivertShit::Is3074DL(packet_data* packet) { return packet->udp_header != nullptr && ntohs(packet->udp_header->SrcPort) == 3074; };
+    bool WinDivertShit::Is3074UL(packet_data* packet) { return packet->udp_header != nullptr && ntohs(packet->udp_header->DstPort) == 3074; };
+    bool WinDivertShit::Is30kDL(packet_data* packet) { return packet->udp_header != nullptr && ntohs(packet->udp_header->SrcPort) >= 30000 && ntohs(packet->udp_header->SrcPort) <= 30009; };
+    bool WinDivertShit::Is7500DL(packet_data* packet) { return packet->tcp_header != nullptr && ntohs(packet->tcp_header->SrcPort) >= 7500 && ntohs(packet->tcp_header->SrcPort) <= 7509; };
 
     unsigned long WinDivertShit::WinDivertFilterThread()
     {
         UINT address_length = sizeof(WINDIVERT_ADDRESS);
         std::unique_ptr<std::vector<packet_data>> packet_buffer = std::make_unique<std::vector<packet_data>>();
+        packet_data cur_packet {};
 
         // Get console for pretty colors.
         console = GetStdHandle(STD_OUTPUT_HANDLE);
 
-        auto Is27kDL = [](packet_data* packet) -> bool { return packet->udp_header != nullptr && ntohs(packet->udp_header->SrcPort) >= 27015 && ntohs(packet->udp_header->SrcPort) <= 27200; };
-        auto Is27kUL = [](packet_data* packet) -> bool { return packet->udp_header != nullptr && ntohs(packet->udp_header->DstPort) >= 27015 && ntohs(packet->udp_header->DstPort) <= 27200; };
-        auto Is3074DL = [](packet_data* packet) -> bool { return packet->udp_header != nullptr && ntohs(packet->udp_header->SrcPort) == 3074; };
-        auto Is3074UL = [](packet_data* packet) -> bool { return packet->udp_header != nullptr && ntohs(packet->udp_header->DstPort) == 3074; };
-        auto Is30kDL = [](packet_data* packet) -> bool { return packet->udp_header != nullptr && ntohs(packet->udp_header->SrcPort) >= 30000 && ntohs(packet->udp_header->SrcPort) <= 30009; };
-        auto Is7500DL = [](packet_data* packet) -> bool { return packet->tcp_header != nullptr && ntohs(packet->tcp_header->SrcPort) >= 7500 && ntohs(packet->tcp_header->SrcPort) <= 7509; };
-
         // Main loop:
         while (TRUE)
         {
+            passthrough = false;
+
             if (hWindivert == INVALID_HANDLE_VALUE || hWindivert == 0)
             {
                 continue;
             }
 
+            ReinjectAll(packet_buffer.get());
+
             // Read a matching packet.
-            packet_data cur_packet {};
-
-
-            if (reinject)
-            {
-                ReinjectAll(packet_buffer.get());
-            }
-
-
             if (!WinDivertRecvEx(hWindivert, cur_packet.packet, sizeof(cur_packet.packet), &cur_packet.receive_length, 0, &cur_packet.receive_address, &address_length, nullptr))
             {
                 if (GetLastError() != 6 && GetLastError() != 995) // expected error so i just dont output debug for it
@@ -200,11 +221,6 @@ namespace Klim
                 }
                 continue;
             }
-            else
-            {
-                cur_packet.recv_time = std::chrono::high_resolution_clock::now();
-            }
-
 
             if (!WinDivertHelperParsePacket(cur_packet.packet, cur_packet.receive_length, nullptr, nullptr, nullptr, nullptr, nullptr, &cur_packet.tcp_header, &cur_packet.udp_header, nullptr, &cur_packet.receive_length, nullptr, nullptr))
             {
@@ -216,6 +232,10 @@ namespace Klim
                 std::cout << "warning! Failed to recalculate checksums: " << GetLastError() << "\n";
             }
 
+            if (Is7500DL(&cur_packet) && !cur_packet.tcp_header->Fin && !cur_packet.tcp_header->Psh)
+            {
+                passthrough = true;
+            }
 
             if (passthrough)
             {
