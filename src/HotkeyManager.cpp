@@ -8,14 +8,16 @@
 
 namespace Klim
 {
-    HotkeyManager::HotkeyManager(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, UserInterface* ui_instance)
+    HotkeyManager::HotkeyManager(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, Settings* settings)
         : done(false)
         , _cur_line(-1)
         , _current_hotkey_list()
         , _limit_ptr_vector(limit_ptr_vector)
-        , ui_instance(ui_instance)
+        , ui_instance(nullptr)
+        , _settings(settings)
     {
     }
+
 
     void HotkeyManager::AsyncBindHotkey(int i)
     {
@@ -81,7 +83,7 @@ namespace Klim
     }
 
 
-    void HotkeyManager::TriggerHotkeys(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, std::vector<int> currently_pressed_keys, const bool debug, char combined_windivert_rules[1000])
+    void HotkeyManager::TriggerHotkeys(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, std::vector<int> currently_pressed_keys, const bool debug)
     {
         for (size_t i = 0; i < limit_ptr_vector.size(); i++)
         {
@@ -104,9 +106,9 @@ namespace Klim
             std::sort(currently_pressed_keys.begin(), currently_pressed_keys.end());
             const bool contains_all = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), key_list.begin(), key_list.end());
 
-            if (contains_all)
+            if (contains_all && !_chatbox_open)
             {
-                OnTriggerHotkey(limit_ptr_vector[i], debug, limit_ptr_vector, combined_windivert_rules);
+                OnTriggerHotkey(limit_ptr_vector[i], debug, limit_ptr_vector);
             }
         }
     }
@@ -139,7 +141,7 @@ namespace Klim
     }
 
 
-    void HotkeyManager::OnTriggerHotkey(std::atomic<Limit>* limit_arg, const bool debug, const std::vector<std::atomic<Limit>*>& limit_ptr_vector, char* combined_windivert_rules)
+    void HotkeyManager::OnTriggerHotkey(std::atomic<Limit>* limit_arg, const bool debug, const std::vector<std::atomic<Limit>*>& limit_ptr_vector)
     {
         if (limit_arg->load().type == exit_app)
         {
@@ -156,6 +158,7 @@ namespace Klim
         {
             for (int i = 0; i < limit_ptr_vector.size(); i++)
             {
+                // bug somewhere in the for loop, only the first timer works
                 if (strcmp(limit_arg->load().name, limit_ptr_vector[i]->load().name) == 0)
                 {
                     if (ui_instance->timer_vector[i].running)
@@ -190,8 +193,86 @@ namespace Klim
             }
 
             std::cout << "state of " << limit_arg->load().name << ": " << limit_arg->load().state << "\n";
-            SetFilterRuleString(limit_ptr_vector, combined_windivert_rules);
-            UpdateFilter(combined_windivert_rules);
+            windivert_instance->SetFilterRuleString(limit_ptr_vector, combined_windivert_rules);
+            windivert_instance->UpdateFilter(combined_windivert_rules);
         }
     }
+
+
+    void HotkeyManager::KeyboardEvent(int n_code, WPARAM w_param, LPARAM l_param)
+    {
+        if (n_code == HC_ACTION && (w_param == WM_SYSKEYUP || w_param == WM_KEYUP))
+        {
+            const KBDLLHOOKSTRUCT hooked_key = *reinterpret_cast<KBDLLHOOKSTRUCT*>(l_param);
+
+            const int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
+            const std::vector<int>::iterator iterator = std::find(_currently_pressed_keys.begin(), _currently_pressed_keys.end(), key);
+            if (iterator != _currently_pressed_keys.end())
+            {
+                _currently_pressed_keys.erase(iterator);
+            }
+
+            this->UnTriggerHotkeys(_limit_ptr_vector, _currently_pressed_keys);
+        }
+
+        if (n_code == HC_ACTION && ((w_param == WM_SYSKEYDOWN) || (w_param == WM_KEYDOWN)))
+        {
+            const KBDLLHOOKSTRUCT hooked_key = *reinterpret_cast<KBDLLHOOKSTRUCT*>(l_param);
+
+            const int key = MapVirtualKey(hooked_key.scanCode, MAPVK_VSC_TO_VK);
+            const std::vector<int>::iterator iterator = std::find(_currently_pressed_keys.begin(), _currently_pressed_keys.end(), key);
+            if (iterator == _currently_pressed_keys.end())
+            {
+                _currently_pressed_keys.push_back(key);
+                if (key == VK_RETURN)
+                {
+                    if (Helper::D2Active())
+                    {
+                        _chatbox_open = !_chatbox_open;
+                        std::cout << "chatbox " << (_chatbox_open ? "open\n" : "closed\n");
+                    }
+                }
+            }
+            if (!ui_instance->show_config)
+            {
+                this->TriggerHotkeys(_limit_ptr_vector, _currently_pressed_keys, _settings->debug);
+            }
+        }
+    }
+
+    LRESULT HotkeyManager::StaticKeyboardEvent(int n_code, WPARAM w_param, LPARAM l_param)
+    {
+        HotkeyManager* hk_instance_ptr = HotkeyManager::hk_instance;
+        hk_instance_ptr->KeyboardEvent(n_code, w_param, l_param);
+        return CallNextHookEx(HotkeyManager::keyboard_hook_handle, n_code, w_param, l_param);
+    }
+
+
+    LRESULT CALLBACK HotkeyManager::MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
+    {
+        // do stuff
+
+        return CallNextHookEx(HotkeyManager::mouseHook, nCode, wParam, lParam);
+    }
+
+    DWORD HotkeyManager::HotkeyThread()
+    {
+        HotkeyManager::keyboard_hook_handle = SetWindowsHookEx(WH_KEYBOARD_LL, HotkeyManager::StaticKeyboardEvent, NULL, NULL);
+        // HotkeyManager::mouseHook = SetWindowsHookEx(WH_MOUSE_LL, HotkeyManager::MouseProc, NULL, 0);
+        MessageLoop();
+        UnhookWindowsHookEx(HotkeyManager::keyboard_hook_handle);
+        UnhookWindowsHookEx(HotkeyManager::mouseHook);
+        return 0;
+    }
+
+    void HotkeyManager::MessageLoop()
+    {
+        MSG message;
+        while (GetMessage(&message, nullptr, 0, 0))
+        {
+            TranslateMessage(&message);
+            DispatchMessage(&message);
+        }
+    }
+
 }

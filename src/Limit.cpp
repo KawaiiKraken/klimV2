@@ -40,6 +40,27 @@ namespace Klim
         return "Invalid LimitType";
     }
 
+    const char* Limit::TypeToRule(LimitType type)
+    {
+        switch (type)
+        {
+            case limit_3074_dl:
+                return " or (inbound and udp.SrcPort == 3074)";
+            case limit_3074_ul:
+                return " or (outbound and udp.DstPort == 3074)";
+            case limit_27k_dl:
+                return " or (inbound and udp.SrcPort >= 27015 and udp.SrcPort <= 27200)";
+            case limit_27k_ul:
+                return " or (outbound and udp.DstPort >= 27015 and udp.DstPort <= 27200)";
+            case limit_30k_dl:
+                return " or (inbound and tcp.SrcPort >= 30000 and tcp.SrcPort <= 30009)";
+            case limit_7500_dl:
+                return " or (inbound and tcp.SrcPort >= 7500 and tcp.SrcPort <= 7509)";
+            default:
+                return nullptr;
+        }
+    }
+
     LimitType Limit::StringToType(const char* str)
     {
         if (strcmp(str, "3074(DL)") == 0)
@@ -80,6 +101,19 @@ namespace Klim
         }
 
         return invalid;
+    }
+
+    std::atomic<Limit>* Limit::GetLimitPtrByType(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, LimitType limit)
+    {
+        for (int i = 0; i < limit_ptr_vector.size(); i++)
+        {
+            if (limit_ptr_vector[i]->load().type == limit)
+            {
+                return limit_ptr_vector[i];
+            }
+        }
+        std::cout << "error: no matching limit ptr found\n";
+        return nullptr; // is this safe?
     }
 
     void Limit::ToggleWholeGameLimit(std::atomic<Limit>* limit_ptr)
@@ -131,12 +165,12 @@ namespace Klim
         {
             return;
         }
-        
+
         // ReSharper disable CppInconsistentNaming
-        typedef LONG(NTAPI* NtSuspendProcess)(IN HANDLE ProcessHandle);
-        typedef LONG(NTAPI* NtResumeProcess)(IN HANDLE ProcessHandle);
+        typedef LONG(NTAPI * NtSuspendProcess)(IN HANDLE ProcessHandle);
+        typedef LONG(NTAPI * NtResumeProcess)(IN HANDLE ProcessHandle);
         // ReSharper restore CppInconsistentNaming
-        
+
         if (suspend)
         {
             std::cout << "suspending process\n";

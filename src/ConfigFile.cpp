@@ -47,6 +47,7 @@ namespace Klim
         config["show_overlay"] = settings->show_overlay;
         config["show_timer"] = settings->show_timer;
         config["frosted_glass"] = settings->frosted_glass;
+        config["debug"] = settings->debug;
 
         StoreConfigToJson(path_to_config_file, config);
     }
@@ -83,6 +84,7 @@ namespace Klim
         settings->show_overlay = loaded_config["show_overlay"].asBool();
         settings->show_timer = loaded_config["show_timer"].asBool();
         settings->frosted_glass = loaded_config["frosted_glass"].asBool();
+        settings->debug = loaded_config["debug"].asBool();
     }
 
     bool ConfigFile::FileExists(const LPCTSTR file_path)
