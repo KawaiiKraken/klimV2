@@ -56,7 +56,12 @@ for support join our server at the [thrallway](https://thrallway.com)
 # compiling from source
 ```
 git clone https://github.com/KawaiiKraken/klimV2
+cd klimv2
+git clone https://github.com/Microsoft/vcpkg.git
+.\vcpkg\bootstrap-vcpkg.bat
+.\vcpkg\vcpkg.exe install jsoncpp opengl imgui[core,opengl3-binding,win32-binding]:x64-windows 
+.\vpkg\vcpkg.exe integrate install
+.\klim.sln
 ```
-- you will need to install imgui, opengl, and jsoncpp thru vcpkg
-- open sln in visual studio, hit build
+hit build
 

@@ -39,6 +39,7 @@ namespace Klim
             bool binding_complete = true;
             bool triggered = false;
             bool state = false;
+            bool block = false;
             int overlay_line_number = -1;
             bool update_ui = false;
 
@@ -50,20 +51,27 @@ namespace Klim
                 type = invalid;
             }
 
-            explicit Limit(const char* n, const char* b = "")
+            explicit Limit(LimitType lim_type)
                 : Limit()
             {
-                strncpy_s(name, n, sizeof(name));
-                strncpy_s(windivert_rule, b, sizeof(windivert_rule));
+                type = lim_type;
+                const char* lim_name = TypeToString(type);
+                strncpy_s(name, lim_name, sizeof(name));
 
-                type = StringToType(name);
+                const char* rule = TypeToRule(type);
+                if (rule != nullptr)
+                {
+                    strncpy_s(windivert_rule, rule, sizeof(windivert_rule));
+                }
             }
 
             static void ToggleSuspend(std::atomic<Limit>* suspend);
             static void ToggleWholeGameLimit(std::atomic<Limit>* limit_ptr);
 
             static const char* TypeToString(LimitType type);
+            static const char* TypeToRule(LimitType type);
             static LimitType StringToType(const char* str);
+            static std::atomic<Limit>* GetLimitPtrByType(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, LimitType limit);
 
         private:
             static void SuspendProcess(DWORD pid, bool suspend);

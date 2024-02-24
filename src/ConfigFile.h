@@ -1,7 +1,7 @@
 #pragma once
 
-#include "jsoncpp_header/json.h"
 #include <fstream>
+#include <json/json.h>
 #include <tchar.h>
 #include <windows.h>
 
@@ -23,6 +23,7 @@ namespace Klim
             bool show_overlay = true;
             bool show_timer = true;
             bool frosted_glass = false;
+            bool debug = false;
     };
 
 

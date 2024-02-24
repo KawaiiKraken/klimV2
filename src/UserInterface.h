@@ -65,11 +65,11 @@ namespace Klim
                         {
                             auto now = std::chrono::high_resolution_clock::now();
                             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime);
-                            return (elapsedTime + duration.count() / 1000.0f);
+                            return static_cast<float>((elapsedTime + duration.count() / 1000.0f));
                         }
                         else
                         {
-                            return elapsedTime / 1000.0f;
+                            return static_cast<float>(elapsedTime / 1000.0f);
                         }
                     }
                     bool running;
@@ -103,7 +103,7 @@ namespace Klim
             void Overlay(bool* p_open, HWND window_handle) const;
             void Config(HWND window_handle);
             void HotkeyTab();
-            void UiConfigTab(const HWND hwnd);
+            void UiConfigTab();
             void BlurBehindHwnd(HWND hWnd, bool state);
             void RestartApp();
             static void HelpMarker(const char* description);

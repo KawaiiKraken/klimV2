@@ -3,10 +3,11 @@
 #include "HelperFunctions.h"
 #include "HotkeyManager.h"
 #include "Limit.h"
-#include "imgui/imgui_impl_opengl3.h"
-#include "imgui/imgui_impl_win32.h"
 #include <GL/GL.h>
 #include <dwmapi.h>
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_win32.h>
+#include <imgui_internal.h>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -65,7 +66,7 @@ namespace Klim
             }
 
             const int scan_code = MapVirtualKey(limit_ptr->load().key_list[i], 0);
-            GetKeyNameText(scan_code << 16, name_buffer, std::size(name_buffer));
+            GetKeyNameText(scan_code << 16, name_buffer, static_cast<int>(std::size(name_buffer)));
             wcscat_s(hotkey_state_string, wc_string_size, name_buffer);
         }
 
@@ -87,8 +88,6 @@ namespace Klim
 
     void UserInterface::Overlay(bool* p_open, const HWND window_handle) const
     {
-        const ImGuiIO& io = ImGui::GetIO();
-
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoResize;
 
         // make click-through (entire window)
@@ -146,7 +145,7 @@ namespace Klim
             }
             ui_instance->_window_size = overlay_window_size;
             ImGui::SetWindowSize(overlay_window_size);
-            SetWindowPos(window_handle, 0, 0, 0, overlay_window_size.x, overlay_window_size.y, SWP_NOZORDER | SWP_NOMOVE);
+            SetWindowPos(window_handle, 0, 0, 0, static_cast<int>(overlay_window_size.x), static_cast<int>(overlay_window_size.y), SWP_NOZORDER | SWP_NOMOVE);
             ui_instance->BlurBehindHwnd(window_handle, _settings->frosted_glass);
         }
 
@@ -160,7 +159,8 @@ namespace Klim
         SetWindowLongPtr(window_handle, GWL_EXSTYLE, GetWindowLongPtr(window_handle, GWL_EXSTYLE) | ~WS_EX_TRANSPARENT);
 
 
-        static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
+        // static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
+        static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImVec2(250, 360));
 
@@ -175,7 +175,7 @@ namespace Klim
 
             if (ImGui::BeginTabItem("Visuals"))
             {
-                UserInterface::UiConfigTab(window_handle);
+                UserInterface::UiConfigTab();
                 ImGui::EndTabItem();
             }
 
@@ -183,7 +183,7 @@ namespace Klim
         }
 
         _window_size = ImGui::GetWindowSize();
-        SetWindowPos(window_handle, 0, 0, 0, _window_size.x, _window_size.y, SWP_NOZORDER | SWP_NOMOVE);
+        SetWindowPos(window_handle, 0, 0, 0, static_cast<int>(_window_size.x), static_cast<int>(_window_size.y), SWP_NOZORDER | SWP_NOMOVE);
 
         ImVec2 windowPos = ImGui::GetWindowPos();
         ImVec2 windowSize = ImGui::GetWindowSize();
@@ -285,7 +285,7 @@ namespace Klim
 
                     const int scan_code = MapVirtualKey(_limit_ptr_vector[i]->load().key_list[j], 0);
                     char name_buffer[256];
-                    GetKeyNameTextA(scan_code << 16, name_buffer, std::size(name_buffer));
+                    GetKeyNameTextA(scan_code << 16, name_buffer, static_cast<int>(std::size(name_buffer)));
                     string_vector[i] += name_buffer;
                 }
             }
@@ -355,7 +355,7 @@ namespace Klim
 
                     const int scan_code = MapVirtualKey(_limit_ptr_vector[i]->load().key_list[j], 0);
                     char name_buffer[256];
-                    GetKeyNameTextA(scan_code << 16, name_buffer, std::size(name_buffer));
+                    GetKeyNameTextA(scan_code << 16, name_buffer, static_cast<int>(std::size(name_buffer)));
                     string_vector[i] += name_buffer;
                 }
 
@@ -365,7 +365,7 @@ namespace Klim
                     string_vector[i] = in_progress;
                     button_clicked[i] = false;
                     // line_of_button_clicked = static_cast<int>(i); // this isn't required, but a static cast shows its intentional
-                    _line_of_button_clicked = i;
+                    _line_of_button_clicked = static_cast<int>(i);
                     std::thread([&]() { hk_instance->AsyncBindHotkey(_line_of_button_clicked); }).detach();
                 }
             }
@@ -387,7 +387,7 @@ namespace Klim
             }
     }
 
-    void UserInterface::UiConfigTab(const HWND hwnd)
+    void UserInterface::UiConfigTab()
     {
         // TODO make it save config on every edit
         ImGui::SeparatorText("Overlay");
@@ -440,6 +440,11 @@ namespace Klim
             ImGui::Combo("", &_settings->window_location, possible_window_pos, IM_ARRAYSIZE(possible_window_pos));
             ImGui::PopID();
 
+            ImGui::Checkbox("Debug", &_settings->debug);
+            ImGui::SameLine();
+            UserInterface::HelpMarker("If you dont know what this does dont use it.");
+
+
             // ImGui::Text("Theme");
             // ImGui::SameLine();
             // UserInterface::HelpMarker("coming soon..?");
@@ -454,14 +459,14 @@ namespace Klim
         GetWindowRect(desktop_window_handle, &desktop_rect);
         const float PAD = 0.0f;
         ImVec2 work_pos(0, 0); // Use work area to avoid menu-bar/task-bar, if any!
-        ImVec2 work_size(desktop_rect.right, desktop_rect.bottom);
+        ImVec2 work_size(static_cast<float>(desktop_rect.right), static_cast<float>(desktop_rect.bottom));
         ImVec2 window_pos, window_pos_pivot;
         window_pos.x = (_settings->window_location & 1) ? (work_pos.x + work_size.x - PAD - _window_size.x) : (work_pos.x + PAD);
         window_pos.y = (_settings->window_location & 2) ? (work_pos.y + work_size.y - PAD - _window_size.y) : (work_pos.y + PAD);
         window_pos_pivot.x = (_settings->window_location & 1) ? 1.0f : 0.0f;
         window_pos_pivot.y = (_settings->window_location & 2) ? 1.0f : 0.0f;
 
-        SetWindowPos(hwnd, 0, window_pos.x, window_pos.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        SetWindowPos(hwnd, 0, static_cast<int>(window_pos.x), static_cast<int>(window_pos.y), 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 
 
@@ -495,7 +500,7 @@ namespace Klim
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
 
-        _custom_font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(Hack_Regular, _settings->font_size);
+        _custom_font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(Hack_Regular, static_cast<float>(_settings->font_size));
         ImFont* default_font = io.Fonts->AddFontDefault();
 
         // Setup Dear ImGui style
@@ -664,21 +669,24 @@ namespace Klim
         // int greenValue = 0;
         // int blueValue = 0;
         // int alphaValue = 20;
-        const pSetWindowCompositionAttribute SetWindowCompositionAttribute = (pSetWindowCompositionAttribute)GetProcAddress(hModule, "SetWindowCompositionAttribute");
-        // int gradientColor = (alphaValue<<24) + (blueValue<<16) + (greenValue<<8) + (redValue);
-        // AccentState blurType = isRS4OrGreater == 1 ? ACCENT_ENABLE_ACRYLICBLURBEHIND : ACCENT_ENABLE_BLURBEHIND;
-        // AccentPolicy policy = {blurType, 2, gradientColor, 0};
-        AccentPolicy policy;
-        if (state)
+        if (hModule != 0)
         {
-            policy = { ACCENT_ENABLE_ACRYLICBLURBEHIND, 2, 1, 0 };
+            const pSetWindowCompositionAttribute SetWindowCompositionAttribute = (pSetWindowCompositionAttribute)GetProcAddress(hModule, "SetWindowCompositionAttribute");
+            // int gradientColor = (alphaValue<<24) + (blueValue<<16) + (greenValue<<8) + (redValue);
+            // AccentState blurType = isRS4OrGreater == 1 ? ACCENT_ENABLE_ACRYLICBLURBEHIND : ACCENT_ENABLE_BLURBEHIND;
+            // AccentPolicy policy = {blurType, 2, gradientColor, 0};
+            AccentPolicy policy;
+            if (state)
+            {
+                policy = { ACCENT_ENABLE_ACRYLICBLURBEHIND, 2, 1, 0 };
+            }
+            else
+            {
+                policy = { ACCENT_DISABLED, 0, 0, 0 };
+            }
+            WindowCompositionAttributeData data = { WCA_ACCENT_POLICY, &policy, sizeof(AccentPolicy) };
+            SetWindowCompositionAttribute(hwnd, &data);
         }
-        else
-        {
-            policy = { ACCENT_DISABLED, 0, 0, 0 };
-        }
-        WindowCompositionAttributeData data = { WCA_ACCENT_POLICY, &policy, sizeof(AccentPolicy) };
-        SetWindowCompositionAttribute(hwnd, &data);
     }
 
 

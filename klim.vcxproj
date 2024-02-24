@@ -136,8 +136,6 @@
     <ClCompile Include="src\ConfigFile.cpp" />
     <ClCompile Include="src\HelperFunctions.cpp" />
     <ClCompile Include="src\HotkeyManager.cpp" />
-    <ClCompile Include="src\imgui\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="src\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="src\Limit.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\UserInterface.cpp" />
@@ -189,30 +187,10 @@
     <ClInclude Include="src\ConfigFile.h" />
     <ClInclude Include="src\HelperFunctions.h" />
     <ClInclude Include="src\HotkeyManager.h" />
-    <ClInclude Include="src\imgui\imgui_impl_opengl3.h" />
-    <ClInclude Include="src\imgui\imgui_impl_opengl3_loader.h" />
-    <ClInclude Include="src\imgui\imgui_impl_win32.h" />
-    <ClInclude Include="src\jsoncpp_header\allocator.h" />
-    <ClInclude Include="src\jsoncpp_header\assertions.h" />
-    <ClInclude Include="src\jsoncpp_header\config.h" />
-    <ClInclude Include="src\jsoncpp_header\forwards.h" />
-    <ClInclude Include="src\jsoncpp_header\json.h" />
-    <ClInclude Include="src\jsoncpp_header\json_features.h" />
-    <ClInclude Include="src\jsoncpp_header\reader.h" />
-    <ClInclude Include="src\jsoncpp_header\value.h" />
-    <ClInclude Include="src\jsoncpp_header\version.h" />
-    <ClInclude Include="src\jsoncpp_header\writer.h" />
     <ClInclude Include="src\Limit.h" />
     <ClInclude Include="src\UserInterface.h" />
     <ClInclude Include="src\WinDivertFunctions.h" />
     <ClInclude Include="WinDivert\windivert.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\..\..\..\..\tools\vcpkg\installed\x64-windows\lib\jsoncpp.lib" />
-    <Library Include="WinDivert\WinDivert.lib" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\..\..\Desktop\kraken pfp img\klimit.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
