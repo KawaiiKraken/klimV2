@@ -2,3 +2,6 @@ x64/
 .vs/
 vcpkg/
 imgui.ini
+klim.sln.DotSettings.user
+klim.vcxproj.user
+ideas.txt
