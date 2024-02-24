@@ -232,6 +232,17 @@ namespace Klim
                         std::cout << "chatbox " << (_chatbox_open ? "open\n" : "closed\n");
                     }
                 }
+                // chatbox can be closed with both escape too
+                if (key == VK_ESCAPE)
+                {
+                    if (Helper::D2Active())
+                    {
+                        if (_chatbox_open)
+                        {
+                            _chatbox_open = false;
+                        }
+                    }
+                }
             }
             if (!ui_instance->show_config)
             {
