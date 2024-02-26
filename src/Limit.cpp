@@ -136,7 +136,7 @@ namespace Klim
     void Limit::ToggleSuspend(std::atomic<Limit>* suspend)
     {
         // prevents from pausing random stuff if running with debug
-        if (!Helper::D2Active())
+        if (!Helper::D2Active(nullptr))
         {
             MessageBox(nullptr, L"failed to pause...\ndestiny2.exe is not the active window", nullptr, MB_OK | MB_ICONWARNING);
             return;
@@ -171,16 +171,22 @@ namespace Klim
         typedef LONG(NTAPI * NtResumeProcess)(IN HANDLE ProcessHandle);
         // ReSharper restore CppInconsistentNaming
 
+        HMODULE ntdll = nullptr;
+        ntdll = GetModuleHandle(L"ntdll");
+        if (ntdll == nullptr)
+        {
+            CloseHandle(suspend_resume_handle);
+            return;
+        }
+
         if (suspend)
         {
-            std::cout << "suspending process\n";
-            const NtSuspendProcess nt_suspend_process = reinterpret_cast<NtSuspendProcess>(GetProcAddress(GetModuleHandleA("ntdll"), "NtSuspendProcess"));
+            const NtSuspendProcess nt_suspend_process = reinterpret_cast<NtSuspendProcess>(GetProcAddress(ntdll, "NtSuspendProcess"));
             nt_suspend_process(suspend_resume_handle);
         }
         else
         {
-            std::cout << "resuming process\n";
-            const NtResumeProcess nt_resume_process = reinterpret_cast<NtResumeProcess>(GetProcAddress(GetModuleHandleA("ntdll"), "NtResumeProcess"));
+            const NtResumeProcess nt_resume_process = reinterpret_cast<NtResumeProcess>(GetProcAddress(ntdll, "NtResumeProcess"));
             nt_resume_process(suspend_resume_handle);
         }
 

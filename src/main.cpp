@@ -34,9 +34,10 @@ const std::vector<std::atomic<Klim::Limit>*> limit_ptr_vector = { &limit_3074_dl
 wchar_t path_to_config_file[MAX_PATH];
 Klim::Settings settings;
 
-Klim::HotkeyManager hotkey_manager(limit_ptr_vector, &settings);
-Klim::UserInterface user_interface(limit_ptr_vector, path_to_config_file, &settings);
-Klim::WinDivertShit windivert_shit(limit_ptr_vector, &user_interface);
+std::shared_ptr<spdlog::logger> logger = Klim::Helper::LoggerInit("log.txt");
+Klim::HotkeyManager hotkey_manager(limit_ptr_vector, &settings, logger);
+Klim::UserInterface user_interface(limit_ptr_vector, path_to_config_file, &settings, logger);
+Klim::WinDivertShit windivert_shit(limit_ptr_vector, &user_interface, logger);
 Klim::UserInterface* Klim::UserInterface::ui_instance = &user_interface;
 Klim::HotkeyManager* Klim::UserInterface::hk_instance = &hotkey_manager;
 Klim::WinDivertShit* Klim::HotkeyManager::windivert_instance = &windivert_shit;
@@ -55,6 +56,7 @@ int main()
 {
     // dumb way to do it but wtv
     hotkey_manager.ui_instance = &user_interface;
+    logger->info("init");
 
     if (!Klim::Helper::RunningAsAdmin())
     {
@@ -62,7 +64,7 @@ int main()
         return 0;
     }
 
-    Klim::ConfigFile::SetPathToConfigFile(L"config.json", path_to_config_file);
+    Klim::ConfigFile::SetPathToFileInExeDir(L"config.json", path_to_config_file);
     if (Klim::ConfigFile::FileExists(path_to_config_file))
     {
         Klim::ConfigFile::LoadConfig(limit_ptr_vector, path_to_config_file, &settings);
@@ -78,10 +80,10 @@ int main()
     user_interface.show_overlay = false;
 
     DWORD dw_thread;
-    std::cout << "starting ui thread\n";
+    logger->info("starting ui thread");
     CreateThread(nullptr, NULL, RunGuiWrapper, &user_interface, NULL, &dw_thread);
 
-    std::cout << "starting hotkey thread\n";
+    logger->info("starting hotkey thread");
 
 
     hotkey_manager.HotkeyThread();

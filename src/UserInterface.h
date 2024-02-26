@@ -1,10 +1,9 @@
 #pragma once
 
+#include <chrono>
 #include <imgui.h>
 #include <iostream>
-// #include <string>
-// #include <thread>
-#include <chrono>
+#include <spdlog/spdlog.h>
 #include <vector>
 #include <windows.h>
 
@@ -17,11 +16,12 @@ namespace Klim
     class UserInterface
     {
         public:
-            UserInterface(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings);
+            UserInterface(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings, std::shared_ptr<spdlog::logger> logger);
             static UserInterface* ui_instance;
             static HotkeyManager* hk_instance;
             bool show_overlay = false;
             bool show_config = false;
+            std::shared_ptr<spdlog::logger> logger;
             int RunGui();
             class Timer
             {
@@ -82,7 +82,7 @@ namespace Klim
 
         private:
             static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-            void FormatHotkeyStatusWcString(char* c_string, const std::atomic<Limit>* limit_ptr);
+            std::string FormatHotkeyStatusWcString(const std::atomic<Limit>* limit_ptr);
             std::vector<std::atomic<Limit>*> _limit_ptr_vector;
 
             // Data stored per platform window

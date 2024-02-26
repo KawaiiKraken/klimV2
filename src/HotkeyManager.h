@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Limit.h"
+#include "helperFunctions.h"
 
 namespace Klim
 {
@@ -11,13 +12,13 @@ namespace Klim
     class HotkeyManager
     {
         public:
-            HotkeyManager(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, Settings* settings);
+            HotkeyManager(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, Settings* settings, std::shared_ptr<spdlog::logger> logger);
             void TriggerHotkeys(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, std::vector<int> currently_pressed_keys, bool debug);
             void UnTriggerHotkeys(std::vector<std::atomic<Limit>*> limit_ptr_vector, std::vector<int> currently_pressed_keys);
             void OnTriggerHotkey(std::atomic<Limit>* limit_arg, bool debug, const std::vector<std::atomic<Limit>*>& limit_ptr_vector);
             void AsyncBindHotkey(int i);
             void KeyboardInputHandler(int key, bool is_key_down);
-            int done = false;
+            int done = true;
             UserInterface* ui_instance;
             static WinDivertShit* windivert_instance;
             DWORD HotkeyThread();
@@ -38,5 +39,6 @@ namespace Klim
             std::vector<int> _currently_pressed_keys;
             void MessageLoop();
             Settings* _settings;
+            std::shared_ptr<spdlog::logger> logger;
     };
 }
