@@ -19,12 +19,13 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 namespace Klim
 {
-    UserInterface::UserInterface(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings)
+    UserInterface::UserInterface(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t* path_to_config_file, Settings* settings, std::shared_ptr<spdlog::logger> _logger)
         : _limit_ptr_vector(limit_ptr_vector)
         , _path_to_config_file(path_to_config_file)
         , _settings(settings)
         , _custom_font(nullptr)
         , _line_of_button_clicked(-1) // this could have been a local variable but it goes out of scope and crashes the release build
+        , logger(_logger)
     {
     }
 
@@ -39,51 +40,48 @@ namespace Klim
     }
 
 
-    void UserInterface::FormatHotkeyStatusWcString(char* c_string, const std::atomic<Limit>* limit_ptr)
+    std::string UserInterface::FormatHotkeyStatusWcString(const std::atomic<Limit>* limit_ptr)
     {
         // No keybinds set
         if (limit_ptr->load().key_list[0] == 0)
         {
-            return;
+            return "";
         }
 
-        constexpr int wc_string_size = 200;
-        wchar_t hotkey_state_string[wc_string_size];
-
-        wcscpy_s(hotkey_state_string, wc_string_size, L"");
-
-        for (int i = 0; i < limit_ptr->load().max_key_list_size; i++)
-        {
-            wchar_t name_buffer[256];
-            if (limit_ptr->load().key_list[i] == 0)
-            {
-                break;
-            }
-
-            if (wcscmp(hotkey_state_string, L"") != 0)
-            {
-                wcscat_s(hotkey_state_string, wc_string_size, L"+");
-            }
-
-            const int scan_code = MapVirtualKey(limit_ptr->load().key_list[i], 0);
-            GetKeyNameText(scan_code << 16, name_buffer, static_cast<int>(std::size(name_buffer)));
-            wcscat_s(hotkey_state_string, wc_string_size, name_buffer);
-        }
+        std::string hotkey_status = "";
 
         if (_settings->show_hotkey)
         {
-            wcscat_s(hotkey_state_string, wc_string_size, L" ");
-            WideCharToMultiByte(CP_UTF8, 0, hotkey_state_string, -1, c_string, 200, nullptr, nullptr);
+            for (int i = 0; i < limit_ptr->load().max_key_list_size; i++)
+            {
+                if (limit_ptr->load().key_list[i] == 0)
+                {
+                    break;
+                }
+
+                if (hotkey_status != "")
+                {
+                    hotkey_status += "+";
+                }
+
+                const int scan_code = MapVirtualKey(limit_ptr->load().key_list[i], 0);
+
+                char name_buffer[256];
+                GetKeyNameTextA(scan_code << 16, name_buffer, static_cast<int>(std::size(name_buffer)));
+
+                hotkey_status += name_buffer;
+            }
+            hotkey_status += " ";
         }
 
-        strcat_s(c_string, 200, limit_ptr->load().name);
-
+        hotkey_status += limit_ptr->load().name;
 
         if (_settings->show_limit_state)
         {
-            strcat_s(c_string, 200, " ");
-            strcat_s(c_string, 200, limit_ptr->load().state ? "(on)" : "(off)");
+            hotkey_status += limit_ptr->load().state ? " (on)" : " (off)";
         }
+
+        return hotkey_status;
     }
 
     void UserInterface::Overlay(bool* p_open, const HWND window_handle) const
@@ -104,12 +102,12 @@ namespace Klim
         ImVec2 overlay_window_size(0.0f, 0.0f);
         if (ImGui::Begin("Overlay", p_open, window_flags))
         {
-            std::vector<char[200]> char_ptr_vector(_limit_ptr_vector.size());
+            std::vector<std::string> char_ptr_vector(_limit_ptr_vector.size());
             for (size_t i = 0; i < _limit_ptr_vector.size(); i++)
             {
-                ui_instance->FormatHotkeyStatusWcString(char_ptr_vector[i], _limit_ptr_vector[i]);
+                char_ptr_vector[i] = ui_instance->FormatHotkeyStatusWcString(_limit_ptr_vector[i]);
                 ImGui::PushID(static_cast<int>(i));
-                if (strcmp(char_ptr_vector[i], "") != 0)
+                if (char_ptr_vector[i] != "")
                 {
                     ImVec4 color(1.0f, 1.0f, 1.0f, 1.0f); // default color
                     // ImGui::Text(char_ptr_vector[i]);
@@ -125,7 +123,7 @@ namespace Klim
                     {
                         color = UserInterface::ColorRefToImVec4(_settings->color_default);
                     }
-                    ImGui::TextColored(color, char_ptr_vector[i]);
+                    ImGui::TextColored(color, char_ptr_vector[i].c_str());
                     char formattedString[50];
                     strcpy_s(formattedString, sizeof(formattedString), "");
                     if (_settings->show_timer == true && timer_vector[i].running == true)
@@ -134,11 +132,11 @@ namespace Klim
                         ImGui::Text("%.1f", timer_vector[i].getElapsedTime());
                         snprintf(formattedString, sizeof(formattedString), " %.1f", timer_vector[i].getElapsedTime());
                     }
-                    if (overlay_window_size.x < ImGui::CalcTextSize(char_ptr_vector[i]).x + ImGui::CalcTextSize(formattedString).x + 30)
+                    if (overlay_window_size.x < ImGui::CalcTextSize(char_ptr_vector[i].c_str()).x + ImGui::CalcTextSize(formattedString).x + 30)
                     {
-                        overlay_window_size.x = ImGui::CalcTextSize(char_ptr_vector[i]).x + ImGui::CalcTextSize(formattedString).x + 30; // TODO replace with window style padding
+                        overlay_window_size.x = ImGui::CalcTextSize(char_ptr_vector[i].c_str()).x + ImGui::CalcTextSize(formattedString).x + 30; // TODO replace with window style padding
                     }
-                    overlay_window_size.y += ImGui::CalcTextSize(char_ptr_vector[i]).y;
+                    overlay_window_size.y += ImGui::CalcTextSize(char_ptr_vector[i].c_str()).y;
                     overlay_window_size.y += 10;
                 }
                 ImGui::PopID();
@@ -190,7 +188,7 @@ namespace Klim
         // Calculate the bottom boundary of the window
         float windowBottom = windowPos.y + windowSize.y;
         ImGui::SetCursorPosY(windowBottom - 30);
-        if (ImGui::Button("Close"))
+        if (ImGui::Button("Save"))
         {
             // check if exit app is bound
             for (std::atomic<Limit>*& limit_ptr : _limit_ptr_vector)
@@ -203,7 +201,7 @@ namespace Klim
                     }
                     else
                     {
-                        ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings);
+                        ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings, logger);
 
                         if (_font_changed)
                         {
@@ -318,7 +316,6 @@ namespace Klim
                 {
                     button_clicked[i] = true;
                     string_vector[i] = in_progress;
-                    std::cout << "button " << i << " clicked [callback]\n";
                 }
             }
 
@@ -340,7 +337,6 @@ namespace Klim
 
             if (_limit_ptr_vector[i]->load().binding_complete == true && string_vector[i] == in_progress)
             {
-                std::cout << "updating ui...\n";
                 string_vector[i] = "";
                 for (int j = 0; j < _limit_ptr_vector[i]->load().max_key_list_size; j++)
                 {
@@ -361,7 +357,6 @@ namespace Klim
 
                 if (button_clicked[i] == true)
                 {
-                    std::cout << "button " << i << " clicked [registered]\n";
                     string_vector[i] = in_progress;
                     button_clicked[i] = false;
                     // line_of_button_clicked = static_cast<int>(i); // this isn't required, but a static cast shows its intentional
@@ -443,6 +438,17 @@ namespace Klim
             ImGui::PopID();
 
             ImGui::Checkbox("Debug", &_settings->debug);
+            if (ImGui::IsItemDeactivatedAfterEdit())
+            {
+                if (_settings->debug)
+                {
+                    ShowWindow(GetConsoleWindow(), SW_RESTORE);
+                }
+                else
+                {
+                    ShowWindow(GetConsoleWindow(), SW_HIDE);
+                }
+            }
             ImGui::SameLine();
             UserInterface::HelpMarker("If you dont know what this does dont use it.");
 
@@ -728,11 +734,17 @@ namespace Klim
                 ::PostQuitMessage(0);
                 return 0;
             case WM_KEYDOWN:
-                hk_instance->KeyboardInputHandler(static_cast<int>(wParam), true);
+                if (!hk_instance->done)
+                {
+                    hk_instance->KeyboardInputHandler(static_cast<int>(wParam), true);
+                }
                 break;
             case WM_KEYUP:
-                hk_instance->KeyboardInputHandler(static_cast<int>(wParam), false);
-                break;
+                if (!hk_instance->done)
+                {
+                    hk_instance->KeyboardInputHandler(static_cast<int>(wParam), false);
+                    break;
+                }
             default:
                 break;
         }

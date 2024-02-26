@@ -7,7 +7,7 @@
 
 namespace Klim
 {
-    void ConfigFile::WriteConfig(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], const Settings* settings)
+    void ConfigFile::WriteConfig(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], const Settings* settings, std::shared_ptr<spdlog::logger> logger)
     {
         Json::Value config;
 
@@ -49,7 +49,7 @@ namespace Klim
         config["frosted_glass"] = settings->frosted_glass;
         config["debug"] = settings->debug;
 
-        StoreConfigToJson(path_to_config_file, config);
+        StoreConfigToJson(path_to_config_file, config, logger);
     }
 
     void ConfigFile::LoadConfig(std::vector<std::atomic<Limit>*> limit_ptr_vector, wchar_t path_to_config_file[MAX_PATH], Settings* settings)
@@ -112,28 +112,31 @@ namespace Klim
         else
         {
             std::cerr << "Error opening file for reading\n";
-            MessageBoxA(nullptr, "Save a hotkey first", nullptr, MB_OK);
             PostQuitMessage(0);
         }
 
         return json_data;
     }
 
-    // TODO make it overwrite the file
-    void ConfigFile::StoreConfigToJson(const wchar_t* file_path, const Json::Value& config_data)
+    void ConfigFile::StoreConfigToJson(const wchar_t* file_path, const Json::Value& config_data, std::shared_ptr<spdlog::logger> logger)
     {
-        std::cout << "creating new config file\n";
         const HANDLE file_handle = CreateFileW(file_path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
         if (file_handle == INVALID_HANDLE_VALUE)
         {
-            std::cerr << "Error opening file for writing\n";
+            if (logger != nullptr)
+            {
+                logger->error("Could not open file for writing");
+            }
             return;
         }
 
         const std::string json_data = config_data.toStyledString();
 
-        std::cout << "writing config\n";
+        if (logger != nullptr)
+        {
+            logger->info("writing config");
+        }
         DWORD bytes_written;
         WriteFile(file_handle, json_data.c_str(), static_cast<DWORD>(json_data.length()), &bytes_written, nullptr);
 
@@ -164,7 +167,7 @@ namespace Klim
         return vec;
     }
 
-    void ConfigFile::SetPathToConfigFile(const wchar_t* config_filename, wchar_t* path_to_config_file)
+    void ConfigFile::SetPathToFileInExeDir(const wchar_t* config_filename, wchar_t* path_to_config_file)
     {
         wchar_t file_path_self[MAX_PATH];
         wchar_t folder_path_self[MAX_PATH];

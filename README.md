@@ -59,7 +59,7 @@ git clone https://github.com/KawaiiKraken/klimV2
 cd klimv2
 git clone https://github.com/Microsoft/vcpkg.git
 .\vcpkg\bootstrap-vcpkg.bat
-.\vcpkg\vcpkg.exe install jsoncpp opengl imgui[core,opengl3-binding,win32-binding]:x64-windows 
+.\vcpkg\vcpkg.exe install jsoncpp opengl spdlog imgui[core,opengl3-binding,win32-binding]:x64-windows 
 .\vpkg\vcpkg.exe integrate install
 .\klim.sln
 ```

@@ -2,6 +2,7 @@
 
 #include "../WinDivert/windivert.h"
 #include "Limit.h"
+#include "helperFunctions.h"
 #include <iomanip>
 #include <thread>
 #include <vector>
@@ -23,7 +24,7 @@ namespace Klim
     class WinDivertShit
     {
         public:
-            WinDivertShit(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, UserInterface* _ui_instance);
+            WinDivertShit(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, UserInterface* _ui_instance, std::shared_ptr<spdlog::logger> logger);
             unsigned long WinDivertFilterThread();
             void UpdateFilter(char* combined_windivert_rules_ptr);
             void SetFilterRuleString(std::vector<std::atomic<Limit>*> limit_ptr_vector, char* combined_windivert_rules);
@@ -55,5 +56,6 @@ namespace Klim
             bool Is30kDL(packet_data* packet);
             bool Is7500DL(packet_data* packet);
             bool should_reinject(packet_data* packet);
+            std::shared_ptr<spdlog::logger> logger;
     };
 }

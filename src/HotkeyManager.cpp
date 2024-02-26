@@ -1,6 +1,5 @@
 #include "HotkeyManager.h"
 #include "ConfigFile.h"
-#include "HelperFunctions.h"
 #include "UserInterface.h"
 #include "WinDivertFunctions.h"
 #include <algorithm>
@@ -8,25 +7,26 @@
 
 namespace Klim
 {
-    HotkeyManager::HotkeyManager(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, Settings* settings)
-        : done(false)
-        , _cur_line(-1)
+    HotkeyManager::HotkeyManager(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, Settings* settings, std::shared_ptr<spdlog::logger> logger)
+        : _cur_line(-1)
         , _current_hotkey_list()
         , _limit_ptr_vector(limit_ptr_vector)
         , ui_instance(nullptr)
         , _settings(settings)
+        , logger(logger)
     {
     }
 
 
     void HotkeyManager::AsyncBindHotkey(int i)
     {
-        _cur_line = i;
-        if (_limit_ptr_vector[_cur_line]->load().binding_complete == false)
+        if (!done)
         {
             MessageBox(nullptr, L"error hotkey is already being bound...", nullptr, MB_OK);
             return;
         }
+
+        _cur_line = i;
 
         Limit temp_limit = _limit_ptr_vector[_cur_line]->load();
         temp_limit.binding_complete = false;
@@ -46,12 +46,13 @@ namespace Klim
 
         temp_limit = _limit_ptr_vector[_cur_line]->load();
         temp_limit.update_ui = true;
-        std::cout << "current size: " << _current_hotkey_list.size() << "\n";
+        logger->info("_current_hotkey_list.size = {}", _current_hotkey_list.size());
         temp_limit.binding_complete = true;
         _limit_ptr_vector[_cur_line]->store(temp_limit);
         _cur_line = -1;
     }
 
+    // this function is part of the hotkey binding, is not related to anything else
     void HotkeyManager::KeyboardInputHandler(const int key, const bool is_key_down)
     {
         if (_cur_line == -1)
@@ -61,20 +62,20 @@ namespace Klim
 
         if (is_key_down)
         {
-            std::cout << "Key Down: " << key << "\n";
             const std::vector<int>::iterator iterator = std::find(_current_hotkey_list.begin(), _current_hotkey_list.end(), key);
             if (iterator == _current_hotkey_list.end())
             {
+                logger->info("input handler: key down: {}", key);
                 _current_hotkey_list.push_back(key);
             }
         }
         else
         {
-            std::cout << "Key Up: " << key << "\n";
             std::vector<int>::iterator it = std::find(_current_hotkey_list.begin(), _current_hotkey_list.end(), key);
             Limit temp_limit = _limit_ptr_vector[_cur_line]->load();
             for (int i = 0; i < _current_hotkey_list.size(); i++)
             {
+                logger->info("input handler: key up: {}", key);
                 temp_limit.key_list[i] = _current_hotkey_list[i];
             }
             _limit_ptr_vector[_cur_line]->store(temp_limit);
@@ -106,7 +107,7 @@ namespace Klim
             std::sort(currently_pressed_keys.begin(), currently_pressed_keys.end());
             const bool contains_all = std::includes(currently_pressed_keys.begin(), currently_pressed_keys.end(), key_list.begin(), key_list.end());
 
-            if (contains_all && !_chatbox_open)
+            if ((contains_all && !_chatbox_open) || (contains_all && limit_ptr_vector[i]->load().type == Klim::exit_app))
             {
                 OnTriggerHotkey(limit_ptr_vector[i], debug, limit_ptr_vector);
             }
@@ -145,12 +146,12 @@ namespace Klim
     {
         if (limit_arg->load().type == exit_app)
         {
-            Helper::ExitApp(debug);
+            Helper::ExitApp(debug, logger);
         }
 
-        if (!(Helper::D2Active() || debug))
+        if (!debug && !Helper::D2Active(logger))
         {
-            std::cout << "hotkey ignored: d2 is not the active window and debug mode is not on\n";
+            logger->info("hotkey ignored: d2 is not the active window and debug mode is not on");
             return;
         }
 
@@ -165,12 +166,12 @@ namespace Klim
                     {
 
                         ui_instance->timer_vector[i].reset();
-                        std::cout << limit_arg->load().name << " TIMER stop\n";
+                        logger->info("timer stop {}", limit_arg->load().name);
                     }
                     else
                     {
                         ui_instance->timer_vector[i].start();
-                        std::cout << limit_arg->load().name << " TIMER start\n";
+                        logger->info("timer start {}", limit_arg->load().name);
                     }
                 }
             }
@@ -192,7 +193,7 @@ namespace Klim
                 limit_arg->store(limit);
             }
 
-            std::cout << "state of " << limit_arg->load().name << ": " << limit_arg->load().state << "\n";
+            logger->info("state of {}: {}", limit_arg->load().name, limit_arg->load().state);
             windivert_instance->SetFilterRuleString(limit_ptr_vector, combined_windivert_rules);
             windivert_instance->UpdateFilter(combined_windivert_rules);
         }
@@ -226,16 +227,16 @@ namespace Klim
                 _currently_pressed_keys.push_back(key);
                 if (key == VK_RETURN)
                 {
-                    if (Helper::D2Active())
+                    if (Helper::D2Active(logger))
                     {
                         _chatbox_open = !_chatbox_open;
-                        std::cout << "chatbox " << (_chatbox_open ? "open\n" : "closed\n");
+                        logger->info("chatbox {}", _chatbox_open ? "open" : "closed");
                     }
                 }
                 // chatbox can be closed with both escape too
                 if (key == VK_ESCAPE)
                 {
-                    if (Helper::D2Active())
+                    if (Helper::D2Active(logger))
                     {
                         if (_chatbox_open)
                         {

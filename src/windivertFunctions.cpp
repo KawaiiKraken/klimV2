@@ -20,10 +20,11 @@ namespace Klim
     HANDLE hThread2 = nullptr;
     bool filterThreadRunning = false;
 
-    WinDivertShit::WinDivertShit(const std::vector<std::atomic<Limit>*>& _limit_ptr_vector, UserInterface* _ui_instance)
+    WinDivertShit::WinDivertShit(const std::vector<std::atomic<Limit>*>& _limit_ptr_vector, UserInterface* _ui_instance, std::shared_ptr<spdlog::logger> logger)
         : _limit_ptr_vector(_limit_ptr_vector)
         , _ui_instance(_ui_instance)
         , console(nullptr)
+        , logger(logger)
     {
     }
 
@@ -52,7 +53,7 @@ namespace Klim
         {
             reinject = true;
         }
-        std::cout << "filter: " << combined_windivert_rules << "\n";
+        logger->info("filter: {}", combined_windivert_rules);
     }
 
 
@@ -60,30 +61,29 @@ namespace Klim
     {
         char combined_windivert_rules[1000];
         strcpy_s(combined_windivert_rules, sizeof(combined_windivert_rules), combined_windivert_rules_ptr);
-        std::cout << "filter: " << combined_windivert_rules << "\n";
         if (hWindivert != nullptr)
         {
-            std::cout << "deleting old filter\n";
+            logger->info("deleting old filter");
             if (!WinDivertClose(hWindivert))
             {
-                std::cout << "error! failed to open the WinDivert device: " << GetLastError() << "\n";
+                logger->error("Failed to close WinDivert device, {}", GetLastError());
             }
         }
-        std::cout << "creating new filter\n";
+        logger->info("creating new filter");
         hWindivert = WinDivertOpen(combined_windivert_rules, WINDIVERT_LAYER_NETWORK, priority, 0);
         if (hWindivert == INVALID_HANDLE_VALUE)
         {
             if (GetLastError() == ERROR_INVALID_PARAMETER && !WinDivertHelperCompileFilter(combined_windivert_rules_ptr, WINDIVERT_LAYER_NETWORK, nullptr, 0, &err_str, nullptr))
             {
-                std::cout << "error! invalid filter: " << err_str << "\n";
+                logger->error("Invalid filter, {}", err_str);
                 exit(EXIT_FAILURE);
             }
-            std::cout << "error! failed to open the WinDivert device: " << GetLastError() << "\n";
+            logger->error("Failed to open WinDivert device, {}", GetLastError());
             exit(EXIT_FAILURE);
         }
         if (!filterThreadRunning)
         {
-            std::cout << "starting windivert thread\n";
+            logger->info("Starting windivert thread");
             std::thread myThread([this] { this->WinDivertFilterThread(); });
             myThread.detach();
             filterThreadRunning = true;
@@ -93,53 +93,107 @@ namespace Klim
 
     void WinDivertShit::LogPacket(packet_data* packet)
     {
+        std::string packet_info = "";
+
         // Dump packet info...
         if (!passthrough)
         {
-            SetConsoleTextAttribute(console, FOREGROUND_RED);
-            std::cout << "BLOCK ";
-            SetConsoleTextAttribute(console, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+            packet_info += "BLOCK";
         }
 
         if (packet->tcp_header != nullptr)
         {
-            std::cout << " tcp.Flags=";
+            packet_info += " tcp.Flags=";
             if (packet->tcp_header->Fin)
-                std::cout << "[FIN]";
+            {
+                packet_info += "[FIN]";
+            }
             if (packet->tcp_header->Rst)
-                std::cout << "[RST]";
+            {
+                packet_info += "[RST]";
+            }
             if (packet->tcp_header->Urg)
-                std::cout << "[URG]";
+            {
+                packet_info += "[URG]";
+            }
             if (packet->tcp_header->Syn)
-                std::cout << "[SYN]";
+            {
+                packet_info += "[SYN]";
+            }
             if (packet->tcp_header->Psh)
-                std::cout << "[PSH]";
+            {
+                packet_info += "[PSH]";
+            }
             if (packet->tcp_header->Ack)
-                std::cout << "[ACK]";
+            {
+                packet_info += "[ACK]";
+            }
 
             if (packet->tcp_header->Ack)
             {
-                std::cout << "AckNum=" << ntohl(packet->tcp_header->AckNum);
+                packet_info += " AckNum=" + std::to_string(ntohl(packet->tcp_header->AckNum));
             }
-            std::cout << " SeqNum=" << ntohl(packet->tcp_header->SeqNum);
+            packet_info += " SeqNum=" + std::to_string(ntohl(packet->tcp_header->SeqNum));
         }
 
         if (packet->udp_header != nullptr)
         {
-            std::cout << "udp.SrcPort=" << ntohs(packet->udp_header->SrcPort) << " udp.DstPort=" << ntohs(packet->udp_header->DstPort);
+            packet_info += " udp.SrcPort=" + std::to_string(ntohs(packet->udp_header->SrcPort));
+            packet_info += " udp.DstPort=" + std::to_string(ntohs(packet->udp_header->DstPort));
         }
 
-        std::cout << " size=" << packet->receive_length;
-        std::cout << "\n";
+        packet_info += " size=" + std::to_string(packet->receive_length);
+        logger->info(packet_info);
     }
 
 
     // this is really jank i need to rework this
     bool WinDivertShit::should_reinject(packet_data* packet)
     {
+        // the Is{port} thing is not associated with the limit types so it has to have a separate if statement for each rn
         if (Is3074DL(packet))
         {
             if (!Limit::GetLimitPtrByType(_limit_ptr_vector, Klim::limit_3074_dl)->load().block)
+            {
+                return true;
+            }
+        }
+
+        if (Is3074UL(packet))
+        {
+            if (!Limit::GetLimitPtrByType(_limit_ptr_vector, Klim::limit_3074_ul)->load().block)
+            {
+                return true;
+            }
+        }
+
+        if (Is27kDL(packet))
+        {
+            if (!Limit::GetLimitPtrByType(_limit_ptr_vector, Klim::limit_27k_dl)->load().block)
+            {
+                return true;
+            }
+        }
+
+        if (Is27kUL(packet))
+        {
+            if (!Limit::GetLimitPtrByType(_limit_ptr_vector, Klim::limit_27k_ul)->load().block)
+            {
+                return true;
+            }
+        }
+
+        if (Is30kDL(packet))
+        {
+            if (!Limit::GetLimitPtrByType(_limit_ptr_vector, Klim::limit_30k_dl)->load().block)
+            {
+                return true;
+            }
+        }
+
+        if (Is7500DL(packet))
+        {
+            if (!Limit::GetLimitPtrByType(_limit_ptr_vector, Klim::limit_7500_dl)->load().block)
             {
                 return true;
             }
@@ -161,7 +215,7 @@ namespace Klim
                 {
                     if (!printed_start)
                     {
-                        std::cout << "reinjecting packets (" << packet_buffer->size() << ")... ";
+                        logger->info("reinjecting packets ({})...", packet_buffer->size());
                         printed_start = true;
                     }
 
@@ -169,7 +223,7 @@ namespace Klim
                     {
                         if (GetLastError() != 6) // expected error so no need for debug output
                         {
-                            std::cout << "warning! failed to re-inject buffer packet: " << GetLastError() << " retrying...\n";
+                            logger->warn("Failed to re-inject buffer packet: {}. retrying...", GetLastError());
                         }
                     }
                     else
@@ -217,19 +271,19 @@ namespace Klim
             {
                 if (GetLastError() != 6 && GetLastError() != 995) // expected error so i just dont output debug for it
                 {
-                    std::cout << "switching filters.. " << GetLastError() << "\n ";
+                    logger->warn("switching filters.. {}", GetLastError());
                 }
                 continue;
             }
 
             if (!WinDivertHelperParsePacket(cur_packet.packet, cur_packet.receive_length, nullptr, nullptr, nullptr, nullptr, nullptr, &cur_packet.tcp_header, &cur_packet.udp_header, nullptr, &cur_packet.receive_length, nullptr, nullptr))
             {
-                std::cout << "parse failed: " << GetLastError() << "\n ";
+                logger->warn("parse failed: {}", GetLastError());
             }
 
             if (!WinDivertHelperCalcChecksums(cur_packet.packet, sizeof(cur_packet.packet), nullptr, 0))
             {
-                std::cout << "warning! Failed to recalculate checksums: " << GetLastError() << "\n";
+                logger->warn("Failed to recalculate checksums: {}", GetLastError());
             }
 
             if (Is7500DL(&cur_packet) && !cur_packet.tcp_header->Fin && !cur_packet.tcp_header->Psh)
@@ -241,7 +295,7 @@ namespace Klim
             {
                 if (!WinDivertSendEx(hWindivert, cur_packet.packet, sizeof(cur_packet.packet), nullptr, 0, &cur_packet.receive_address, address_length, nullptr))
                 {
-                    std::cout << "warning! failed to re-inject packet: " << GetLastError() << "\n";
+                    logger->warn("Failed to re-inject packet: {}", GetLastError());
                 }
             }
             else

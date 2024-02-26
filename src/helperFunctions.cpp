@@ -1,8 +1,14 @@
 #include "HelperFunctions.h"
 #include "ConfigFile.h"
+#include <filesystem>
 #include <iostream>
 #include <psapi.h>
+#include <shellapi.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/rotating_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <windows.h>
+
 
 namespace Klim
 {
@@ -22,9 +28,12 @@ namespace Klim
         return res;
     }
 
-    void Helper::ExitApp(const bool debug)
+    void Helper::ExitApp(const bool debug, std::shared_ptr<spdlog::logger> logger)
     {
-        std::cout << "shutting down\n";
+        if (logger != nullptr)
+        {
+            logger->info("shutting down");
+        }
         ShellExecute(nullptr, nullptr, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", nullptr, SW_HIDE);
         if (!debug)
         {
@@ -33,7 +42,8 @@ namespace Klim
         PostQuitMessage(0);
     }
 
-    bool Helper::D2Active()
+    // logger can be nullptr
+    bool Helper::D2Active(std::shared_ptr<spdlog::logger> logger)
     {
         TCHAR buffer[MAX_PATH] = { 0 };
         DWORD dw_proc_id = 0;
@@ -45,7 +55,12 @@ namespace Klim
         CloseHandle(process_handle);
 
         const wchar_t* filename = GetFileName(buffer);
-        std::wcout << L"active window filename: " << filename << L"\n";
+        if (logger != nullptr)
+        {
+            char filename_str[MAX_PATH];
+            WideCharToMultiByte(CP_UTF8, 0, filename, MAX_PATH, filename_str, MAX_PATH, 0, 0);
+            logger->info("active window: {}", filename_str);
+        }
 
         if (wcscmp(filename, L"destiny2.exe") == 0)
         {
@@ -62,7 +77,7 @@ namespace Klim
         HANDLE token_handle = nullptr;
         if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token_handle))
         {
-            TOKEN_ELEVATION elevation;
+            TOKEN_ELEVATION elevation = { 0 };
             DWORD cb_size = sizeof(TOKEN_ELEVATION);
             if (GetTokenInformation(token_handle, TokenElevation, &elevation, sizeof(elevation), &cb_size))
             {
@@ -89,5 +104,36 @@ namespace Klim
             filename++;
         }
         return filename;
+    }
+
+    std::shared_ptr<spdlog::logger> Helper::LoggerInit(const std::string& log_file_name)
+    {
+        // Remove old log files on startup
+        for (const auto& entry : std::filesystem::directory_iterator("."))
+        {
+            if (entry.is_regular_file() && entry.path().filename().string().find(log_file_name) != std::string::npos)
+            {
+                std::filesystem::remove(entry);
+            }
+        }
+        spdlog::init_thread_pool(8192, 1);
+
+        wchar_t filename[MAX_PATH];
+        mbstowcs_s(0, filename, log_file_name.c_str(), MAX_PATH);
+
+        wchar_t path[MAX_PATH];
+        ConfigFile::SetPathToFileInExeDir(filename, path);
+
+        auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file_name);
+        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+
+        file_sink->set_level(spdlog::level::trace);
+        console_sink->set_level(spdlog::level::trace);
+
+        std::shared_ptr<spdlog::logger> logger = std::make_shared<spdlog::logger>("multi_sink", spdlog::sinks_init_list { file_sink, console_sink });
+        logger->set_pattern("[%M:%S.%e] [%^%l%$] %v");
+        logger->set_level(spdlog::level::trace);
+        logger->flush_on(spdlog::level::trace);
+        return logger;
     }
 }
