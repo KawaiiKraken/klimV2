@@ -733,12 +733,14 @@ namespace Klim
             case WM_DESTROY:
                 ::PostQuitMessage(0);
                 return 0;
+            case WM_SYSKEYDOWN:
             case WM_KEYDOWN:
                 if (!hk_instance->done)
                 {
                     hk_instance->KeyboardInputHandler(static_cast<int>(wParam), true);
                 }
                 break;
+            case WM_SYSKEYUP:
             case WM_KEYUP:
                 if (!hk_instance->done)
                 {
