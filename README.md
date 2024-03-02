@@ -1,22 +1,21 @@
 # klim v2
 kreken's destiny 2 netlimiter 
 
+give this repo a star on github if you like the project!
+
 for support join our server at the [thrallway](https://thrallway.com)
 
 # features
 - lims: 3074DL, 3074UL, 27kDL, 27UL, 30kDL, 7500DL, whole game 800b/s DL
 - game pauser
-- config gui 
-- undetected
-- limits without a delay 
 - overlay 
 - timers 
 - packet logs
-- hotkeys only work when d2 is focused
+- etc etc just install it and try lol
 
 # screenshots
-![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/hotkey_tab.png "hotkey tab")
-![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/visual_tab.png "visual tab")
+![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/hotkey_tab_new_theme.png "hotkey tab")
+![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/visuals_tab_new_theme.png "visual tab")
 ![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/overlay.png "overlay")
  
 # installation
@@ -37,23 +36,15 @@ for support join our server at the [thrallway](https://thrallway.com)
 - whole game limit requires windows pro
 - the overlay can be seen when screensharing for some people 
 
-# upcoming features
-- turn off hotkeys when d2 chatbox is open
-- hide overlay when d2 isnt focused
-- make overlay relative to d2 window (so that it works in windowed mode)
-- custom overlay position
-- changing binds without restarting klim
-- better lims?
-
 # how to contribute
-- give this repo a star on github
 - give feature ideas/requests at the [thrallway](https://thrallway.com)
 - report bugs via a github issue or at the [thrallway](https://thrallway.com)
 - clone this repo and make a pull request with your changes
 - idk buy me an expansion or smth if you really like this project
-- kofi soonTM
+- kofi soonTM?
 
 # compiling from source
+you will need to also install visual studio and the c++ desktop development pack
 ```
 git clone https://github.com/KawaiiKraken/klimV2
 cd klimv2
