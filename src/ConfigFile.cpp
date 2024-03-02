@@ -52,6 +52,7 @@ namespace Klim
         config["show_console"] = settings->show_console;
         config["always_on_top"] = settings->always_on_top;
         config["use_custom_theme"] = settings->use_custom_theme;
+        config["fps"] = settings->fps;
 
         StoreConfigToJson(path_to_config_file, config, logger);
     }
@@ -93,6 +94,7 @@ namespace Klim
         settings->show_console = loaded_config["show_console"].asBool();
         settings->always_on_top = loaded_config["always_on_top"].asBool();
         settings->use_custom_theme = loaded_config["use_custom_theme"].asBool();
+        settings->fps = loaded_config["fps"].asInt();
     }
 
     bool ConfigFile::FileExists(const LPCTSTR file_path)

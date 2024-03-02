@@ -54,15 +54,16 @@ DWORD WINAPI RunGuiWrapper(LPVOID lpParam)
 
 int main()
 {
-    // dumb way to do it but wtv
-    hotkey_manager.ui_instance = &user_interface;
-    logger->info("init");
-
     if (!Klim::Helper::RunningAsAdmin())
     {
         MessageBox(nullptr, L"ERROR: not running as admin", L"ERROR", MB_ICONERROR | MB_DEFBUTTON2);
         return 0;
     }
+
+
+    hotkey_manager.ui_instance = &user_interface;
+    logger->info("init");
+
 
     Klim::ConfigFile::SetPathToFileInExeDir(L"config.json", path_to_config_file);
     if (Klim::ConfigFile::FileExists(path_to_config_file))

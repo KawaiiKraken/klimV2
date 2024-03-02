@@ -23,6 +23,20 @@ namespace Klim
             bool show_config = false;
             std::shared_ptr<spdlog::logger> logger;
             int RunGui();
+
+
+            class FrameRateLimiter
+            {
+                public:
+                    FrameRateLimiter(int targetFPS);
+                    void StartFrame();
+
+                private:
+                    std::chrono::steady_clock::time_point lastFrameTime;
+                    std::chrono::steady_clock::duration targetFrameDuration;
+            };
+
+
             class Timer
             {
                 public:
@@ -82,7 +96,7 @@ namespace Klim
 
         private:
             static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-            std::string FormatHotkeyStatusWcString(const std::atomic<Limit>* limit_ptr);
+            std::string FormatHotkeyStatus(const std::atomic<Limit>* limit_ptr);
             std::vector<std::atomic<Limit>*> _limit_ptr_vector;
 
             // Data stored per platform window
@@ -115,7 +129,7 @@ namespace Klim
             ImVec2 _window_size;
             ImVec2 _display_size;
             ImFont* _custom_font;
-            bool _font_changed = false;
+            bool _restart_required = false;
             int _line_of_button_clicked;
     };
 }

@@ -10,9 +10,8 @@ namespace Klim
 {
     class Limit;
 
-    class Settings
+    struct Settings
     {
-        public:
             COLORREF color_default = RGB(255, 255, 255);
             COLORREF color_on = RGB(255, 0, 0);
             COLORREF color_off = RGB(255, 255, 255);
@@ -29,6 +28,7 @@ namespace Klim
             bool show_console = false;
             bool always_on_top = false;
             bool use_custom_theme = true;
+            int fps = 200;
     };
 
 
