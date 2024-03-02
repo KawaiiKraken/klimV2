@@ -67,7 +67,13 @@ namespace Klim
                 const int scan_code = MapVirtualKey(limit_ptr->load().key_list[i], 0);
 
                 char name_buffer[256];
-                GetKeyNameTextA(scan_code << 16, name_buffer, static_cast<int>(std::size(name_buffer)));
+
+                if (!GetKeyNameTextA(scan_code << 16, name_buffer, static_cast<int>(std::size(name_buffer))))
+                {
+                    // this should prob be a ret check for keyname or mapvk
+                    std::string mouse_button = Helper::GetMouseButtonNameByVkCode(limit_ptr->load().key_list[i]);
+                    strcpy_s(name_buffer, sizeof(name_buffer), mouse_button.c_str());
+                }
 
                 hotkey_status += name_buffer;
             }
@@ -270,6 +276,7 @@ namespace Klim
             else
             {
                 string_vector[i] = "";
+                // TODO make this shit into a function
                 for (int j = 0; j < _limit_ptr_vector[i]->load().max_key_list_size; j++)
                 {
                     if (_limit_ptr_vector[i]->load().key_list[j] == 0)
@@ -283,7 +290,12 @@ namespace Klim
 
                     const int scan_code = MapVirtualKey(_limit_ptr_vector[i]->load().key_list[j], 0);
                     char name_buffer[256];
-                    GetKeyNameTextA(scan_code << 16, name_buffer, static_cast<int>(std::size(name_buffer)));
+                    if (!GetKeyNameTextA(scan_code << 16, name_buffer, static_cast<int>(std::size(name_buffer))))
+                    {
+                        // this should prob be a ret check for keyname or mapvk
+                        std::string mouse_button = Helper::GetMouseButtonNameByVkCode(_limit_ptr_vector[i]->load().key_list[j]);
+                        strcpy_s(name_buffer, sizeof(name_buffer), mouse_button.c_str());
+                    }
                     string_vector[i] += name_buffer;
                 }
             }

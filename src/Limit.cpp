@@ -136,7 +136,7 @@ namespace Klim
     void Limit::ToggleSuspend(std::atomic<Limit>* suspend)
     {
         // prevents from pausing random stuff if running with debug
-        if (!Helper::D2Active(nullptr))
+        if (!Helper::IsDestinyTheActiveWindow(nullptr))
         {
             MessageBox(nullptr, L"failed to pause...\ndestiny2.exe is not the active window", nullptr, MB_OK | MB_ICONWARNING);
             return;
