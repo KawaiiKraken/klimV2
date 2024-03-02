@@ -48,6 +48,10 @@ namespace Klim
         config["show_timer"] = settings->show_timer;
         config["frosted_glass"] = settings->frosted_glass;
         config["debug"] = settings->debug;
+        config["force_passthrough"] = settings->force_passthrough;
+        config["show_console"] = settings->show_console;
+        config["always_on_top"] = settings->always_on_top;
+        config["use_custom_theme"] = settings->use_custom_theme;
 
         StoreConfigToJson(path_to_config_file, config, logger);
     }
@@ -85,6 +89,10 @@ namespace Klim
         settings->show_timer = loaded_config["show_timer"].asBool();
         settings->frosted_glass = loaded_config["frosted_glass"].asBool();
         settings->debug = loaded_config["debug"].asBool();
+        settings->force_passthrough = loaded_config["force_passthrough"].asBool();
+        settings->show_console = loaded_config["show_console"].asBool();
+        settings->always_on_top = loaded_config["always_on_top"].asBool();
+        settings->use_custom_theme = loaded_config["use_custom_theme"].asBool();
     }
 
     bool ConfigFile::FileExists(const LPCTSTR file_path)

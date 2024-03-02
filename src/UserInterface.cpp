@@ -166,7 +166,17 @@ namespace Klim
         // static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
         static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
         ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImVec2(250, 360));
+        // ImGui::SetNextWindowSize(ImVec2(250, 360));
+
+        // does this have to happen every frame?
+        if (_settings->use_custom_theme)
+        {
+            ImGuiApplyTheme_EnemyMouse();
+        }
+        else
+        {
+            ImGui::StyleColorsDark();
+        }
 
         ImGui::Begin("Config", nullptr, flags);
         if (ImGui::BeginTabBar("MyTabBar"))
@@ -179,22 +189,29 @@ namespace Klim
 
             if (ImGui::BeginTabItem("Visuals"))
             {
-                UserInterface::UiConfigTab();
+                UserInterface::VisualsTab();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Advanced"))
+            {
+                UserInterface::AdvancedTab();
                 ImGui::EndTabItem();
             }
 
             ImGui::EndTabBar();
         }
 
-        _window_size = ImGui::GetWindowSize();
-        SetWindowPos(window_handle, 0, 0, 0, static_cast<int>(_window_size.x), static_cast<int>(_window_size.y), SWP_NOZORDER | SWP_NOMOVE);
+        //_window_size = ImGui::GetWindowSize();
+        // set size
+        // SetWindowPos(window_handle, 0, 0, 0, static_cast<int>(_window_size.x), static_cast<int>(_window_size.y), SWP_NOZORDER | SWP_NOMOVE);
 
         ImVec2 windowPos = ImGui::GetWindowPos();
         ImVec2 windowSize = ImGui::GetWindowSize();
         // Calculate the bottom boundary of the window
-        float windowBottom = windowPos.y + windowSize.y;
-        ImGui::SetCursorPosY(windowBottom - 30);
-        if (ImGui::Button("Save"))
+        // float windowBottom = windowPos.y + windowSize.y;
+        // ImGui::SetCursorPosY(windowBottom - 30);
+        if (ImGui::Button("Start"))
         {
             // check if exit app is bound
             for (std::atomic<Limit>*& limit_ptr : _limit_ptr_vector)
@@ -264,7 +281,7 @@ namespace Klim
         {
             string_vector.emplace_back("");
         }
-        ImGui::SeparatorText("");
+        ImGui::SeparatorText("Hotkeys");
 
         float button_size = 0.0f;
         for (size_t i = 0; i < _limit_ptr_vector.size(); i++)
@@ -394,7 +411,8 @@ namespace Klim
             }
     }
 
-    void UserInterface::UiConfigTab()
+
+    void UserInterface::VisualsTab()
     {
         // TODO make it save config on every edit
         ImGui::SeparatorText("Overlay");
@@ -427,7 +445,7 @@ namespace Klim
 
             ImGui::Text("Text size");
             ImGui::SameLine();
-            UserInterface::HelpMarker("REQUIRES RESTART TO TAKE EFFECT");
+            UserInterface::HelpMarker("restart required (its automatic)");
             ImGui::InputInt("", &_settings->font_size);
             if (ImGui::IsItemDeactivatedAfterEdit())
             {
@@ -449,10 +467,20 @@ namespace Klim
             ImGui::Combo("", &_settings->window_location, possible_window_pos, IM_ARRAYSIZE(possible_window_pos));
             ImGui::PopID();
 
-            ImGui::Checkbox("Debug", &_settings->debug);
+            ImGui::Checkbox("Custom Theme", &_settings->use_custom_theme);
+            ImGui::SameLine();
+            UserInterface::HelpMarker("blu");
+        }
+    }
+
+    void UserInterface::AdvancedTab()
+    {
+        ImGui::SeparatorText("Advanced");
+        {
+            ImGui::Checkbox("Show Console", &_settings->show_console);
             if (ImGui::IsItemDeactivatedAfterEdit())
             {
-                if (_settings->debug)
+                if (_settings->show_console)
                 {
                     ShowWindow(GetConsoleWindow(), SW_RESTORE);
                 }
@@ -462,15 +490,32 @@ namespace Klim
                 }
             }
             ImGui::SameLine();
-            UserInterface::HelpMarker("If you dont know what this does dont use it.");
+            UserInterface::HelpMarker("dont select text with mouse, that crashes it lmao");
 
+            ImGui::Checkbox("Debug", &_settings->debug);
+            ImGui::SameLine();
+            UserInterface::HelpMarker("debug mode (dont use)");
 
-            // ImGui::Text("Theme");
-            // ImGui::SameLine();
-            // UserInterface::HelpMarker("coming soon..?");
+            ImGui::Checkbox("passthrough", &_settings->force_passthrough);
+            ImGui::SameLine();
+            UserInterface::HelpMarker("dont block/limit anything");
+
+            ImGui::Checkbox("always on top", &_settings->always_on_top);
+            if (ImGui::IsItemDeactivatedAfterEdit())
+            {
+                if (_settings->always_on_top)
+                {
+                    SetWindowPos(GetConsoleWindow(), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+                }
+                else
+                {
+                    SetWindowPos(GetConsoleWindow(), HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+                }
+            }
+            ImGui::SameLine();
+            UserInterface::HelpMarker("console only");
         }
     }
-
 
     void UserInterface::SetHwndPos(HWND hwnd)
     {
@@ -759,10 +804,72 @@ namespace Klim
                     hk_instance->KeyboardInputHandler(static_cast<int>(wParam), false);
                     break;
                 }
-            default:
-                break;
         }
 
         return ::DefWindowProcW(hWnd, msg, wParam, lParam);
+    }
+
+    void UserInterface::ImGuiApplyTheme_EnemyMouse()
+    {
+
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.Alpha = 1.0;
+        style.Colors[ImGuiCol_WindowBg].w = 0.83f;
+        style.ChildRounding = 3;
+        style.WindowRounding = 3;
+        style.GrabRounding = 1;
+        style.GrabMinSize = 20;
+        style.FrameRounding = 3;
+
+
+        style.Colors[ImGuiCol_Text] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
+        style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.00f, 0.40f, 0.41f, 1.00f);
+        style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+        style.Colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+        style.Colors[ImGuiCol_Border] = ImVec4(0.00f, 1.00f, 1.00f, 0.65f);
+        style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+        style.Colors[ImGuiCol_FrameBg] = ImVec4(0.44f, 0.80f, 0.80f, 0.18f);
+        style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.44f, 0.80f, 0.80f, 0.27f);
+        style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.44f, 0.81f, 0.86f, 0.66f);
+        style.Colors[ImGuiCol_TitleBg] = ImVec4(0.14f, 0.18f, 0.21f, 0.73f);
+        style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.54f);
+        style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.00f, 1.00f, 1.00f, 0.27f);
+        style.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.20f);
+        style.Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.22f, 0.29f, 0.30f, 0.71f);
+        style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.00f, 1.00f, 1.00f, 0.44f);
+        style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.00f, 1.00f, 1.00f, 0.74f);
+        style.Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
+        style.Colors[ImGuiCol_PopupBg] = ImVec4(0.16f, 0.24f, 0.22f, 0.60f);
+        style.Colors[ImGuiCol_CheckMark] = ImVec4(0.00f, 1.00f, 1.00f, 0.68f);
+        style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.00f, 1.00f, 1.00f, 0.36f);
+        style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.00f, 1.00f, 1.00f, 0.76f);
+        style.Colors[ImGuiCol_Button] = ImVec4(0.00f, 0.65f, 0.65f, 0.46f);
+        style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.01f, 1.00f, 1.00f, 0.43f);
+        style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.00f, 1.00f, 1.00f, 0.62f);
+        style.Colors[ImGuiCol_Tab] = ImVec4(0.00f, 0.65f, 0.65f, 0.46f);
+        style.Colors[ImGuiCol_TabHovered] = ImVec4(0.01f, 1.00f, 1.00f, 0.43f);
+        style.Colors[ImGuiCol_TabActive] = ImVec4(0.00f, 1.00f, 1.00f, 0.62f);
+        style.Colors[ImGuiCol_Header] = ImVec4(0.00f, 1.00f, 1.00f, 0.33f);
+        style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.00f, 1.00f, 1.00f, 0.42f);
+        style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.00f, 1.00f, 1.00f, 0.54f);
+        style.Colors[ImGuiCol_Separator] = ImVec4(0.00f, 0.50f, 0.50f, 0.33f);
+        style.Colors[ImGuiCol_SeparatorHovered] = ImVec4(0.00f, 0.50f, 0.50f, 0.47f);
+        style.Colors[ImGuiCol_SeparatorActive] = ImVec4(0.00f, 0.70f, 0.70f, 1.00f);
+        style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 1.00f, 1.00f, 0.54f);
+        style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.00f, 1.00f, 1.00f, 0.74f);
+        style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
+        /*
+        style.Colors[ImGuiCol_CloseButton] = ImVec4(0.00f, 0.78f, 0.78f, 0.35f);
+        style.Colors[ImGuiCol_CloseButtonHovered] = ImVec4(0.00f, 0.78f, 0.78f, 0.47f);
+        style.Colors[ImGuiCol_CloseButtonActive] = ImVec4(0.00f, 0.78f, 0.78f, 1.00f);
+        */
+        style.Colors[ImGuiCol_PlotLines] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
+        style.Colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
+        style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
+        style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
+        style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.00f, 1.00f, 1.00f, 0.22f);
+        // style.Colors[ImGuiCol_TooltipBg] = ImVec4(0.00f, 0.13f, 0.13f, 0.90f);
+        style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.13f, 0.13f, 0.90f);
+        // style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.04f, 0.10f, 0.09f, 0.51f);
     }
 }

@@ -37,7 +37,7 @@ Klim::Settings settings;
 std::shared_ptr<spdlog::logger> logger = Klim::Helper::LoggerInit("log.txt");
 Klim::HotkeyManager hotkey_manager(limit_ptr_vector, &settings, logger);
 Klim::UserInterface user_interface(limit_ptr_vector, path_to_config_file, &settings, logger);
-Klim::WinDivertShit windivert_shit(limit_ptr_vector, &user_interface, logger);
+Klim::WinDivertShit windivert_shit(limit_ptr_vector, &user_interface, logger, &settings);
 Klim::UserInterface* Klim::UserInterface::ui_instance = &user_interface;
 Klim::HotkeyManager* Klim::UserInterface::hk_instance = &hotkey_manager;
 Klim::WinDivertShit* Klim::HotkeyManager::windivert_instance = &windivert_shit;
@@ -70,10 +70,14 @@ int main()
         Klim::ConfigFile::LoadConfig(limit_ptr_vector, path_to_config_file, &settings);
     }
 
-    if (!settings.debug)
+    if (!settings.show_console)
     {
-        // hide the console if not running with debug on
         ShowWindow(GetConsoleWindow(), SW_HIDE);
+    }
+
+    if (settings.always_on_top)
+    {
+        SetWindowPos(GetConsoleWindow(), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     }
 
     user_interface.show_config = true;

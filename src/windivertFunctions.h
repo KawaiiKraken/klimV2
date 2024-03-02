@@ -20,11 +20,12 @@ namespace Klim
 {
     class Limit;
     class UserInterface;
+    struct Settings;
 
     class WinDivertShit
     {
         public:
-            WinDivertShit(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, UserInterface* _ui_instance, std::shared_ptr<spdlog::logger> logger);
+            WinDivertShit(const std::vector<std::atomic<Limit>*>& limit_ptr_vector, UserInterface* _ui_instance, std::shared_ptr<spdlog::logger> logger, Settings* settings);
             unsigned long WinDivertFilterThread();
             void UpdateFilter(char* combined_windivert_rules_ptr);
             void SetFilterRuleString(std::vector<std::atomic<Limit>*> limit_ptr_vector, char* combined_windivert_rules);
@@ -57,5 +58,6 @@ namespace Klim
             bool Is7500DL(packet_data* packet);
             bool should_reinject(packet_data* packet);
             std::shared_ptr<spdlog::logger> logger;
+            Settings* _settings;
     };
 }

@@ -28,14 +28,14 @@ namespace Klim
         return res;
     }
 
-    void Helper::ExitApp(const bool debug, std::shared_ptr<spdlog::logger> logger)
+    void Helper::ExitApp(const bool console, std::shared_ptr<spdlog::logger> logger)
     {
         if (logger != nullptr)
         {
             logger->info("shutting down");
         }
         ShellExecute(nullptr, nullptr, L"powershell.exe", L"-ExecutionPolicy bypass -c Remove-NetQosPolicy -Name 'Destiny2-Limit' -Confirm:$false", nullptr, SW_HIDE);
-        if (!debug)
+        if (!console)
         {
             ShowWindow(GetConsoleWindow(), SW_RESTORE);
         }
