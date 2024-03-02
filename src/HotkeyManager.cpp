@@ -149,7 +149,7 @@ namespace Klim
             Helper::ExitApp(debug, logger);
         }
 
-        if (!debug && !Helper::D2Active(logger))
+        if (!debug && !Helper::IsDestinyTheActiveWindow(logger))
         {
             logger->info("hotkey ignored: d2 is not the active window and debug mode is not on");
             return;
@@ -202,7 +202,12 @@ namespace Klim
 
     void HotkeyManager::KeyboardEvent(int n_code, WPARAM w_param, LPARAM l_param)
     {
-        if (n_code == HC_ACTION && (w_param == WM_SYSKEYUP || w_param == WM_KEYUP))
+        if (n_code != HC_ACTION)
+        {
+            return;
+        }
+
+        if (w_param == WM_SYSKEYUP || w_param == WM_KEYUP)
         {
             const KBDLLHOOKSTRUCT hooked_key = *reinterpret_cast<KBDLLHOOKSTRUCT*>(l_param);
 
@@ -211,12 +216,11 @@ namespace Klim
             if (iterator != _currently_pressed_keys.end())
             {
                 _currently_pressed_keys.erase(iterator);
+                this->UnTriggerHotkeys(_limit_ptr_vector, _currently_pressed_keys);
             }
-
-            this->UnTriggerHotkeys(_limit_ptr_vector, _currently_pressed_keys);
         }
 
-        if (n_code == HC_ACTION && ((w_param == WM_SYSKEYDOWN) || (w_param == WM_KEYDOWN)))
+        if (w_param == WM_SYSKEYDOWN || w_param == WM_KEYDOWN)
         {
             const KBDLLHOOKSTRUCT hooked_key = *reinterpret_cast<KBDLLHOOKSTRUCT*>(l_param);
 
@@ -227,7 +231,7 @@ namespace Klim
                 _currently_pressed_keys.push_back(key);
                 if (key == VK_RETURN)
                 {
-                    if (Helper::D2Active(logger))
+                    if (Helper::IsDestinyTheActiveWindow(logger))
                     {
                         _chatbox_open = !_chatbox_open;
                         logger->info("chatbox {}", _chatbox_open ? "open" : "closed");
@@ -236,11 +240,12 @@ namespace Klim
                 // chatbox can be closed with both escape too
                 if (key == VK_ESCAPE)
                 {
-                    if (Helper::D2Active(logger))
+                    if (_chatbox_open)
                     {
-                        if (_chatbox_open)
+                        if (Helper::IsDestinyTheActiveWindow(logger))
                         {
                             _chatbox_open = false;
+                            logger->info("chatbox {}", _chatbox_open ? "open" : "closed");
                         }
                     }
                 }
@@ -252,6 +257,7 @@ namespace Klim
         }
     }
 
+
     LRESULT HotkeyManager::StaticKeyboardEvent(int n_code, WPARAM w_param, LPARAM l_param)
     {
         HotkeyManager* hk_instance_ptr = HotkeyManager::hk_instance;
@@ -259,18 +265,97 @@ namespace Klim
         return CallNextHookEx(HotkeyManager::keyboard_hook_handle, n_code, w_param, l_param);
     }
 
-
-    LRESULT CALLBACK HotkeyManager::MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
+    LRESULT HotkeyManager::StaticMouseEvent(int n_code, WPARAM w_param, LPARAM l_param)
     {
-        // do stuff
-
-        return CallNextHookEx(HotkeyManager::mouseHook, nCode, wParam, lParam);
+        HotkeyManager* hk_instance_ptr = HotkeyManager::hk_instance;
+        hk_instance_ptr->MouseEvent(n_code, w_param, l_param);
+        return CallNextHookEx(HotkeyManager::keyboard_hook_handle, n_code, w_param, l_param);
     }
+
+
+    LRESULT CALLBACK HotkeyManager::MouseProc(int n_code, WPARAM w_param, LPARAM l_param)
+    {
+        HotkeyManager::StaticMouseEvent(n_code, w_param, l_param);
+
+        return CallNextHookEx(HotkeyManager::mouseHook, n_code, w_param, l_param);
+    }
+
+    void HotkeyManager::MouseEvent(int n_code, WPARAM w_param, LPARAM l_param)
+    {
+        int vk_code = 0;
+        switch (w_param)
+        {
+            // determine direction
+            case WM_LBUTTONDOWN:
+            case WM_LBUTTONUP:
+                vk_code = VK_LBUTTON;
+                break;
+
+            case WM_RBUTTONDOWN:
+            case WM_RBUTTONUP:
+                vk_code = VK_RBUTTON;
+                break;
+
+            case WM_MBUTTONDOWN:
+            case WM_MBUTTONUP:
+                vk_code = VK_MBUTTON;
+                break;
+
+            case WM_XBUTTONDOWN:
+            case WM_XBUTTONUP:
+                // xbutton has 2 possible values
+                switch (GET_XBUTTON_WPARAM(((MSLLHOOKSTRUCT*)l_param)->mouseData))
+                {
+                    case XBUTTON1:
+                        vk_code = VK_XBUTTON1;
+                        break;
+                    case XBUTTON2:
+                        vk_code = VK_XBUTTON2;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        // get direction
+        bool down = (w_param == WM_LBUTTONDOWN || w_param == WM_RBUTTONDOWN || w_param == WM_MBUTTONDOWN || w_param == WM_XBUTTONDOWN);
+        if (vk_code != 0)
+        {
+            logger->info("mouse button {} {}", vk_code, down ? "down" : "up");
+
+            // this should make binding work
+            KeyboardInputHandler(vk_code, down); // yes ik "keyboard"
+
+            if (down)
+            {
+                _currently_pressed_keys.push_back(vk_code);
+                // TODO make this use bool allow_hotkeys instead
+                if (!ui_instance->show_config)
+                {
+                    this->TriggerHotkeys(_limit_ptr_vector, _currently_pressed_keys, _settings->debug);
+                }
+            }
+
+            if (!down)
+            {
+                const std::vector<int>::iterator iterator = std::find(_currently_pressed_keys.begin(), _currently_pressed_keys.end(), vk_code);
+                if (iterator != _currently_pressed_keys.end())
+                {
+                    _currently_pressed_keys.erase(iterator);
+                    this->UnTriggerHotkeys(_limit_ptr_vector, _currently_pressed_keys);
+                }
+            }
+        }
+    }
+
 
     DWORD HotkeyManager::HotkeyThread()
     {
         HotkeyManager::keyboard_hook_handle = SetWindowsHookEx(WH_KEYBOARD_LL, HotkeyManager::StaticKeyboardEvent, NULL, NULL);
-        // HotkeyManager::mouseHook = SetWindowsHookEx(WH_MOUSE_LL, HotkeyManager::MouseProc, NULL, 0);
         MessageLoop();
         UnhookWindowsHookEx(HotkeyManager::keyboard_hook_handle);
         UnhookWindowsHookEx(HotkeyManager::mouseHook);

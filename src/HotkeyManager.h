@@ -24,6 +24,7 @@ namespace Klim
             DWORD HotkeyThread();
             static LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam);
             static __declspec(dllexport) LRESULT CALLBACK StaticKeyboardEvent(int n_code, WPARAM w_param, LPARAM l_param);
+            static __declspec(dllexport) LRESULT CALLBACK StaticMouseEvent(int n_code, WPARAM w_param, LPARAM l_param);
             static HotkeyManager* hk_instance;
             static HHOOK keyboard_hook_handle;
             static HHOOK mouseHook;
@@ -35,6 +36,7 @@ namespace Klim
             bool _chatbox_open = false;
             typedef void (*KeyboardEventCallback)(int, bool);
             void KeyboardEvent(int n_code, WPARAM w_param, LPARAM l_param);
+            void MouseEvent(int n_code, WPARAM w_param, LPARAM l_param);
             char combined_windivert_rules[1000] = "";
             std::vector<int> _currently_pressed_keys;
             void MessageLoop();

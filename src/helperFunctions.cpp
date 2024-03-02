@@ -43,7 +43,7 @@ namespace Klim
     }
 
     // logger can be nullptr
-    bool Helper::D2Active(std::shared_ptr<spdlog::logger> logger)
+    bool Helper::IsDestinyTheActiveWindow(std::shared_ptr<spdlog::logger> logger)
     {
         TCHAR buffer[MAX_PATH] = { 0 };
         DWORD dw_proc_id = 0;
@@ -135,5 +135,30 @@ namespace Klim
         logger->set_level(spdlog::level::trace);
         logger->flush_on(spdlog::level::trace);
         return logger;
+    }
+
+
+    std::string Helper::GetMouseButtonNameByVkCode(int vk_code)
+    {
+        switch (vk_code)
+        {
+            case VK_LBUTTON:
+                return "LB";
+                break;
+            case VK_RBUTTON:
+                return "RB";
+                break;
+            case VK_MBUTTON:
+                return "MB";
+                break;
+            case VK_XBUTTON1:
+                return "XB1";
+                break;
+            case VK_XBUTTON2:
+                return "XB2";
+                break;
+            default:
+                return "Unknown mouse button";
+        }
     }
 }
