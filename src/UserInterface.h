@@ -103,8 +103,10 @@ namespace Klim
             void Overlay(bool* p_open, HWND window_handle) const;
             void Config(HWND window_handle);
             void HotkeyTab();
-            void UiConfigTab();
+            void VisualsTab();
+            void AdvancedTab();
             void BlurBehindHwnd(HWND hWnd, bool state);
+            void ImGuiApplyTheme_EnemyMouse();
             void RestartApp();
             static void HelpMarker(const char* description);
             void SetHwndPos(HWND hwnd);

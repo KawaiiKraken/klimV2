@@ -1,4 +1,5 @@
 #include "WinDivertFunctions.h"
+#include "ConfigFile.h"
 #include "Limit.h"
 #include "UserInterface.h"
 #include <iomanip>
@@ -20,11 +21,12 @@ namespace Klim
     HANDLE hThread2 = nullptr;
     bool filterThreadRunning = false;
 
-    WinDivertShit::WinDivertShit(const std::vector<std::atomic<Limit>*>& _limit_ptr_vector, UserInterface* _ui_instance, std::shared_ptr<spdlog::logger> logger)
+    WinDivertShit::WinDivertShit(const std::vector<std::atomic<Limit>*>& _limit_ptr_vector, UserInterface* _ui_instance, std::shared_ptr<spdlog::logger> logger, Settings* settings)
         : _limit_ptr_vector(_limit_ptr_vector)
         , _ui_instance(_ui_instance)
         , console(nullptr)
         , logger(logger)
+        , _settings(settings)
     {
     }
 
@@ -291,6 +293,10 @@ namespace Klim
                 passthrough = true;
             }
 
+            if (_settings->force_passthrough)
+            {
+                passthrough = true;
+            }
             if (passthrough)
             {
                 if (!WinDivertSendEx(hWindivert, cur_packet.packet, sizeof(cur_packet.packet), nullptr, 0, &cur_packet.receive_address, address_length, nullptr))

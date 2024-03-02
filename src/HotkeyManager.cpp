@@ -146,7 +146,7 @@ namespace Klim
     {
         if (limit_arg->load().type == exit_app)
         {
-            Helper::ExitApp(debug, logger);
+            Helper::ExitApp(_settings->show_console, logger);
         }
 
         if (!debug && !Helper::IsDestinyTheActiveWindow(logger))
@@ -325,7 +325,10 @@ namespace Klim
         bool down = (w_param == WM_LBUTTONDOWN || w_param == WM_RBUTTONDOWN || w_param == WM_MBUTTONDOWN || w_param == WM_XBUTTONDOWN);
         if (vk_code != 0)
         {
-            logger->info("mouse button {} {}", vk_code, down ? "down" : "up");
+            if (_settings->debug)
+            {
+                logger->debug("mouse button {} {}", vk_code, down ? "down" : "up");
+            }
 
             // this should make binding work
             KeyboardInputHandler(vk_code, down); // yes ik "keyboard"

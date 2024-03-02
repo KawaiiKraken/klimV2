@@ -25,6 +25,10 @@ namespace Klim
             bool show_timer = true;
             bool frosted_glass = false;
             bool debug = false;
+            bool force_passthrough = false;
+            bool show_console = false;
+            bool always_on_top = false;
+            bool use_custom_theme = true;
     };
 
 
