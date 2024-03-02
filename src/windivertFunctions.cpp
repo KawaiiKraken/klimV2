@@ -31,6 +31,7 @@ namespace Klim
     }
 
 
+    // sets the string that is used by the windivert capture filter
     void WinDivertShit::SetFilterRuleString(std::vector<std::atomic<Limit>*> limit_ptr_vector, char* combined_windivert_rules)
     {
         strcpy_s(combined_windivert_rules, 1000, "(udp.DstPort < 1 and udp.DstPort > 1)"); // set to rule that wont match anything
@@ -59,6 +60,7 @@ namespace Klim
     }
 
 
+    // updates the windivert capture filter
     void WinDivertShit::UpdateFilter(char* combined_windivert_rules_ptr)
     {
         char combined_windivert_rules[1000];
@@ -93,11 +95,11 @@ namespace Klim
     }
 
 
+    // Dump packet info
     void WinDivertShit::LogPacket(packet_data* packet)
     {
         std::string packet_info = "";
 
-        // Dump packet info...
         if (!passthrough)
         {
             packet_info += "BLOCK";
@@ -204,6 +206,7 @@ namespace Klim
         return false;
     };
 
+    // inject all given packets
     void WinDivertShit::ReinjectAll(std::vector<packet_data>* packet_buffer)
     {
         UINT address_length = sizeof(WINDIVERT_ADDRESS);
@@ -247,10 +250,13 @@ namespace Klim
     bool WinDivertShit::Is30kDL(packet_data* packet) { return packet->udp_header != nullptr && ntohs(packet->udp_header->SrcPort) >= 30000 && ntohs(packet->udp_header->SrcPort) <= 30009; };
     bool WinDivertShit::Is7500DL(packet_data* packet) { return packet->tcp_header != nullptr && ntohs(packet->tcp_header->SrcPort) >= 7500 && ntohs(packet->tcp_header->SrcPort) <= 7509; };
 
+    // function containing the main loop for packet processing
     unsigned long WinDivertShit::WinDivertFilterThread()
     {
         UINT address_length = sizeof(WINDIVERT_ADDRESS);
+        // contains all blocked packets
         std::unique_ptr<std::vector<packet_data>> packet_buffer = std::make_unique<std::vector<packet_data>>();
+        // current packet
         packet_data cur_packet {};
 
         // Get console for pretty colors.

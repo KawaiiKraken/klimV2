@@ -29,6 +29,29 @@ namespace Klim
     {
     }
 
+    UserInterface::FrameRateLimiter::FrameRateLimiter(int targetFPS)
+    {
+        targetFrameDuration = std::chrono::milliseconds(1000) / targetFPS;
+        lastFrameTime = std::chrono::steady_clock::now();
+    }
+
+    void UserInterface::FrameRateLimiter::StartFrame()
+    {
+        // Calculate the time taken for the previous frame
+        auto currentTime = std::chrono::steady_clock::now();
+        auto frameDuration = currentTime - lastFrameTime;
+
+        // If the frame took less time than the target duration, sleep for the remaining time
+        if (frameDuration < targetFrameDuration)
+        {
+            auto sleepTime = targetFrameDuration - frameDuration;
+            std::this_thread::sleep_for(sleepTime);
+        }
+
+        // Update the last frame time for the next frame
+        lastFrameTime = std::chrono::steady_clock::now();
+    }
+
     ImVec4 UserInterface::ColorRefToImVec4(COLORREF colorRef)
     {
         ImVec4 color;
@@ -40,7 +63,8 @@ namespace Klim
     }
 
 
-    std::string UserInterface::FormatHotkeyStatusWcString(const std::atomic<Limit>* limit_ptr)
+    // format text for the overlay
+    std::string UserInterface::FormatHotkeyStatus(const std::atomic<Limit>* limit_ptr)
     {
         // No keybinds set
         if (limit_ptr->load().key_list[0] == 0)
@@ -108,10 +132,14 @@ namespace Klim
         ImVec2 overlay_window_size(0.0f, 0.0f);
         if (ImGui::Begin("Overlay", p_open, window_flags))
         {
+            if (_settings->debug)
+            {
+                ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+            }
             std::vector<std::string> char_ptr_vector(_limit_ptr_vector.size());
             for (size_t i = 0; i < _limit_ptr_vector.size(); i++)
             {
-                char_ptr_vector[i] = ui_instance->FormatHotkeyStatusWcString(_limit_ptr_vector[i]);
+                char_ptr_vector[i] = ui_instance->FormatHotkeyStatus(_limit_ptr_vector[i]);
                 ImGui::PushID(static_cast<int>(i));
                 if (char_ptr_vector[i] != "")
                 {
@@ -135,7 +163,9 @@ namespace Klim
                     if (_settings->show_timer == true && timer_vector[i].running == true)
                     {
                         ImGui::SameLine();
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
                         ImGui::Text("%.1f", timer_vector[i].getElapsedTime());
+                        ImGui::PopStyleColor();
                         snprintf(formattedString, sizeof(formattedString), " %.1f", timer_vector[i].getElapsedTime());
                     }
                     if (overlay_window_size.x < ImGui::CalcTextSize(char_ptr_vector[i].c_str()).x + ImGui::CalcTextSize(formattedString).x + 30)
@@ -143,7 +173,7 @@ namespace Klim
                         overlay_window_size.x = ImGui::CalcTextSize(char_ptr_vector[i].c_str()).x + ImGui::CalcTextSize(formattedString).x + 30; // TODO replace with window style padding
                     }
                     overlay_window_size.y += ImGui::CalcTextSize(char_ptr_vector[i].c_str()).y;
-                    overlay_window_size.y += 10;
+                    overlay_window_size.y += 40;
                 }
                 ImGui::PopID();
             }
@@ -164,7 +194,7 @@ namespace Klim
 
 
         // static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
-        static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
+        static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         // ImGui::SetNextWindowSize(ImVec2(250, 360));
 
@@ -178,7 +208,11 @@ namespace Klim
             ImGui::StyleColorsDark();
         }
 
-        ImGui::Begin("Config", nullptr, flags);
+        ImGui::Begin("klim", nullptr, flags);
+        if (_settings->debug)
+        {
+            ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        }
         if (ImGui::BeginTabBar("MyTabBar"))
         {
             if (ImGui::BeginTabItem("Hotkeys"))
@@ -226,7 +260,7 @@ namespace Klim
                     {
                         ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings, logger);
 
-                        if (_font_changed)
+                        if (_restart_required)
                         {
                             RestartApp();
                         }
@@ -242,11 +276,11 @@ namespace Klim
                 }
             }
         }
-
         ImGui::End();
     }
 
 
+    // self explanatory
     void UserInterface::RestartApp()
     {
         TCHAR szPath[MAX_PATH];
@@ -398,6 +432,7 @@ namespace Klim
         }
     }
 
+    // show tooptip on hover
     void UserInterface::HelpMarker(const char* description)
     {
         ImGui::Text("(?)");
@@ -449,7 +484,7 @@ namespace Klim
             ImGui::InputInt("", &_settings->font_size);
             if (ImGui::IsItemDeactivatedAfterEdit())
             {
-                _font_changed = true;
+                _restart_required = true;
             }
         }
 
@@ -494,7 +529,7 @@ namespace Klim
 
             ImGui::Checkbox("Debug", &_settings->debug);
             ImGui::SameLine();
-            UserInterface::HelpMarker("debug mode (dont use)");
+            UserInterface::HelpMarker("dont use unless you know what youre doing.. like really");
 
             ImGui::Checkbox("passthrough", &_settings->force_passthrough);
             ImGui::SameLine();
@@ -514,6 +549,14 @@ namespace Klim
             }
             ImGui::SameLine();
             UserInterface::HelpMarker("console only");
+
+            ImGui::SliderInt("FPS", &_settings->fps, 30, 200); // Slider for FPS adjustment
+            if (ImGui::IsItemDeactivatedAfterEdit())
+            {
+                _restart_required = true;
+            }
+            ImGui::SameLine();
+            UserInterface::HelpMarker("requires restart to take effect");
         }
     }
 
@@ -586,6 +629,9 @@ namespace Klim
             Timer timer;
             timer_vector.push_back(timer);
         }
+
+        FrameRateLimiter fps_limit(_settings->fps);
+
         while (!done)
         {
             // Poll and handle messages (inputs, window resize, etc.)
@@ -606,6 +652,7 @@ namespace Klim
                 break;
             }
 
+            fps_limit.StartFrame();
 
             // Start the Dear ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
@@ -809,6 +856,7 @@ namespace Klim
         return ::DefWindowProcW(hWnd, msg, wParam, lParam);
     }
 
+    // custom theme
     void UserInterface::ImGuiApplyTheme_EnemyMouse()
     {
 
