@@ -9,6 +9,7 @@
 #include <imgui_impl_win32.h>
 #include <imgui_internal.h>
 #include <iostream>
+#include <shellapi.h>
 #include <string>
 #include <thread>
 #include <vector>
@@ -236,9 +237,10 @@ namespace Klim
             ImGui::EndTabBar();
         }
 
-        //_window_size = ImGui::GetWindowSize();
+        _window_size = ImGui::GetWindowSize();
         // set size
         // SetWindowPos(window_handle, 0, 0, 0, static_cast<int>(_window_size.x), static_cast<int>(_window_size.y), SWP_NOZORDER | SWP_NOMOVE);
+        SetWindowPos(window_handle, 0, 0, 0, 400, 400, SWP_NOZORDER | SWP_NOMOVE);
 
         ImVec2 windowPos = ImGui::GetWindowPos();
         ImVec2 windowSize = ImGui::GetWindowSize();
@@ -262,6 +264,7 @@ namespace Klim
 
                         if (_restart_required)
                         {
+                            // TODO fix restart
                             RestartApp();
                         }
 
@@ -280,9 +283,10 @@ namespace Klim
     }
 
 
-    // self explanatory
+    // self explanatory, currently broken
     void UserInterface::RestartApp()
     {
+        /*
         TCHAR szPath[MAX_PATH];
         GetModuleFileName(NULL, szPath, MAX_PATH);
 
@@ -303,6 +307,26 @@ namespace Klim
             // Exit the current process
             ExitProcess(0);
         }
+        */
+
+        std::wstring command = L"cmd.exe /C \"timeout /t 5 /nobreak && start ";
+        wchar_t szPath[MAX_PATH];
+        GetModuleFileName(NULL, szPath, MAX_PATH);
+        command += szPath;
+
+        // Open cmd.exe with the specified command
+        // ShellExecute(NULL, L"open", command.c_str(), NULL, NULL, SW_HIDE); // SW_HIDE to hide the command prompt window
+        ShellExecute(NULL, L"open", command.c_str(), NULL, NULL, SW_SHOWNORMAL); // SW_HIDE to hide the command prompt window
+
+        /*
+        // Close the current instance of the application
+        HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, FALSE, GetCurrentProcessId());
+        if (hProcess != NULL)
+        {
+            TerminateProcess(hProcess, 0);
+            CloseHandle(hProcess);
+        }
+        */
     }
 
     void UserInterface::HotkeyTab()
@@ -452,9 +476,16 @@ namespace Klim
         // TODO make it save config on every edit
         ImGui::SeparatorText("Overlay");
         {
+            ImGui::Checkbox("Auto-Hide", &_settings->auto_hide_overlay);
+            ImGui::SameLine();
+            UserInterface::HelpMarker("Hide overlay when tabbed out.");
+
+            // temp removed until rework
+            /*
             ImGui::Checkbox("Show Overlay", &_settings->show_overlay);
             ImGui::SameLine();
             UserInterface::HelpMarker("Show/Hide overlay.");
+            */
 
             ImGui::Checkbox("Show hotkey", &_settings->show_hotkey);
             ImGui::SameLine();
@@ -553,10 +584,11 @@ namespace Klim
             ImGui::SliderInt("FPS", &_settings->fps, 30, 200); // Slider for FPS adjustment
             if (ImGui::IsItemDeactivatedAfterEdit())
             {
-                _restart_required = true;
+                //_restart_required = true;
+                fps_limit = std::make_unique<FrameRateLimiter>(_settings->fps);
             }
             ImGui::SameLine();
-            UserInterface::HelpMarker("requires restart to take effect");
+            UserInterface::HelpMarker("useful for people who have vsync off");
         }
     }
 
@@ -630,7 +662,13 @@ namespace Klim
             timer_vector.push_back(timer);
         }
 
-        FrameRateLimiter fps_limit(_settings->fps);
+        d2_hwnd = Helper::GetHwndByExeName(L"destiny2.exe");
+        if (d2_hwnd == 0)
+        {
+            logger->error("d2 hwnd not found, hiding overlay on loss of focus is now impossibe");
+        }
+
+        fps_limit = std::make_unique<FrameRateLimiter>(_settings->fps);
 
         while (!done)
         {
@@ -652,7 +690,7 @@ namespace Klim
                 break;
             }
 
-            fps_limit.StartFrame();
+            fps_limit->StartFrame();
 
             // Start the Dear ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
@@ -673,7 +711,7 @@ namespace Klim
             }
 
             // custom_font->FontSize = _settings->font_size;
-            if (show_overlay)
+            if (show_overlay && (d2_hwnd == 0 || GetForegroundWindow() == d2_hwnd))
             {
                 ImGui::PushFont(_custom_font);
                 Overlay(&show_overlay, window_handle);

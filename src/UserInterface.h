@@ -131,6 +131,8 @@ namespace Klim
             ImFont* _custom_font;
             bool _restart_required = false;
             int _line_of_button_clicked;
+            HWND d2_hwnd = 0;
+            std::unique_ptr<FrameRateLimiter> fps_limit = nullptr;
     };
 }
 
