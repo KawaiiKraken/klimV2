@@ -6,3 +6,6 @@ klim.sln.DotSettings.user
 klim.vcxproj.user
 ideas.txt
 log.txt
+Release/
+Release.7z
+klim/
