@@ -16,6 +16,7 @@
 #include <windows.h>
 #pragma comment(lib, "dwmapi.lib")
 
+// this should prob be moved somewhere else
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace Klim
@@ -136,46 +137,49 @@ namespace Klim
             if (_settings->debug)
             {
                 ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+                overlay_window_size.y += ImGui::CalcTextSize("FPS: %.1f").y;
+                overlay_window_size.y += 7;
             }
             std::vector<std::string> char_ptr_vector(_limit_ptr_vector.size());
             for (size_t i = 0; i < _limit_ptr_vector.size(); i++)
             {
                 char_ptr_vector[i] = ui_instance->FormatHotkeyStatus(_limit_ptr_vector[i]);
                 ImGui::PushID(static_cast<int>(i));
-                if (char_ptr_vector[i] != "")
+                if (char_ptr_vector[i] == "")
                 {
-                    ImVec4 color(1.0f, 1.0f, 1.0f, 1.0f); // default color
-                    // ImGui::Text(char_ptr_vector[i]);
-                    if (_limit_ptr_vector[i]->load().state)
-                    {
-                        color = UserInterface::ColorRefToImVec4(_settings->color_on);
-                    }
-                    else
-                    {
-                        color = UserInterface::ColorRefToImVec4(_settings->color_off);
-                    }
-                    if (!_settings->change_text_color)
-                    {
-                        color = UserInterface::ColorRefToImVec4(_settings->color_default);
-                    }
-                    ImGui::TextColored(color, char_ptr_vector[i].c_str());
-                    char formattedString[50];
-                    strcpy_s(formattedString, sizeof(formattedString), "");
-                    if (_settings->show_timer == true && timer_vector[i].running == true)
-                    {
-                        ImGui::SameLine();
-                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-                        ImGui::Text("%.1f", timer_vector[i].getElapsedTime());
-                        ImGui::PopStyleColor();
-                        snprintf(formattedString, sizeof(formattedString), " %.1f", timer_vector[i].getElapsedTime());
-                    }
-                    if (overlay_window_size.x < ImGui::CalcTextSize(char_ptr_vector[i].c_str()).x + ImGui::CalcTextSize(formattedString).x + 30)
-                    {
-                        overlay_window_size.x = ImGui::CalcTextSize(char_ptr_vector[i].c_str()).x + ImGui::CalcTextSize(formattedString).x + 30; // TODO replace with window style padding
-                    }
-                    overlay_window_size.y += ImGui::CalcTextSize(char_ptr_vector[i].c_str()).y;
-                    overlay_window_size.y += 40;
+                    continue;
                 }
+                ImVec4 color(1.0f, 1.0f, 1.0f, 1.0f); // default color
+                // ImGui::Text(char_ptr_vector[i]);
+                if (_limit_ptr_vector[i]->load().state)
+                {
+                    color = UserInterface::ColorRefToImVec4(_settings->color_on);
+                }
+                else
+                {
+                    color = UserInterface::ColorRefToImVec4(_settings->color_off);
+                }
+                if (!_settings->change_text_color)
+                {
+                    color = UserInterface::ColorRefToImVec4(_settings->color_default);
+                }
+                ImGui::TextColored(color, char_ptr_vector[i].c_str());
+                char formattedString[50];
+                strcpy_s(formattedString, sizeof(formattedString), "");
+                if (_settings->show_timer == true && timer_vector[i].running == true)
+                {
+                    ImGui::SameLine();
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+                    ImGui::Text("%.1f", timer_vector[i].getElapsedTime());
+                    ImGui::PopStyleColor();
+                    snprintf(formattedString, sizeof(formattedString), " %.1f", timer_vector[i].getElapsedTime());
+                }
+                if (overlay_window_size.x < ImGui::CalcTextSize(char_ptr_vector[i].c_str()).x + ImGui::CalcTextSize(formattedString).x + 30)
+                {
+                    overlay_window_size.x = ImGui::CalcTextSize(char_ptr_vector[i].c_str()).x + ImGui::CalcTextSize(formattedString).x + 30; // TODO replace with window style padding
+                }
+                overlay_window_size.y += ImGui::CalcTextSize(char_ptr_vector[i].c_str()).y;
+                overlay_window_size.y += 7;
                 ImGui::PopID();
             }
             ui_instance->_window_size = overlay_window_size;
@@ -242,40 +246,30 @@ namespace Klim
         // SetWindowPos(window_handle, 0, 0, 0, static_cast<int>(_window_size.x), static_cast<int>(_window_size.y), SWP_NOZORDER | SWP_NOMOVE);
         SetWindowPos(window_handle, 0, 0, 0, 400, 400, SWP_NOZORDER | SWP_NOMOVE);
 
-        ImVec2 windowPos = ImGui::GetWindowPos();
-        ImVec2 windowSize = ImGui::GetWindowSize();
-        // Calculate the bottom boundary of the window
-        // float windowBottom = windowPos.y + windowSize.y;
-        // ImGui::SetCursorPosY(windowBottom - 30);
         if (ImGui::Button("Start"))
         {
             // check if exit app is bound
-            for (std::atomic<Limit>*& limit_ptr : _limit_ptr_vector)
+            if (Limit::GetLimitPtrByType(_limit_ptr_vector, exit_app)->load().key_list[0] == 0)
             {
-                if (strcmp(limit_ptr->load().name, Limit::TypeToString(exit_app)) == 0)
+                MessageBoxA(nullptr, "bind Exit App before closing", nullptr, MB_OK);
+            }
+            else
+            {
+                ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings, logger);
+
+                if (_restart_required)
                 {
-                    if (limit_ptr->load().key_list[0] == 0)
-                    {
-                        MessageBoxA(nullptr, "bind Exit App before closing", nullptr, MB_OK);
-                    }
-                    else
-                    {
-                        ConfigFile::WriteConfig(_limit_ptr_vector, _path_to_config_file, _settings, logger);
-
-                        if (_restart_required)
-                        {
-                            // TODO fix restart
-                            RestartApp();
-                        }
+                    // TODO fix restart
+                    // RestartApp();
+                    ExitProcess(0);
+                }
 
 
-                        ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);
-                        show_config = false;
-                        if (_settings->show_overlay)
-                        {
-                            show_overlay = true;
-                        }
-                    }
+                ConfigFile::LoadConfig(_limit_ptr_vector, _path_to_config_file, _settings);
+                show_config = false;
+                if (_settings->show_overlay)
+                {
+                    show_overlay = true;
                 }
             }
         }
@@ -286,7 +280,6 @@ namespace Klim
     // self explanatory, currently broken
     void UserInterface::RestartApp()
     {
-        /*
         TCHAR szPath[MAX_PATH];
         GetModuleFileName(NULL, szPath, MAX_PATH);
 
@@ -307,26 +300,6 @@ namespace Klim
             // Exit the current process
             ExitProcess(0);
         }
-        */
-
-        std::wstring command = L"cmd.exe /C \"timeout /t 5 /nobreak && start ";
-        wchar_t szPath[MAX_PATH];
-        GetModuleFileName(NULL, szPath, MAX_PATH);
-        command += szPath;
-
-        // Open cmd.exe with the specified command
-        // ShellExecute(NULL, L"open", command.c_str(), NULL, NULL, SW_HIDE); // SW_HIDE to hide the command prompt window
-        ShellExecute(NULL, L"open", command.c_str(), NULL, NULL, SW_SHOWNORMAL); // SW_HIDE to hide the command prompt window
-
-        /*
-        // Close the current instance of the application
-        HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, FALSE, GetCurrentProcessId());
-        if (hProcess != NULL)
-        {
-            TerminateProcess(hProcess, 0);
-            CloseHandle(hProcess);
-        }
-        */
     }
 
     void UserInterface::HotkeyTab()
@@ -474,9 +447,17 @@ namespace Klim
     void UserInterface::VisualsTab()
     {
         // TODO make it save config on every edit
-        ImGui::SeparatorText("Overlay");
+        ImGui::SeparatorText("Visuals");
         {
-            ImGui::Checkbox("Auto-Hide", &_settings->auto_hide_overlay);
+            ImGui::Text("Window Position");
+            ImGui::SameLine();
+            UserInterface::HelpMarker("Both config and overlay.");
+            ImGui::PushID(0xdeadbeef); // doesn't work in this case unless given an id.. why??
+            const char* possible_window_pos[] = { "Top Left", "Top Right", "Bottom Left", "Bottom Right" };
+            ImGui::Combo("", &_settings->window_location, possible_window_pos, IM_ARRAYSIZE(possible_window_pos));
+            ImGui::PopID();
+
+            ImGui::Checkbox("Auto-Hide Overlay", &_settings->auto_hide_overlay);
             ImGui::SameLine();
             UserInterface::HelpMarker("Hide overlay when tabbed out.");
 
@@ -487,11 +468,11 @@ namespace Klim
             UserInterface::HelpMarker("Show/Hide overlay.");
             */
 
-            ImGui::Checkbox("Show hotkey", &_settings->show_hotkey);
+            ImGui::Checkbox("Show Hotkey", &_settings->show_hotkey);
             ImGui::SameLine();
             UserInterface::HelpMarker("Shows the hotkey to trigger a limit.");
 
-            ImGui::Checkbox("Show timer", &_settings->show_timer);
+            ImGui::Checkbox("Show Timer", &_settings->show_timer);
             ImGui::SameLine();
             UserInterface::HelpMarker("Shows how long a limit has been on.");
 
@@ -501,15 +482,15 @@ namespace Klim
             UserInterface::HelpMarker("Frosted glass effect as background.");
             */
 
-            ImGui::Checkbox("Show limit state", &_settings->show_limit_state);
+            ImGui::Checkbox("Show Limit State", &_settings->show_limit_state);
             ImGui::SameLine();
             UserInterface::HelpMarker("(on)/(off) text.");
 
-            ImGui::Checkbox("Change color", &_settings->change_text_color);
+            ImGui::Checkbox("Change Color", &_settings->change_text_color);
             ImGui::SameLine();
             UserInterface::HelpMarker("Change text color based on limit state.");
 
-            ImGui::Text("Text size");
+            ImGui::Text("Overlay Text Size");
             ImGui::SameLine();
             UserInterface::HelpMarker("restart required (its automatic)");
             ImGui::InputInt("", &_settings->font_size);
@@ -519,24 +500,13 @@ namespace Klim
             }
         }
 
-        ImGui::SeparatorText("Misc");
-        {
-            ImVec2 windowSize = ImGui::GetWindowSize();
-            ImVec2 maxWidgetSize = ImVec2(windowSize.x * 0.5f, windowSize.y * 0.5f);
+        ImVec2 windowSize = ImGui::GetWindowSize();
+        ImVec2 maxWidgetSize = ImVec2(windowSize.x * 0.5f, windowSize.y * 0.5f);
 
 
-            ImGui::Text("Window position");
-            ImGui::SameLine();
-            UserInterface::HelpMarker("Both config and overlay.");
-            ImGui::PushID(0xdeadbeef); // doesn't work in this case unless given an id.. why??
-            const char* possible_window_pos[] = { "Top Left", "Top Right", "Bottom Left", "Bottom Right" };
-            ImGui::Combo("", &_settings->window_location, possible_window_pos, IM_ARRAYSIZE(possible_window_pos));
-            ImGui::PopID();
-
-            ImGui::Checkbox("New Theme", &_settings->use_custom_theme);
-            ImGui::SameLine();
-            UserInterface::HelpMarker("by github.com/enemymouse");
-        }
+        ImGui::Checkbox("New Theme", &_settings->use_custom_theme);
+        ImGui::SameLine();
+        UserInterface::HelpMarker("by github.com/enemymouse");
     }
 
     void UserInterface::AdvancedTab()
@@ -662,13 +632,8 @@ namespace Klim
             timer_vector.push_back(timer);
         }
 
-        d2_hwnd = Helper::GetHwndByExeName(L"destiny2.exe");
-        if (d2_hwnd == 0)
-        {
-            logger->error("d2 hwnd not found, hiding overlay on loss of focus is now impossibe");
-        }
-
         fps_limit = std::make_unique<FrameRateLimiter>(_settings->fps);
+
 
         while (!done)
         {
@@ -710,12 +675,22 @@ namespace Klim
                 ImGui::PopFont();
             }
 
+
             // custom_font->FontSize = _settings->font_size;
-            if (show_overlay && (d2_hwnd == 0 || GetForegroundWindow() == d2_hwnd))
+            if (show_overlay && (!_settings->auto_hide_overlay || GetForegroundWindow() == d2_hwnd))
             {
                 ImGui::PushFont(_custom_font);
                 Overlay(&show_overlay, window_handle);
                 ImGui::PopFont();
+            }
+            else
+            {
+                // if case will hit until d2 is activated for the first time
+                if (Helper::IsDestinyTheActiveWindow(nullptr)) // no logger cuz spam
+                {
+                    d2_hwnd = GetForegroundWindow();
+                    logger->info("d2 hwnd set");
+                }
             }
 
             UserInterface::SetHwndPos(window_handle);
@@ -859,13 +834,6 @@ namespace Klim
                 // SetLayeredWindowAttributes(hWnd, RGB(128, 128, 128), 0, LWA_COLORKEY);
                 SetLayeredWindowAttributes(hWnd, RGB(1, 1, 1), 0, LWA_COLORKEY);
                 break;
-            case WM_SIZE:
-                if (wParam != SIZE_MINIMIZED)
-                {
-                    // ui_instance->_g_width = LOWORD(lParam);
-                    // ui_instance->_g_height = HIWORD(lParam);
-                }
-                return 0;
             case WM_SYSCOMMAND:
                 if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
                 {
@@ -897,7 +865,6 @@ namespace Klim
     // source https://gist.github.com/enemymouse/c8aa24e247a1d7b9fc33d45091cbb8f0
     void UserInterface::ImGuiApplyTheme_EnemyMouse()
     {
-
         ImGuiStyle& style = ImGui::GetStyle();
         style.Alpha = 1.0;
         style.Colors[ImGuiCol_WindowBg].w = 0.83f;
@@ -906,8 +873,6 @@ namespace Klim
         style.GrabRounding = 1;
         style.GrabMinSize = 20;
         style.FrameRounding = 3;
-
-
         style.Colors[ImGuiCol_Text] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
         style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.00f, 0.40f, 0.41f, 1.00f);
         style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
@@ -944,18 +909,11 @@ namespace Klim
         style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 1.00f, 1.00f, 0.54f);
         style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.00f, 1.00f, 1.00f, 0.74f);
         style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
-        /*
-        style.Colors[ImGuiCol_CloseButton] = ImVec4(0.00f, 0.78f, 0.78f, 0.35f);
-        style.Colors[ImGuiCol_CloseButtonHovered] = ImVec4(0.00f, 0.78f, 0.78f, 0.47f);
-        style.Colors[ImGuiCol_CloseButtonActive] = ImVec4(0.00f, 0.78f, 0.78f, 1.00f);
-        */
         style.Colors[ImGuiCol_PlotLines] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
         style.Colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
         style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
         style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
         style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.00f, 1.00f, 1.00f, 0.22f);
-        // style.Colors[ImGuiCol_TooltipBg] = ImVec4(0.00f, 0.13f, 0.13f, 0.90f);
         style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.13f, 0.13f, 0.90f);
-        // style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.04f, 0.10f, 0.09f, 0.51f);
     }
 }

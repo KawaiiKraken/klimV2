@@ -43,6 +43,7 @@ namespace Klim
     }
 
     // logger can be nullptr
+    // if hwnd is provided a handle is not needed, otherwise should be 0
     bool Helper::IsDestinyTheActiveWindow(std::shared_ptr<spdlog::logger> logger)
     {
         TCHAR buffer[MAX_PATH] = { 0 };
@@ -161,53 +162,4 @@ namespace Klim
                 return "Unknown mouse button";
         }
     }
-
-
-    struct EnumWindowsData
-    {
-            std::wstring exeName;
-            HWND hwnd;
-    };
-
-    BOOL CALLBACK Helper::EnumWindowsProc(HWND hwnd, LPARAM lParam)
-    {
-        EnumWindowsData* data = reinterpret_cast<EnumWindowsData*>(lParam);
-        DWORD processId;
-        GetWindowThreadProcessId(hwnd, &processId);
-
-        HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
-        if (hProcess != NULL)
-        {
-            TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
-            HMODULE hModule;
-            DWORD cbNeeded;
-
-            if (EnumProcessModules(hProcess, &hModule, sizeof(hModule), &cbNeeded))
-            {
-                GetModuleFileNameEx(hProcess, hModule, szProcessName, sizeof(szProcessName) / sizeof(TCHAR));
-
-                std::wstring processName(szProcessName);
-                if (processName.find(data->exeName) != std::wstring::npos)
-                {
-                    data->hwnd = hwnd;
-                    CloseHandle(hProcess);
-                    return FALSE;
-                }
-            }
-            CloseHandle(hProcess);
-        }
-        return TRUE;
-    }
-
-
-    HWND Helper::GetHwndByExeName(const std::wstring& exeName)
-    {
-        EnumWindowsData data;
-        data.exeName = exeName;
-        data.hwnd = NULL;
-        EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&data));
-        return data.hwnd;
-    }
-
-
 }

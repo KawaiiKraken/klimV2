@@ -10,7 +10,7 @@
 #include <wininet.h>
 
 #pragma comment(lib, "wininet.lib")
-#pragma comment(lib, "WinDivert/WinDivert.lib")
+#pragma comment(lib, "WinDivert-2.2.2-A/x86/WinDivert.lib")
 
 
 namespace Klim
