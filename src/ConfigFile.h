@@ -28,6 +28,7 @@ namespace Klim
             bool show_console = false;
             bool always_on_top = false;
             bool use_custom_theme = true;
+            bool auto_hide_overlay = true;
             int fps = 200;
     };
 

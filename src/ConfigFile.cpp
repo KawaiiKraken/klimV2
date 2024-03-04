@@ -53,6 +53,7 @@ namespace Klim
         config["always_on_top"] = settings->always_on_top;
         config["use_custom_theme"] = settings->use_custom_theme;
         config["fps"] = settings->fps;
+        config["auto_hide_overlay"] = settings->auto_hide_overlay;
 
         StoreConfigToJson(path_to_config_file, config, logger);
     }
@@ -95,6 +96,7 @@ namespace Klim
         settings->always_on_top = loaded_config["always_on_top"].asBool();
         settings->use_custom_theme = loaded_config["use_custom_theme"].asBool();
         settings->fps = loaded_config["fps"].asInt();
+        settings->auto_hide_overlay = loaded_config["auto_hide_overlay"].asBool();
     }
 
     bool ConfigFile::FileExists(const LPCTSTR file_path)
