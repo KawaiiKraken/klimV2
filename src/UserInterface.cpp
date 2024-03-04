@@ -533,9 +533,9 @@ namespace Klim
             ImGui::Combo("", &_settings->window_location, possible_window_pos, IM_ARRAYSIZE(possible_window_pos));
             ImGui::PopID();
 
-            ImGui::Checkbox("Custom Theme", &_settings->use_custom_theme);
+            ImGui::Checkbox("New Theme", &_settings->use_custom_theme);
             ImGui::SameLine();
-            UserInterface::HelpMarker("blu");
+            UserInterface::HelpMarker("by github.com/enemymouse");
         }
     }
 
@@ -894,7 +894,7 @@ namespace Klim
         return ::DefWindowProcW(hWnd, msg, wParam, lParam);
     }
 
-    // custom theme
+    // source https://gist.github.com/enemymouse/c8aa24e247a1d7b9fc33d45091cbb8f0
     void UserInterface::ImGuiApplyTheme_EnemyMouse()
     {
 
