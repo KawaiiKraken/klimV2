@@ -18,11 +18,6 @@ for support join our server at the [thrallway](https://thrallway.com)
 ![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/visuals_tab_v3.png "visual tab")
 ![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/overlay.png "overlay")
  
-# installation
-- download [lastest release](https://github.com/KawaiiKraken/klimV2/releases/latest)
-- unzip
-- run exe
-
 # how to use
 - [netlimiter bible](https://docs.google.com/document/d/1CuFbJ4KlbSMqf22lVap2yiSMHxLWRJpiMO1eIIpgtJQ)
 - [vid example](https://www.youtube.com/watch?v=zTgaYyAxNZ4&pp=ygUPYXotMSBuZXRsaW1pdGVy) ...vid is using a different lim
