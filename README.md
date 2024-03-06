@@ -8,14 +8,6 @@ for support join our server at the [thrallway](https://thrallway.com)
 <a href='https://ko-fi.com/kreky' target='_blank'><img height='46' width="200" src='https://cdn.ko-fi.com/cdn/kofi4.png' alt='Buy Coffee for kreky' />
 </a>
 
-# features
-- lims: 3074DL, 3074UL, 27kDL, 27UL, 30kDL, 7500DL, whole game 800b/s DL
-- game pauser
-- overlay 
-- timers 
-- packet logs
-- etc 
-
 # screenshots
 ![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/hotkey_tab_v3.png "hotkey tab")
 ![image failed to load..](https://github.com/KawaiiKraken/klimV2/blob/master/resources/visuals_tab_v3.png "visual tab")
