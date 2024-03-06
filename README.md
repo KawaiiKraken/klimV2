@@ -1,7 +1,9 @@
 # !!!currently detected!!!
 either exe or windivert not 100% sure
 
-nlsvc patches are still safe apparently
+nlsvc patches are still safe apparently but likely not for long
+
+bypass soon but i might not make it public
 # klim v2
 kreken's destiny 2 netlimiter 
 
